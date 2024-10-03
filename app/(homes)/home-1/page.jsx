@@ -7,7 +7,7 @@ import Hotbids from "@/components/homes/home-1/Hotbids";
 import Process from "@/components/homes/common/Process";
 
 export const metadata = {
-  title: "Home 1 || Xhibiter | NFT Marketplace Nextjs Template",
+  title: "Minatokens",
 };
 export default function HomePage1() {
   return (

@@ -28,18 +28,17 @@ export default function Hero() {
         <div className="grid h-full items-center gap-4 md:grid-cols-12">
           <div className="col-span-6 flex h-full flex-col items-center justify-center py-10 md:items-start md:py-20 xl:col-span-4">
             <h1 className="mb-6 text-center font-display text-5xl text-jacarta-700 dark:text-white md:text-left lg:text-6xl xl:text-7xl">
-              Buy, sell and collect NFTs.
+              Launch your <span className="animate-gradient">own tokens</span>
             </h1>
             <p className="mb-8 text-center text-lg dark:text-jacarta-200 md:text-left">
-              The world's largest digital marketplace for crypto collectibles
-              and non-fungible tokens
+              The first MINA launchpad for custom fungible tokens.
             </p>
             <div className="flex space-x-4">
               <Link
                 href="/create"
                 className="w-36 rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
               >
-                Upload
+                Launch
               </Link>
               <Link
                 href="/collections"
@@ -73,7 +72,7 @@ export default function Hero() {
                 </defs>
                 <g clipPath="url(#clipping)">
                   <image
-                    href="/img/hero/hero.jpg"
+                    href="/img/hero/hero-Mina_Token4.png"
                     width="200"
                     height="200"
                     clipPath="url(#clipping)"

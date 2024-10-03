@@ -5,9 +5,9 @@ import Nav from "./component/Nav";
 import {
   addMobileMenuToggle,
   removeMenuActive,
-} from "@/utils/mobileMenuToggle";
+} from "../../utils/mobileMenuToggle";
 import Profile from "./component/Profile";
-import { handleDarkMode } from "@/utils/handleDarkMode";
+import { handleDarkMode } from "../../utils/handleDarkMode";
 import Image from "next/image";
 import Link from "next/link";
 import MetamarkComponent from "../metamask/MetamarkComponent";
@@ -46,18 +46,18 @@ export default function Header1() {
           {/* Logo */}
           <Link href="/" className="shrink-0">
             <Image
-              width={130}
-              height={28}
-              src="/img/logo.png"
-              className="max-h-7 dark:hidden"
-              alt="Xhibiter | NFT Marketplace"
+              width={64}
+              height={64}
+              src="/img/zkCloudWorker-logo.png"
+              className="dark:hidden"
+              alt="Minatokens | MINA Launchpad"
             />
             <Image
-              width={130}
-              height={28}
-              src="/img/logo_white.png"
-              className="hidden max-h-7 dark:block"
-              alt="Xhibiter | NFT Marketplace"
+              width={64}
+              height={64}
+              src="/img/zkCloudWorker-logo.png"
+              className="hidden dark:block"
+              alt="Minatokens | MINA Launchpad"
             />
           </Link>
 
@@ -96,14 +96,14 @@ export default function Header1() {
                   height={28}
                   src="/img/logo.png"
                   className="max-h-7 dark:hidden"
-                  alt="Xhibiter | NFT Marketplace"
+                  alt="Minatokens | MINA Launchpad"
                 />
                 <Image
                   width={130}
                   height={28}
                   src="/img/logo_white.png"
                   className="hidden max-h-7 dark:block"
-                  alt="Xhibiter | NFT Marketplace"
+                  alt="Minatokens | MINA Launchpad"
                 />
               </Link>
 

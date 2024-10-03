@@ -1,1 +1,2 @@
-# UI test
+# Minatokens Launchpad UI
+

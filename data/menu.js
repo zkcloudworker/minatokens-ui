@@ -47,12 +47,9 @@ export const pages = [
   { id: 18, href: "/tos", text: "Terms of Service" },
 ];
 export const resources = [
-  { id: 1, href: "/help-center", text: "Help Center" },
-  { id: 2, href: "/platform-status", text: "Platform Status" },
-  { id: 3, href: "/partners", text: "Partners" },
-  { id: 4, href: "/blog", text: "Blog" },
-  { id: 5, href: "/single-post/2", text: "Single Post" },
-  { id: 6, href: "/newsletter", text: "Newsletter" },
+  { id: 1, href: "/help-center", text: "Frequent Questions" },
+  { id: 2, href: "/platform-status", text: "Documentation" },
+  { id: 3, href: "/partners", text: "MINA Developers Alliance" },
 ];
 export const explore = [
   {
