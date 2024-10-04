@@ -2,7 +2,7 @@
 
 import { sendDeployTransaction } from "./zkcloudworker";
 import { getAccountNonce } from "./nonce";
-import { TimelineItem } from "../src/components/ui/timeline";
+import { TimelineItem } from "@/components/ui/timeline";
 import React from "react";
 import { verificationKeys } from "./vk";
 

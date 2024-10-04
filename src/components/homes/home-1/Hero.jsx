@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative pb-10 pt-20 md:pt-32 lg:h-[88vh]">
+    <section className="relative pb-18 pt-32 md:pt-48 lg:h-[88vh]">
       <picture className="pointer-events-none absolute inset-x-0 top-0 -z-10 dark:hidden">
         <Image
           width={1920}
@@ -35,13 +35,13 @@ export default function Hero() {
             </p>
             <div className="flex space-x-4">
               <Link
-                href="/create"
+                href="/launch"
                 className="w-36 rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
               >
                 Launch
               </Link>
               <Link
-                href="/collections"
+                href="/explore"
                 className=" rtl:!mr-6 w-36 rounded-full bg-white py-3 px-8 text-center font-semibold text-accent shadow-white-volume transition-all hover:bg-accent-dark hover:text-white hover:shadow-accent-volume"
               >
                 Explore

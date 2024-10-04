@@ -6,17 +6,14 @@ import Hero from "@/components/homes/home-1/Hero";
 import Hotbids from "@/components/homes/home-1/Hotbids";
 import Process from "@/components/homes/common/Process";
 
-export const metadata = {
-  title: "Minatokens",
-};
 export default function HomePage1() {
   return (
     <>
       <Header1 />
       <main>
         <Hero />
-        <Hotbids />
-        <Collections />
+        {/* <Hotbids />
+        <Collections /> */}
         <Categories />
         <Process />
       </main>

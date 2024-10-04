@@ -42,7 +42,7 @@ export default function Header1() {
           scrolled ? "js-page-header--is-sticky" : ""
         }`}
       >
-        <div className="flex items-center px-6 py-6 xl:px-24 ">
+        <div className="flex items-center justify-between px-6 py-6 xl:px-24 ">
           {/* Logo */}
           <Link href="/" className="shrink-0">
             <Image
@@ -59,16 +59,25 @@ export default function Header1() {
               className="hidden dark:block"
               alt="Minatokens | MINA Launchpad"
             />
+            <div class="text-jacarta-900 dark:text-white -ms-3">
+              Minatokens
+            </div>
           </Link>
+
+          <nav className="navbar w-full hidden lg:block xl:ml-[8%] --border">
+              <ul className="flex flex-col lg:flex-row">
+                <Nav />
+              </ul>
+          </nav>
 
           {/* Search */}
           <form
             onSubmit={(e) => e.preventDefault()}
-            className="relative ml-12 mr-8 hidden basis-3/12 lg:block xl:ml-[8%]"
+            className="relative ml-12 mr-8 hidden basis-3/12 lg:block xl:ml-[8%] --border"
           >
             <input
               type="search"
-              className="w-full rounded-2xl border border-jacarta-100 py-[0.6875rem] px-4 pl-10 text-jacarta-700 placeholder-jacarta-500 focus:ring-accent dark:border-transparent dark:bg-white/[.15] dark:text-white dark:placeholder-white"
+              className="--w-full rounded-2xl border border-jacarta-100 py-[0.6875rem] px-4 pl-10 text-jacarta-700 placeholder-jacarta-500 focus:ring-accent dark:border-transparent dark:bg-white/[.15] dark:text-white dark:placeholder-white"
               placeholder="Search"
             />
             <span className="absolute left-0 top-0 flex h-full w-12 items-center justify-center rounded-2xl">
@@ -92,19 +101,22 @@ export default function Header1() {
               {/* Mobile Logo */}
               <Link href="/" className="shrink-0">
                 <Image
-                  width={130}
-                  height={28}
-                  src="/img/logo.png"
-                  className="max-h-7 dark:hidden"
+                  width={56}
+                  height={66}
+                  src="/img/zkCloudWorker-logo.png"
+                  className="--max-h-7 dark:hidden"
                   alt="Minatokens | MINA Launchpad"
                 />
                 <Image
-                  width={130}
-                  height={28}
-                  src="/img/logo_white.png"
-                  className="hidden max-h-7 dark:block"
+                  width={56}
+                  height={56}
+                  src="/img/zkCloudWorker-logo.png"
+                  className="hidden --max-h-7 dark:block"
                   alt="Minatokens | MINA Launchpad"
                 />
+                <div class="text-jacarta-900 dark:text-white -ms-3">
+                  Minatokens
+                </div>
               </Link>
 
               {/* Mobile Menu Close */}
@@ -150,7 +162,7 @@ export default function Header1() {
             </form>
 
             {/* Primary Nav */}
-            <nav className="navbar w-full">
+            <nav className="navbar w-full lg:hidden">
               <ul className="flex flex-col lg:flex-row">
                 <Nav />
               </ul>
