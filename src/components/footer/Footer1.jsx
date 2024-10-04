@@ -14,15 +14,15 @@ export default function Footer1() {
             <Link href="/" className="mb-6 block flex items-center">
               <span class="inline-block">
                 <Image
-                  width={36}
-                  height={36}
+                  width={32}
+                  height={32}
                   src="/img/zkCloudWorker-logo.png"
                   className="--max-h-7 dark:hidden"
                   alt="Xhibiter | NFT Marketplace"
                 />
                 <Image
-                  width={36}
-                  height={36}
+                  width={32}
+                  height={32}
                   src="/img/zkCloudWorker-logo.png"
                   className="hidden --max-h-7 dark:block"
                   alt="Xhibiter | NFT Marketplace"
@@ -33,9 +33,9 @@ export default function Footer1() {
             <p className="mb-12 dark:text-jacarta-300">
               Launch, buy and sell MINA custom tokens. Powered by 
               &nbsp;
-              <a class="text-orange-bright" target="_blank" href="https://minaprotocol.com">MINA Protocol</a>
+              <a class="text-accent font-bold" target="_blank" href="https://minaprotocol.com">MINA Protocol</a>
               &nbsp; and &nbsp;
-              <a class="text-orange-bright" target="_blank" href="https://zkcloudworker.com">zkCloudWorker</a>
+              <a class="text-accent font-bold" target="_blank" href="https://zkcloudworker.com">zkCloudWorker</a>
               .
             </p>
 
