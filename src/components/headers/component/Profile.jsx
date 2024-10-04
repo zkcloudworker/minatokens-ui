@@ -53,7 +53,7 @@ export default function Profile() {
           </svg>
         </button>
 
-        <div className="mx-5 mb-6 rounded-lg border border-jacarta-100 p-4 dark:border-jacarta-600">
+{/*         <div className="mx-5 mb-6 rounded-lg border border-jacarta-100 p-4 dark:border-jacarta-600">
           <span className="text-sm font-medium tracking-tight dark:text-jacarta-200">
             Balance
           </span>
@@ -85,6 +85,7 @@ export default function Profile() {
             <span className="text-lg font-bold text-green">10 ETH</span>
           </div>
         </div>
+ */}
         <Link
           href="/user/1"
           className="flex items-center space-x-2 rounded-xl px-5 py-2 transition-colors hover:bg-jacarta-50 hover:text-accent focus:text-accent dark:hover:bg-jacarta-600"
