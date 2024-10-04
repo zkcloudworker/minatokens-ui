@@ -3,7 +3,7 @@ import Header1 from "@/components/headers/Header1";
 import Create from "@/components/create/Create";
 
 export const metadata = {
-  title: "Create || Xhibiter | NFT Marketplace Nextjs Template",
+  title: "Minatokens | Launchpad",
 };
 
 export default function CreatePage() {

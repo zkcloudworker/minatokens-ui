@@ -12,7 +12,7 @@ export default function PropertiesModal() {
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title" id="addPropertiesLabel">
-              Add properties
+              Mint addresses
             </h5>
             <button
               type="button"
@@ -35,8 +35,7 @@ export default function PropertiesModal() {
 
           <div className="modal-body p-6">
             <p className="mb-8 dark:text-jacarta-300">
-              Item Properties show up underneath your item, are clickable, and
-              can be filtered in your collection's sidebar.
+              ¿¿¿¿ WHAT COPY HERE ????
             </p>
 
             <div className="relative my-3 flex items-center">
@@ -55,23 +54,23 @@ export default function PropertiesModal() {
 
               <div className="flex-1">
                 <label className="mb-3 block font-display text-base font-semibold text-jacarta-700 dark:text-white">
-                  Type
+                  Amount 
                 </label>
                 <input
                   type="text"
                   className="h-12 w-full border border-r-0 border-jacarta-100 focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
-                  placeholder="Character"
+                  placeholder="Amount"
                 />
               </div>
 
               <div className="flex-1">
                 <label className="mb-3 block font-display text-base font-semibold text-jacarta-700 dark:text-white">
-                  Name
+                  Address (B62...)
                 </label>
                 <input
                   type="text"
                   className="h-12 w-full rounded-r-lg border border-jacarta-100 focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
-                  placeholder="Male"
+                  placeholder="Address"
                 />
               </div>
             </div>
