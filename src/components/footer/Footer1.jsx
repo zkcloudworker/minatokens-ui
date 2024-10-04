@@ -11,25 +11,32 @@ export default function Footer1() {
       <div className="container">
         <div className="grid grid-cols-6 gap-x-7 gap-y-14 pt-24 pb-12 md:grid-cols-12">
           <div className="col-span-full sm:col-span-3 md:col-span-4">
-            <Link href="/" className="mb-6 inline-block">
-              <Image
-                width={130}
-                height={28}
-                src="/img/logo.png"
-                className="max-h-7 dark:hidden"
-                alt="Xhibiter | NFT Marketplace"
-              />
-              <Image
-                width={130}
-                height={28}
-                src="/img/logo_white.png"
-                className="hidden max-h-7 dark:block"
-                alt="Xhibiter | NFT Marketplace"
-              />
+            <Link href="/" className="mb-6 block flex items-center">
+              <span class="inline-block">
+                <Image
+                  width={36}
+                  height={36}
+                  src="/img/zkCloudWorker-logo.png"
+                  className="--max-h-7 dark:hidden"
+                  alt="Xhibiter | NFT Marketplace"
+                />
+                <Image
+                  width={36}
+                  height={36}
+                  src="/img/zkCloudWorker-logo.png"
+                  className="hidden --max-h-7 dark:block"
+                  alt="Xhibiter | NFT Marketplace"
+                />
+              </span>
+              <span class="ms-4 text-white text-lg inline-block">Minatokens.com</span>
             </Link>
             <p className="mb-12 dark:text-jacarta-300">
-              Create, sell and collect truly rare digital artworks. Powered by
-              blockchain technology.
+              Launch, buy and sell MINA custom tokens. Powered by 
+              &nbsp;
+              <a class="text-orange-bright" target="_blank" href="https://minaprotocol.com">MINA Protocol</a>
+              &nbsp; and &nbsp;
+              <a class="text-orange-bright" target="_blank" href="https://zkcloudworker.com">zkCloudWorker</a>
+              .
             </p>
 
             <div className="flex space-x-5">
@@ -66,12 +73,12 @@ export default function Footer1() {
         </div>
         <div className="flex flex-col items-center justify-between space-y-2 py-8 sm:flex-row sm:space-y-0">
           <span className="text-sm dark:text-jacarta-400">
-            &copy; {new Date().getFullYear()} Xhibiter — Made by{" "}
+            &copy; {new Date().getFullYear()} Minatokens — Made by{" "}
             <a
-              href="https://themeforest.net/user/ib-themes/portfolio"
+              href="https://zkcloudworker.com"
               className="hover:text-accent"
             >
-              ib-themes
+              zkCloudWorker Team
             </a>
           </span>
           <ul className="flex flex-wrap space-x-4 text-sm dark:text-jacarta-400">
