@@ -17,9 +17,9 @@ export default function Process() {
       </picture>
       <div className="container">
         <h2 className="mb-16 text-center font-display text-3xl text-jacarta-700 dark:text-white">
-          Create and sell your NFTs
+          Launch and sell your custom tokens
         </h2>
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
           {process3.map((elm, i) => (
             <div key={i} className="text-center">
               <div
@@ -49,7 +49,7 @@ export default function Process() {
 
         <p className="mx-auto mt-20 max-w-2xl text-center text-lg text-jacarta-700 dark:text-white">
           Join our mailing list to stay in the loop with our newest feature
-          releases, NFT drops, and tips and tricks for navigating Xhibiter
+          releases, Airdrops, and tips and tricks for navigating Minatokens.
         </p>
 
         <div className="mx-auto mt-7 max-w-md text-center">

@@ -2,40 +2,32 @@ export const processes = [
   {
     id: 1,
     backgroundColor: "#CDBCFF",
-    imgSrc: "/img/process/process1.svg",
+    imgSrc: "/img/process/process5.svg",
     alt: "process",
     title: "1. Set up your wallet",
     description:
-      "Once you've set up your wallet of choice, connect it to OpenSeaby clicking the NFT Marketplace in the top right corner.",
+      "Please set up your Auro wallet.",
   },
   {
     id: 2,
     backgroundColor: "#C4F2E3",
     imgSrc: "/img/process/process2.svg",
     alt: "process",
-    title: "2. Create Your Collection",
+    title: "2. Launch your token",
     description:
       "Click Create and set up your collection. Add social links, a description, profile & banner images, and set a secondary sales fee.",
   },
   {
     id: 3,
-    backgroundColor: "#CDDFFB",
-    imgSrc: "/img/process/process3.svg",
-    alt: "process",
-    title: "3. Add Your NFTs",
-    description:
-      "Upload your work (image, video, audio, or 3D art), add a title and description, and customize your NFTs with properties, stats.",
-  },
-  {
-    id: 4,
     backgroundColor: "#FFD0D0",
     imgSrc: "/img/process/process4.svg",
     alt: "process",
-    title: "4. List Them For Sale",
+    title: "3. List Them For Sale",
     description:
       "Choose between auctions, fixed-price listings, and declining-price listings. You choose how you want to sell your NFTs!",
   },
 ];
+
 export const process2 = [
   {
     stepNumber: "01",
@@ -62,6 +54,7 @@ export const process2 = [
       "M9.33 11.5h2.17A4.5 4.5 0 0 1 16 16H8.999L9 17h8v-1a5.578 5.578 0 0 0-.886-3H19a5 5 0 0 1 4.516 2.851C21.151 18.972 17.322 21 13 21c-2.761 0-5.1-.59-7-1.625L6 10.071A6.967 6.967 0 0 1 9.33 11.5zM5 19a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v9zM18 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm-7-3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z",
   },
 ];
+
 export const process3 = [
   {
     id: 1,
@@ -71,36 +64,26 @@ export const process3 = [
     title: "1. Set up your wallet",
     bgClass: "bg-accent",
     description:
-      "Once you've set up your wallet of choice, connect it to OpenSeaby clicking the NFT Marketplace in the top right corner.",
+      "Once you've set up your Auro wallet, connect it to Minatokens by clicking the Wallet button in the top right corner.",
   },
   {
     id: 2,
     backgroundColor: "#C4F2E3",
     iconSrc: "/img/process/process6.svg",
     alt: "process",
-    title: "2. Create Your Collection",
+    title: "2. Launch your token",
     bgClass: "bg-green",
     description:
-      "Click Create and set up your collection. Add social links, a description, profile & banner images, and set a secondary sales fee.",
-  },
-  {
-    id: 3,
-    backgroundColor: "#CDDFFB",
-    iconSrc: "/img/process/process7.svg",
-    alt: "process",
-    title: "3. Add Your NFTs",
-    bgClass: "bg-blue",
-    description:
-      "Upload your work (image, video, audio, or 3D art), add a title and description, and customize your NFTs with properties, stats.",
+      "Click Launch and set up your token. Add name, website links, a description & profile image, and set a price.",
   },
   {
     id: 4,
     backgroundColor: "#FFD0D0",
     iconSrc: "/img/process/process8.svg",
     alt: "process",
-    title: "4. List Them For Sale",
+    title: "3. List Them For Sale",
     bgClass: "bg-red",
     description:
-      "Choose between auctions, fixed-price listings, and declining-price listings. You choose how you want to sell your NFTs!",
+      "Choose between auctions, fixed-price listings, and declining-price listings. You choose how you want to sell your Tokens!",
   },
 ];
