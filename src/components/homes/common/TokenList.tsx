@@ -402,12 +402,12 @@ export default function TokenList() {
             <article key={i}>
               <div className="block rounded-2.5xl border border-jacarta-100 bg-white p-[1.1875rem] transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700">
                 <figure className="relative">
-                  <Link href={`/item/${elm.tokenAddress}`}>
+                  <Link href={`/token/${elm.tokenAddress}`}>
                     <Image
                       width={230}
                       height={230}
                       src={elm.image ?? "launchpad.png"}
-                      alt="item 5"
+                      alt="token 5"
                       className="w-full rounded-[0.625rem]"
                       loading="lazy"
                       crossOrigin="anonymous"
@@ -441,7 +441,7 @@ export default function TokenList() {
                   </div>
                 </figure>
                 <div className="mt-7 flex items-center justify-between">
-                  <Link href={`/item/${elm.tokenAddress}`}>
+                  <Link href={`/token/${elm.tokenAddress}`}>
                     <span className="font-display text-base text-jacarta-700 hover:text-accent dark:text-white">
                       {elm.name}
                     </span>
@@ -509,7 +509,7 @@ export default function TokenList() {
                     Buy now
                   </button>
                   <Link
-                    href={`/item/${elm.tokenAddress}`}
+                    href={`/token/${elm.tokenAddress}`}
                     className="group flex items-center"
                   >
                     <svg

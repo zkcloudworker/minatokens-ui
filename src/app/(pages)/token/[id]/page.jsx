@@ -3,10 +3,10 @@ import Header1 from "@/components/headers/Header1";
 import ItemDetails from "@/components/pages/item/ItemDetails";
 
 export const metadata = {
-  title: "Item Details || Xhibiter | NFT Marketplace Nextjs Template",
+  title: "Token Details",
 };
 
-export default function ItemDetailsPage({ params }) {
+export default function TokenDetailsPage({ params }) {
   return (
     <>
       <Header1 />
