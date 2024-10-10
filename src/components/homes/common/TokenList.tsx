@@ -15,10 +15,12 @@ import {
 
 import tippy from "tippy.js";
 import { getWalletInfo } from "@/lib/wallet";
+import { getTokenState } from "@/lib/state";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 interface LikedToken extends DeployedTokenInfo {
   likes: number;
+  _highlightResult: object;
 }
 
 /*
@@ -59,6 +61,7 @@ const categories: { id: TokenCategory; name: string; icon: string }[] = [
 export default function TokenList() {
   const [activeCategory, setActiveCategory] = useState<TokenCategory>("all");
   const [items, setItems] = useState<LikedToken[]>([]);
+  const [tokensFetched, setTokensFetched] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [activeSort, setActiveSort] = useState<string>(sortingOptions[0]);
   const [onlyVarified, setOnlyVarified] = useState<boolean>(false);
@@ -95,6 +98,13 @@ export default function TokenList() {
       if (prev.includes(tokenAddress)) {
         return prev;
       } else {
+        const index = items.findIndex(
+          (elm) => elm.tokenAddress === tokenAddress
+        );
+        if (index !== -1) {
+          items[index].likes += 1;
+          setItems(items);
+        }
         return [...prev, tokenAddress];
       }
     });
@@ -117,14 +127,17 @@ export default function TokenList() {
         )?.hits ?? [];
       console.log("category", activeCategory);
       if (activeCategory === "myTokens") {
-        if (DEBUG) console.log("myTokens", address);
         newItems = newItems.filter((elm) => elm.adminAddress === address);
       } else if (activeCategory === "favorites") {
-        if (DEBUG) console.log("favorites", address);
         newItems = newItems.filter((elm) =>
           favorites.includes(elm.tokenAddress)
         );
       }
+      const tokensWithLikes: LikedToken[] = newItems.map((elm: any) => ({
+        ...elm,
+        likes: 0,
+      }));
+      setItems(tokensWithLikes);
       let userAddress = address;
       if (userAddress === undefined) {
         userAddress = (await getWalletInfo()).address;
@@ -134,14 +147,13 @@ export default function TokenList() {
       const likedTokens = userAddress
         ? await algoliaGetUsersLikes({ userAddress })
         : [];
-      if (DEBUG) console.log("likedTokens", likedTokens);
       setFavorites(likedTokens);
-      const tokensWithLikes: LikedToken[] = [];
-      for (const item of newItems) {
+
+      for (const item of tokensWithLikes) {
         const likes = await algoliaLikesCount({
           tokenAddress: item.tokenAddress,
         });
-        tokensWithLikes.push({ ...item, likes });
+        item.likes = likes;
       }
       if (DEBUG) {
         console.log(
@@ -150,6 +162,7 @@ export default function TokenList() {
           tokensWithLikes.map((elm) => ({
             symbol: elm.symbol,
             likes: elm.likes,
+            highlighted: elm._highlightResult,
           }))
         );
       }
@@ -158,6 +171,41 @@ export default function TokenList() {
       //   "https://salmon-effective-amphibian-898.mypinata.cloud/ipfs/bafybeibhdj6vhkxb5re6mfwp4k7imetbajzfyfskjmbdfphlgaodv3bkgm?pinataGatewayToken=gFuDmY7m1Pa5XzZ3bL1TjPPvO4Ojz6tL-VGIdweN1fUa5oSFZXce3y9mL8y1nSSU";
       // "https://ktjg25keqdlfcv7znum4kpf355fwgdxnielonv37f3jvoikkfsya.arweave.net/VNJtdUSA1lFX-W0ZxTy770tjDu1BFubXfy7TVyFKLLA";
       setItems(tokensWithLikes);
+      for (const item of newItems) {
+        const index = tokensFetched.findIndex(
+          (elm) => elm === item.tokenAddress
+        );
+        if (index === -1) {
+          const state = await getTokenState({
+            tokenAddress: item.tokenAddress,
+            info: item,
+          });
+          if (state.success) {
+            setTokensFetched((prev) => [...prev, item.tokenAddress]);
+            if (state.isStateUpdated) {
+              const index = tokensWithLikes.findIndex(
+                (elm) => elm.tokenAddress === item.tokenAddress
+              );
+              if (index !== -1) {
+                const newItem = tokensWithLikes[index];
+                Object.keys(state.tokenState).forEach((key) => {
+                  (newItem as any)[key] = (state.tokenState as any)[key];
+                });
+                setItems((prev) => {
+                  const newItems = [...prev];
+                  const index = newItems.findIndex(
+                    (elm) => elm.tokenAddress === item.tokenAddress
+                  );
+                  if (index !== -1) {
+                    newItems[index] = newItem;
+                  }
+                  return newItems;
+                });
+              }
+            }
+          }
+        }
+      }
     };
     fetchTokenList();
     // if (activeCategory == "all") {
