@@ -1,24 +1,29 @@
+"use client";
 import Footer1 from "@/components/footer/Footer1";
-import Header1 from "@/components/headers/Header1";
-import Categories from "@/components/homes/common/Categories";
+import TokenHeader from "@/components/headers/TokenHeader";
+import TokenList from "@/components/homes/common/TokenList";
 import Collections from "@/components/homes/common/Collections";
 import Hero from "@/components/homes/home-1/Hero";
 import Hotbids from "@/components/homes/home-1/Hotbids";
 import Process from "@/components/homes/common/Process";
+import { SearchProvider } from "@/context/search";
+import { FC } from "react";
 
-export default function HomePage1() {
+const HomeToken: FC = () => {
   return (
-    <>
-      <Header1 />
+    <SearchProvider>
+      <TokenHeader />
       <main>
         <Hero />
 
         {/* <Hotbids />
         <Collections /> */}
-        <Categories />
+        <TokenList />
         <Process />
       </main>
       <Footer1 />
-    </>
+    </SearchProvider>
   );
-}
+};
+
+export default HomeToken;

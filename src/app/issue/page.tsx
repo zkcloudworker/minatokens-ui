@@ -36,10 +36,15 @@ import { verifyFungibleTokenState } from "@/lib/verify";
 import { sendTransaction } from "@/lib/send";
 import { getAccountNonce } from "@/lib/nonce";
 import { checkMintData, Mint, MintVerified } from "@/lib/address";
+import { TokenInfo } from "@/lib/token";
+import { algoliaGetToken } from "@/lib/algolia";
+import { getTokenState } from "@/lib/state";
+import { algoliaGetTokenList } from "@/lib/search";
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
+const chainId = process.env.NEXT_PUBLIC_CHAIN_ID;
 let minted = 0;
 
 export default function LaunchToken() {
@@ -256,6 +261,7 @@ export default function LaunchToken() {
     waitingTitle: string;
     successTitle: string;
     failedTitle: string;
+    info: TokenInfo;
   }): Promise<void> {
     const {
       id,
@@ -265,6 +271,7 @@ export default function LaunchToken() {
       tokenContractAddress,
       adminContractAddress,
       adminAddress,
+      info,
     } = params;
     logItem({
       id,
@@ -274,10 +281,14 @@ export default function LaunchToken() {
       status: "waiting",
     });
     let count = 0;
+    const timestamp = Date.now();
     let verified = await verifyFungibleTokenState({
       tokenContractAddress,
       adminContractAddress,
       adminAddress,
+      info,
+      created: timestamp,
+      updated: timestamp,
     });
     if (DEBUG)
       console.log("Waiting for contract state to be verified...", verified);
@@ -289,6 +300,9 @@ export default function LaunchToken() {
         tokenContractAddress,
         adminContractAddress,
         adminAddress,
+        info,
+        created: timestamp,
+        updated: timestamp,
       });
     }
     if (DEBUG) console.log("Final status", { verified, count });
@@ -600,6 +614,22 @@ export default function LaunchToken() {
   }
 
   async function handleIssueToken() {
+    // const tokenState = await getTokenState({
+    //   tokenAddress: "B62qpizYLJFJTtCUQyrocxDyBX8wSs68P14BkHVqyK8DuxVjkp39MZz",
+    // });
+    // console.log("Token state:", tokenState);
+    // return;
+    // const tokenList = await algoliaGetTokenList({
+    //   query: "bhjbjh",
+    //   hitsPerPage: 100,
+    //   page: 0,
+    // });
+    // console.log("Token list:", tokenList);
+    // return;
+    if (chainId === undefined) {
+      console.error("Chain ID is not set");
+      return;
+    }
     const walletInfo = await getWalletInfo();
     if (DEBUG) console.log("Wallet Info:", walletInfo);
     const systemInfo = await getSystemInfo();
@@ -652,33 +682,20 @@ export default function LaunchToken() {
     setIsError(false);
 
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    console.log("Token Name:", tokenName);
-    console.log("Token Symbol:", tokenSymbol);
-    console.log("Token Description:", tokenDescription);
-    console.log("Website:", website);
-    console.log("Telegram:", telegram);
-    console.log("Twitter:", twitter);
-    console.log("Discord:", discord);
+    if (DEBUG) {
+      console.log("Token Name:", tokenName);
+      console.log("Token Symbol:", tokenSymbol);
+      console.log("Token Description:", tokenDescription);
+      console.log("Website:", website);
+      console.log("Telegram:", telegram);
+      console.log("Twitter:", twitter);
+      console.log("Discord:", discord);
+      console.log("Image:", image);
+    }
 
     //TODO: Pin token image to Arweave
     // TODO: add issuer
     if (!libraries) setLibraries(loadLibraries());
-
-    const json = {
-      symbol: tokenSymbol,
-      name: tokenName,
-      description: tokenDescription,
-      image: "", // TODO: imageUrl
-      website,
-      telegram,
-      twitter,
-      discord,
-      tokenContractCode:
-        "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleToken.ts",
-      adminContractsCode: [
-        "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleTokenAdmin.ts",
-      ],
-    };
 
     const { address, network, error, success } = await connectWallet({});
     console.log("Connected wallet", { address, network, error, success });
@@ -699,8 +716,38 @@ export default function LaunchToken() {
       return;
     }
 
+    const imageHash = image ? await pinImageToArweave(image) : undefined;
+    if (image !== undefined && imageHash === undefined) {
+      logItem({
+        id: "metadata",
+        status: "error",
+        title: "Token image pinning failed",
+        description: "Failed to pin token image to Arweave permanent storage",
+        date: new Date(),
+      });
+      return;
+    }
+
+    const info: TokenInfo = {
+      symbol: tokenSymbol,
+      name: tokenName,
+      description: tokenDescription,
+      image: imageHash ? await arweaveHashToUrl(imageHash) : undefined,
+      website,
+      telegram,
+      twitter,
+      discord,
+      tokenContractCode:
+        "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleToken.ts",
+      adminContractsCode: [
+        "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleTokenAdmin.ts",
+      ],
+      data: undefined,
+      isMDA: undefined,
+    };
+
     const metadataHash = await pinStringToArweave(
-      JSON.stringify(json, null, 2)
+      JSON.stringify(info, null, 2)
     );
 
     if (!metadataHash) {
@@ -715,7 +762,19 @@ export default function LaunchToken() {
       return;
     }
 
-    const waitForArweaveTxPromise = waitForArweaveTx({
+    let waitForArweaveImageTxPromise = undefined;
+    if (imageHash) {
+      waitForArweaveImageTxPromise = waitForArweaveTx({
+        hash: imageHash,
+        id: "image",
+        type: "image",
+        waitingTitle: "Pinning token image to Arweave permanent storage",
+        successTitle: "Token image is included into Arweave permanent storage",
+        failedTitle: "Failed to pin token image to Arweave permanent storage",
+      });
+    }
+
+    const waitForArweaveMetadataTxPromise = waitForArweaveTx({
       hash: metadataHash,
       id: "metadata",
       type: "metadata",
@@ -826,8 +885,6 @@ export default function LaunchToken() {
       return;
     }
 
-    await waitForArweaveTxPromise;
-
     const sendResult = await sendTransaction(transaction);
     if (DEBUG) console.log("Transaction sent:", sendResult);
     if (
@@ -870,6 +927,7 @@ export default function LaunchToken() {
       waitingTitle: "Verifying token contract state",
       successTitle: "Token contract state is verified",
       failedTitle: "Failed to verify token contract state",
+      info,
     });
     if (isError) {
       return;
@@ -1003,6 +1061,8 @@ export default function LaunchToken() {
         date: new Date(),
       });
     }
+    if (waitForArweaveImageTxPromise) await waitForArweaveImageTxPromise;
+    await waitForArweaveMetadataTxPromise;
     setWaitingItem(undefined);
     setIssuing(false);
     setIssued(true);
