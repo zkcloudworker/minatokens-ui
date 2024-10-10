@@ -249,7 +249,7 @@ export default function TokenList() {
                 }  ${
                   categories[0].selected === false &&
                   categories[1].selected === false
-                    ? " dark:bg-jacarta-700"
+                    ? "dark:bg-jacarta-600"
                     : "dark:bg-jacarta-900"
                 } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
               >
@@ -278,7 +278,7 @@ export default function TokenList() {
                     categories[i].selected ? "bg-jacarta-100" : "bg-white"
                   }  ${
                     categories[i].selected
-                      ? " dark:bg-jacarta-700"
+                      ? "dark:bg-jacarta-600"
                       : "dark:bg-jacarta-900"
                   } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
                 >
