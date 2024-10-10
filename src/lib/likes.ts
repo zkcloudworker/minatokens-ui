@@ -30,10 +30,12 @@ export async function algoliaWriteLike(params: {
     const objectID = tokenAddress + "." + userAddress;
     if (!(await algoliaGetLike({ tokenAddress, userAddress }))) {
       const likes = await algoliaLikesCount({ tokenAddress });
+      const timestamp = Date.now();
       const data = {
         objectID,
         tokenAddress,
         userAddress,
+        timestamp,
       };
 
       const result = await client.saveObject({
@@ -50,9 +52,10 @@ export async function algoliaWriteLike(params: {
       if (
         info !== undefined &&
         likes !== undefined &&
-        (info.likes === undefined || info.likes < likes)
+        (info.likes === undefined || info.likes <= likes)
       ) {
         info.likes = likes + 1;
+        info.updated = timestamp;
         await algoliaWriteToken({ tokenAddress, info });
       }
     }

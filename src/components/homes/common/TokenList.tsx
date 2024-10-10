@@ -18,11 +18,6 @@ import { getWalletInfo } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
-interface LikedToken extends DeployedTokenInfo {
-  likes: number;
-  _highlightResult: object;
-}
-
 /*
 interface Item {
   id: number;
@@ -44,23 +39,36 @@ interface Item {
   */
 
 const sortingOptions: string[] = ["Price: Low to High", "Price: High to Low"];
-type TokenCategory = "all" | "myTokens" | "favorites";
-const categories: { id: TokenCategory; name: string; icon?: string }[] = [
+type categoriesTypes = "myTokens" | "favorites";
+interface Category {
+  id: categoriesTypes;
+  name: string;
+  selected: boolean;
+  icon: string;
+}
+
+const categoriesIndexes: Record<categoriesTypes, number> = {
+  myTokens: 0,
+  favorites: 1,
+};
+const initialCategories: Category[] = [
   {
     id: "myTokens",
+    selected: false,
     name: "My tokens",
     icon: "M2 4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v5.5a2.5 2.5 0 1 0 0 5V20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4zm6.085 15a1.5 1.5 0 0 1 2.83 0H20v-2.968a4.5 4.5 0 0 1 0-8.064V5h-9.085a1.5 1.5 0 0 1-2.83 0H4v14h4.085zM9.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
   },
   {
     id: "favorites",
-    name: "Favorites", // TODO: implement favorites as liked tokens
+    selected: false,
+    name: "Favorites",
     icon: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
   },
 ];
 
 export default function TokenList() {
-  const [activeCategory, setActiveCategory] = useState<TokenCategory>("all");
-  const [items, setItems] = useState<LikedToken[]>([]);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [items, setItems] = useState<DeployedTokenInfo[]>([]);
   const [tokensFetched, setTokensFetched] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [activeSort, setActiveSort] = useState<string>(sortingOptions[0]);
@@ -102,7 +110,7 @@ export default function TokenList() {
           (elm) => elm.tokenAddress === tokenAddress
         );
         if (index !== -1) {
-          items[index].likes += 1;
+          items[index].likes = (items[index].likes ?? 0) + 1;
           setItems(items);
         }
         return [...prev, tokenAddress];
@@ -117,27 +125,6 @@ export default function TokenList() {
 
   useEffect(() => {
     const fetchTokenList = async () => {
-      let newItems: DeployedTokenInfo[] =
-        (
-          await algoliaGetTokenList({
-            query: search,
-            page: 0,
-            hitsPerPage: 8, // TODO: decide how many to fetch
-          })
-        )?.hits ?? [];
-      console.log("category", activeCategory);
-      if (activeCategory === "myTokens") {
-        newItems = newItems.filter((elm) => elm.adminAddress === address);
-      } else if (activeCategory === "favorites") {
-        newItems = newItems.filter((elm) =>
-          favorites.includes(elm.tokenAddress)
-        );
-      }
-      const tokensWithLikes: LikedToken[] = newItems.map((elm: any) => ({
-        ...elm,
-        likes: elm.likes ?? 0,
-      }));
-      setItems(tokensWithLikes);
       let userAddress = address;
       if (userAddress === undefined) {
         userAddress = (await getWalletInfo()).address;
@@ -146,29 +133,37 @@ export default function TokenList() {
           if (DEBUG) console.log("address", userAddress);
         }
       }
+      let newItems: DeployedTokenInfo[] =
+        (
+          await algoliaGetTokenList({
+            query: search,
+            page: 0,
+            hitsPerPage: 8, // TODO: decide how many to fetch
+            favoritesOfAddress: categories[categoriesIndexes.favorites].selected
+              ? userAddress
+              : undefined,
+            ownedByAddress: categories[categoriesIndexes.myTokens].selected
+              ? userAddress
+              : undefined,
+          })
+        )?.hits ?? [];
+      setItems(newItems);
 
-      const likedTokens = userAddress
-        ? await algoliaGetUsersLikes({ userAddress })
-        : [];
-      setFavorites(likedTokens);
-
-      // for (const item of tokensWithLikes) {
-      //   const likes = await algoliaLikesCount({
-      //     tokenAddress: item.tokenAddress,
-      //   });
-      //   item.likes = likes;
-      // }
-      if (DEBUG) {
-        console.log(
-          "newItems for category",
-          activeCategory,
-          tokensWithLikes.map((elm) => ({
-            symbol: elm.symbol,
-            likes: elm.likes,
-            highlighted: elm._highlightResult,
-          }))
-        );
+      let likedTokens: string[] = [];
+      if (categories[categoriesIndexes.favorites].selected && userAddress) {
+        likedTokens = newItems.map((elm) => elm.tokenAddress);
+      } else if (userAddress) {
+        likedTokens = await algoliaGetUsersLikes({ userAddress });
       }
+      setFavorites(likedTokens);
+      if (DEBUG)
+        console.log("Search results:", {
+          userAddress,
+          categories,
+          newItems,
+          likedTokens,
+        });
+
       for (const item of newItems) {
         const index = tokensFetched.findIndex(
           (elm) => elm === item.tokenAddress
@@ -181,23 +176,23 @@ export default function TokenList() {
           if (state.success) {
             setTokensFetched((prev) => [...prev, item.tokenAddress]);
             if (state.isStateUpdated) {
-              const index = tokensWithLikes.findIndex(
+              const index = newItems.findIndex(
                 (elm) => elm.tokenAddress === item.tokenAddress
               );
               if (index !== -1) {
-                const newItem = tokensWithLikes[index];
+                const newItem = newItems[index];
                 Object.keys(state.tokenState).forEach((key) => {
                   (newItem as any)[key] = (state.tokenState as any)[key];
                 });
                 setItems((prev) => {
-                  const newItems = [...prev];
-                  const index = newItems.findIndex(
+                  const prevItems = [...prev];
+                  const index = prevItems.findIndex(
                     (elm) => elm.tokenAddress === item.tokenAddress
                   );
                   if (index !== -1) {
-                    newItems[index] = newItem;
+                    prevItems[index] = newItem;
                   }
-                  return newItems;
+                  return prevItems;
                 });
               }
             }
@@ -226,14 +221,7 @@ export default function TokenList() {
     // if (onlyLazyMinted) {
     //   tempitems = [...tempitems.filter((elm) => elm.LazyMinted)];
     // }
-  }, [
-    activeCategory,
-    activeSort,
-    onlyVarified,
-    onlyNFSW,
-    onlyLazyMinted,
-    search,
-  ]);
+  }, [categories, activeSort, onlyVarified, onlyNFSW, onlyLazyMinted, search]);
 
   return (
     <section className="py-32">
@@ -252,11 +240,15 @@ export default function TokenList() {
           <ul className="flex flex-wrap items-center">
             <li className="my-1 mr-2.5">
               <div
-                onClick={() => setActiveCategory("all")}
+                onClick={() => setCategories(initialCategories)}
                 className={`  ${
-                  activeCategory === "all" ? "bg-jacarta-100" : "bg-white"
+                  categories[0].selected === false &&
+                  categories[1].selected === false
+                    ? "bg-jacarta-100"
+                    : "bg-white"
                 }  ${
-                  activeCategory === "all"
+                  categories[0].selected === false &&
+                  categories[1].selected === false
                     ? " dark:bg-jacarta-700"
                     : "dark:bg-jacarta-900"
                 } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
@@ -266,15 +258,26 @@ export default function TokenList() {
             </li>
             {categories.map((elm, i) => (
               <li
-                onClick={() => setActiveCategory(elm.id)}
+                onClick={() =>
+                  setCategories((prev) => {
+                    const newCategories = prev.map((category, index) => {
+                      if (index === i) {
+                        return { ...category, selected: !category.selected };
+                      }
+                      return category;
+                    });
+                    if (DEBUG) console.log("New categories", newCategories);
+                    return newCategories;
+                  })
+                }
                 key={i}
                 className="my-1 mr-2.5"
               >
                 <div
                   className={`  ${
-                    activeCategory === elm.id ? "bg-jacarta-100" : "bg-white"
+                    categories[i].selected ? "bg-jacarta-100" : "bg-white"
                   }  ${
-                    activeCategory === elm.id
+                    categories[i].selected
                       ? " dark:bg-jacarta-700"
                       : "dark:bg-jacarta-900"
                   } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
@@ -435,34 +438,8 @@ export default function TokenList() {
                       {elm.likes}
                     </span> */}
                     <span className="text-sm dark:text-jacarta-200">
-                      {elm.likes}
+                      {elm.likes ?? 0}
                     </span>
-                  </div>
-                  <div className="absolute left-3 -bottom-3">
-                    <div className="flex -space-x-2">
-                      <a href="#">
-                        <Image
-                          width={20}
-                          height={20}
-                          src={elm.image ?? "launchpad.png"}
-                          alt="creator"
-                          className="h-6 w-6 rounded-full border-2 border-white hover:border-accent dark:border-jacarta-600 dark:hover:border-accent"
-                          data-tippy-content={`Symbol: ${elm.symbol}`}
-                          crossOrigin="anonymous"
-                        />
-                      </a>
-                      <a href="#">
-                        <Image
-                          width={20}
-                          height={20}
-                          src={elm.image ?? "launchpad.png"}
-                          alt="owner"
-                          className="h-6 w-6 rounded-full border-2 border-white hover:border-accent dark:border-jacarta-600 dark:hover:border-accent"
-                          data-tippy-content={`Owner: ${elm.adminAddress}`}
-                          crossOrigin="anonymous"
-                        />
-                      </a>
-                    </div>
                   </div>
                 </figure>
                 <div className="mt-7 flex items-center justify-between">
