@@ -45,7 +45,7 @@ interface Item {
 
 const sortingOptions: string[] = ["Price: Low to High", "Price: High to Low"];
 type TokenCategory = "all" | "myTokens" | "favorites";
-const categories: { id: TokenCategory; name: string; icon: string }[] = [
+const categories: { id: TokenCategory; name: string; icon?: string }[] = [
   {
     id: "myTokens",
     name: "My tokens",
@@ -135,26 +135,29 @@ export default function TokenList() {
       }
       const tokensWithLikes: LikedToken[] = newItems.map((elm: any) => ({
         ...elm,
-        likes: 0,
+        likes: elm.likes ?? 0,
       }));
       setItems(tokensWithLikes);
       let userAddress = address;
       if (userAddress === undefined) {
         userAddress = (await getWalletInfo()).address;
-        if (address !== userAddress) setAddress(userAddress);
+        if (address !== userAddress) {
+          setAddress(userAddress);
+          if (DEBUG) console.log("address", userAddress);
+        }
       }
-      console.log("address", userAddress);
+
       const likedTokens = userAddress
         ? await algoliaGetUsersLikes({ userAddress })
         : [];
       setFavorites(likedTokens);
 
-      for (const item of tokensWithLikes) {
-        const likes = await algoliaLikesCount({
-          tokenAddress: item.tokenAddress,
-        });
-        item.likes = likes;
-      }
+      // for (const item of tokensWithLikes) {
+      //   const likes = await algoliaLikesCount({
+      //     tokenAddress: item.tokenAddress,
+      //   });
+      //   item.likes = likes;
+      // }
       if (DEBUG) {
         console.log(
           "newItems for category",
@@ -166,11 +169,6 @@ export default function TokenList() {
           }))
         );
       }
-      //tempitems[0].image = undefined;
-      // tempitems[1].image =
-      //   "https://salmon-effective-amphibian-898.mypinata.cloud/ipfs/bafybeibhdj6vhkxb5re6mfwp4k7imetbajzfyfskjmbdfphlgaodv3bkgm?pinataGatewayToken=gFuDmY7m1Pa5XzZ3bL1TjPPvO4Ojz6tL-VGIdweN1fUa5oSFZXce3y9mL8y1nSSU";
-      // "https://ktjg25keqdlfcv7znum4kpf355fwgdxnielonv37f3jvoikkfsya.arweave.net/VNJtdUSA1lFX-W0ZxTy770tjDu1BFubXfy7TVyFKLLA";
-      setItems(tokensWithLikes);
       for (const item of newItems) {
         const index = tokensFetched.findIndex(
           (elm) => elm === item.tokenAddress
@@ -256,9 +254,9 @@ export default function TokenList() {
               <div
                 onClick={() => setActiveCategory("all")}
                 className={`  ${
-                  activeCategory == "all" ? "bg-jacarta-100" : "bg-white"
+                  activeCategory === "all" ? "bg-jacarta-100" : "bg-white"
                 }  ${
-                  activeCategory == "all"
+                  activeCategory === "all"
                     ? " dark:bg-jacarta-700"
                     : "dark:bg-jacarta-900"
                 } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
@@ -274,9 +272,9 @@ export default function TokenList() {
               >
                 <div
                   className={`  ${
-                    activeCategory == elm.name ? "bg-jacarta-100" : "bg-white"
+                    activeCategory === elm.id ? "bg-jacarta-100" : "bg-white"
                   }  ${
-                    activeCategory == elm.name
+                    activeCategory === elm.id
                       ? " dark:bg-jacarta-700"
                       : "dark:bg-jacarta-900"
                   } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}

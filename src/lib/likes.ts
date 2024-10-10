@@ -1,6 +1,7 @@
 "use server";
 import { algoliasearch } from "algoliasearch";
 import { searchClient } from "@algolia/client-search";
+import { algoliaGetToken, algoliaWriteToken } from "./algolia";
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 
 const chain = process.env.NEXT_PUBLIC_CHAIN;
@@ -28,6 +29,7 @@ export async function algoliaWriteLike(params: {
     if (DEBUG) console.log("algoliaWriteLike", params, indexName);
     const objectID = tokenAddress + "." + userAddress;
     if (!(await algoliaGetLike({ tokenAddress, userAddress }))) {
+      const likes = await algoliaLikesCount({ tokenAddress });
       const data = {
         objectID,
         tokenAddress,
@@ -41,6 +43,17 @@ export async function algoliaWriteLike(params: {
       if (result.taskID === undefined) {
         console.error("algoliaWriteToken: Algolia write result is", result);
         return false;
+      }
+
+      const info = await algoliaGetToken({ tokenAddress });
+
+      if (
+        info !== undefined &&
+        likes !== undefined &&
+        (info.likes === undefined || info.likes < likes)
+      ) {
+        info.likes = likes + 1;
+        await algoliaWriteToken({ tokenAddress, info });
       }
     }
 
