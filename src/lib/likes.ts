@@ -111,7 +111,7 @@ export async function algoliaLikesCount(params: {
 export async function algoliaGetUsersLikes(params: {
   userAddress: string;
 }): Promise<string[]> {
-  if (DEBUG) console.log("algoliaGetUsersLikes start", params);
+  //if (DEBUG) console.log("algoliaGetUsersLikes start", params);
   const { userAddress } = params;
   if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
   if (chain !== "devnet" && chain !== "mainnet")
@@ -123,7 +123,7 @@ export async function algoliaGetUsersLikes(params: {
   try {
     const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
     const indexName = `token-likes-${chain}`;
-    if (DEBUG) console.log("algoliaGetUsersLikes", params, indexName);
+    //if (DEBUG) console.log("algoliaGetUsersLikes", params, indexName);
     const result = await client.searchSingleIndex({
       indexName,
       searchParams: {
@@ -135,7 +135,7 @@ export async function algoliaGetUsersLikes(params: {
       },
     });
 
-    if (DEBUG) console.log("algoliaGetUsersLikes result:", result);
+    //if (DEBUG) console.log("algoliaGetUsersLikes result:", result);
     return (
       result?.hits?.map((elm) => (elm as unknown as Like).tokenAddress) ?? []
     );

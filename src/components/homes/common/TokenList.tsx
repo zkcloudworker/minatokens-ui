@@ -1,6 +1,5 @@
 "use client";
 
-//import { items2 } from "@/data/item";
 import { algoliaGetTokenList } from "@/lib/search";
 import { DeployedTokenInfo } from "@/lib/token";
 import Image from "next/image";
