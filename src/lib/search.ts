@@ -34,11 +34,11 @@ export async function algoliaGetTokenList(
   const query = params.query ?? "";
   const hitsPerPage = params.hitsPerPage ?? 100;
   const page = params.page ?? 0;
-  if (DEBUG) console.log("algoliaGetTokenList", params);
+  //if (DEBUG) console.log("algoliaGetTokenList", params);
   try {
     const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
     const indexName = `tokens-${chain}`;
-    if (DEBUG) console.log("algoliaGetTokenList", params, indexName);
+    //if (DEBUG) console.log("algoliaGetTokenList", params, indexName);
     const result = await client.searchSingleIndex({
       indexName,
       searchParams: {
@@ -80,7 +80,7 @@ export async function algoliaGetTokenList(
 }
     */
 
-    if (DEBUG) console.log("algoliaGetTokenList result:", result);
+    //if (DEBUG) console.log("algoliaGetTokenList result:", result);
     if (result.hits === undefined) {
       console.error("algoliaGetTokenList search error", { params, result });
       return undefined;

@@ -86,7 +86,7 @@ export async function getTokenState(params: {
     }
     const adminAddress = PublicKey.fromFields([adminAddress0, adminAddress1]);
     const tokenState: TokenState = {
-      tokenContractAddress: tokenContractPublicKey.toBase58(),
+      tokenAddress: tokenContractPublicKey.toBase58(),
       adminContractAddress: adminContractPublicKey.toBase58(),
       adminAddress: adminAddress.toBase58(),
       totalSupply,
