@@ -12,10 +12,13 @@ import Image from "next/image";
 import Link from "next/link";
 //import MetamarkComponent from "../metamask/MetamarkComponent";
 import { SearchContext } from "@/context/search";
+import { AddressContext } from "@/context/address";
+import { getWalletInfo, connectWallet } from "@/lib/wallet";
+// TODO: handle wallet connection with connectWallet
 
 export default function Header1() {
   const { setSearch } = useContext(SearchContext);
-
+  const { address, setAddress } = useContext(AddressContext);
   useEffect(() => {
     addMobileMenuToggle();
     return () => {
@@ -36,6 +39,15 @@ export default function Header1() {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
+  }, []);
+
+  useEffect(() => {
+    const fetchWalletInfo = async () => {
+      const walletInfo = await getWalletInfo();
+      setAddress(walletInfo.address);
+    };
+
+    fetchWalletInfo();
   }, []);
 
   return (

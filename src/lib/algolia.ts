@@ -23,7 +23,6 @@ export async function algoliaWriteToken(params: {
 
     const data = {
       objectID: params.tokenAddress,
-      tokenAddress: params.tokenAddress,
       ...params.info,
     };
 

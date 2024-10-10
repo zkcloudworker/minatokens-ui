@@ -32,7 +32,7 @@ export interface TokenInfo {
 }
 
 export interface TokenState {
-  tokenContractAddress: string;
+  tokenAddress: string;
   adminContractAddress: string;
   adminAddress: string;
   totalSupply: number;

@@ -7,9 +7,20 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
+import { AddressContext } from "@/context/address";
+import {
+  algoliaLikesCount,
+  algoliaWriteLike,
+  algoliaGetUsersLikes,
+} from "@/lib/likes";
 
 import tippy from "tippy.js";
+import { getWalletInfo } from "@/lib/wallet";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
+
+interface LikedToken extends DeployedTokenInfo {
+  likes: number;
+}
 
 /*
 interface Item {
@@ -32,24 +43,30 @@ interface Item {
   */
 
 const sortingOptions: string[] = ["Price: Low to High", "Price: High to Low"];
-const categories = [
+type TokenCategory = "all" | "myTokens" | "favorites";
+const categories: { id: TokenCategory; name: string; icon: string }[] = [
   {
-    id: 1,
+    id: "myTokens",
     name: "My tokens",
     icon: "M2 4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v5.5a2.5 2.5 0 1 0 0 5V20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4zm6.085 15a1.5 1.5 0 0 1 2.83 0H20v-2.968a4.5 4.5 0 0 1 0-8.064V5h-9.085a1.5 1.5 0 0 1-2.83 0H4v14h4.085zM9.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
+  },
+  {
+    id: "favorites",
+    name: "Favorites", // TODO: implement favorites as liked tokens
+    icon: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
   },
 ];
 
 export default function TokenList() {
-  const [allItems, setAllItems] = useState<DeployedTokenInfo[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [filtered, setFiltered] = useState<DeployedTokenInfo[]>(allItems);
+  const [activeCategory, setActiveCategory] = useState<TokenCategory>("all");
+  const [items, setItems] = useState<LikedToken[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [activeSort, setActiveSort] = useState<string>(sortingOptions[0]);
   const [onlyVarified, setOnlyVarified] = useState<boolean>(false);
   const [onlyNFSW, setOnlyNFSW] = useState<boolean>(false);
   const [onlyLazyMinted, setOnlyLazyMinted] = useState<boolean>(false);
   const { search } = useContext(SearchContext);
-
+  const { address, setAddress } = useContext(AddressContext);
   useEffect(() => {
     tippy("[data-tippy-content]");
   }, []);
@@ -73,9 +90,25 @@ export default function TokenList() {
   };
   */
 
+  // TODO: save favorites to local or network storage like AWS or algolia
+  const addLike = async (tokenAddress: string) => {
+    setFavorites((prev) => {
+      if (prev.includes(tokenAddress)) {
+        return prev;
+      } else {
+        return [...prev, tokenAddress];
+      }
+    });
+    if (address) await algoliaWriteLike({ tokenAddress, userAddress: address });
+  };
+
+  const isLiked = (tokenAddress: string) => {
+    return favorites.includes(tokenAddress);
+  };
+
   useEffect(() => {
     const fetchTokenList = async () => {
-      let tempfiltered: DeployedTokenInfo[] =
+      let newItems: DeployedTokenInfo[] =
         (
           await algoliaGetTokenList({
             query: search,
@@ -83,39 +116,73 @@ export default function TokenList() {
             hitsPerPage: 8, // TODO: decide how many to fetch
           })
         )?.hits ?? [];
-      if (DEBUG) {
-        console.log("tempfiltered", tempfiltered);
+      console.log("category", activeCategory);
+      if (activeCategory === "myTokens") {
+        if (DEBUG) console.log("myTokens", address);
+        newItems = newItems.filter((elm) => elm.adminAddress === address);
+      } else if (activeCategory === "favorites") {
+        if (DEBUG) console.log("favorites", address);
+        newItems = newItems.filter((elm) =>
+          favorites.includes(elm.tokenAddress)
+        );
       }
-      //tempfiltered[0].image = undefined;
-      // tempfiltered[1].image =
+      let userAddress = address;
+      if (userAddress === undefined) {
+        userAddress = (await getWalletInfo()).address;
+        if (address !== userAddress) setAddress(userAddress);
+      }
+      console.log("address", userAddress);
+      const likedTokens = userAddress
+        ? await algoliaGetUsersLikes({ userAddress })
+        : [];
+      if (DEBUG) console.log("likedTokens", likedTokens);
+      setFavorites(likedTokens);
+      const tokensWithLikes: LikedToken[] = [];
+      for (const item of newItems) {
+        const likes = await algoliaLikesCount({
+          tokenAddress: item.tokenAddress,
+        });
+        tokensWithLikes.push({ ...item, likes });
+      }
+      if (DEBUG) {
+        console.log(
+          "newItems for category",
+          activeCategory,
+          tokensWithLikes.map((elm) => ({
+            symbol: elm.symbol,
+            likes: elm.likes,
+          }))
+        );
+      }
+      //tempitems[0].image = undefined;
+      // tempitems[1].image =
       //   "https://salmon-effective-amphibian-898.mypinata.cloud/ipfs/bafybeibhdj6vhkxb5re6mfwp4k7imetbajzfyfskjmbdfphlgaodv3bkgm?pinataGatewayToken=gFuDmY7m1Pa5XzZ3bL1TjPPvO4Ojz6tL-VGIdweN1fUa5oSFZXce3y9mL8y1nSSU";
       // "https://ktjg25keqdlfcv7znum4kpf355fwgdxnielonv37f3jvoikkfsya.arweave.net/VNJtdUSA1lFX-W0ZxTy770tjDu1BFubXfy7TVyFKLLA";
-      setFiltered(tempfiltered);
+      setItems(tokensWithLikes);
     };
     fetchTokenList();
     // if (activeCategory == "all") {
-    //   tempfiltered = allItems;
+    //   tempitems = allItems;
     // } else {
-    //   tempfiltered = allItems.filter((elm) => elm.category == activeCategory);
+    //   tempitems = allItems.filter((elm) => elm.category == activeCategory);
     // }
     // if (activeSort == "Price: Low to High") {
-    //   tempfiltered = [...tempfiltered.sort((a, b) => a.price - b.price)];
+    //   tempitems = [...tempitems.sort((a, b) => a.price - b.price)];
     // }
     // if (activeSort == "Price: High to Low") {
-    //   tempfiltered = [...tempfiltered.sort((a, b) => b.price - a.price)];
+    //   tempitems = [...tempitems.sort((a, b) => b.price - a.price)];
     // }
     // if (onlyVarified) {
-    //   tempfiltered = [...tempfiltered.filter((elm) => elm.varified)];
+    //   tempitems = [...tempitems.filter((elm) => elm.varified)];
     // }
     // if (onlyNFSW) {
-    //   tempfiltered = [...tempfiltered.filter((elm) => elm.NFSW)];
+    //   tempitems = [...tempitems.filter((elm) => elm.NFSW)];
     // }
     // if (onlyLazyMinted) {
-    //   tempfiltered = [...tempfiltered.filter((elm) => elm.LazyMinted)];
+    //   tempitems = [...tempitems.filter((elm) => elm.LazyMinted)];
     // }
   }, [
     activeCategory,
-    allItems,
     activeSort,
     onlyVarified,
     onlyNFSW,
@@ -154,7 +221,7 @@ export default function TokenList() {
             </li>
             {categories.map((elm, i) => (
               <li
-                onClick={() => setActiveCategory(elm.name)}
+                onClick={() => setActiveCategory(elm.id)}
                 key={i}
                 className="my-1 mr-2.5"
               >
@@ -285,11 +352,11 @@ export default function TokenList() {
         </div>
 
         <div className="grid grid-cols-1 gap-[1.875rem] md:grid-cols-2 lg:grid-cols-4">
-          {filtered.map((elm, i) => (
+          {items.map((elm, i) => (
             <article key={i}>
               <div className="block rounded-2.5xl border border-jacarta-100 bg-white p-[1.1875rem] transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700">
                 <figure className="relative">
-                  <Link href={`/item/${elm.tokenContractAddress}`}>
+                  <Link href={`/item/${elm.tokenAddress}`}>
                     <Image
                       width={230}
                       height={230}
@@ -302,9 +369,9 @@ export default function TokenList() {
                   </Link>
                   <div className="absolute top-3 right-3 flex items-center space-x-1 rounded-md bg-white p-2 dark:bg-jacarta-700">
                     <span
-                      // onClick={() => addLike(elm.tokenContractAddress)}
+                      onClick={() => addLike(elm.tokenAddress)}
                       className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
-                        "" // elm.liked ? "js-likes--active" : ""
+                        isLiked(elm.tokenAddress) ? "js-likes--active" : ""
                       }`}
                       data-tippy-content="Favorite"
                     >
@@ -322,6 +389,9 @@ export default function TokenList() {
                     {/* <span className="text-sm dark:text-jacarta-200">
                       {elm.likes}
                     </span> */}
+                    <span className="text-sm dark:text-jacarta-200">
+                      {elm.likes}
+                    </span>
                   </div>
                   <div className="absolute left-3 -bottom-3">
                     <div className="flex -space-x-2">
@@ -351,7 +421,7 @@ export default function TokenList() {
                   </div>
                 </figure>
                 <div className="mt-7 flex items-center justify-between">
-                  <Link href={`/item/${elm.tokenContractAddress}`}>
+                  <Link href={`/item/${elm.tokenAddress}`}>
                     <span className="font-display text-base text-jacarta-700 hover:text-accent dark:text-white">
                       {elm.name}
                     </span>
@@ -419,7 +489,7 @@ export default function TokenList() {
                     Buy now
                   </button>
                   <Link
-                    href={`/item/${elm.tokenContractAddress}`}
+                    href={`/item/${elm.tokenAddress}`}
                     className="group flex items-center"
                   >
                     <svg
