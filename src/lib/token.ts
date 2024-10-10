@@ -44,6 +44,7 @@ export interface DeployedTokenInfo extends TokenInfo, TokenState {
   created: number;
   updated: number;
   chain: string;
+  likes?: number;
 }
 
 export interface TokenDeployParams {
