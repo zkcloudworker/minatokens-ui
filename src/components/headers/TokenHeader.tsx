@@ -16,7 +16,9 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 // TODO: handle wallet connection with connectWallet
 
-export default function Header1() {
+const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
+  showSearch = true,
+}) => {
   const { setSearch } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
   useEffect(() => {
@@ -74,7 +76,9 @@ export default function Header1() {
               className="hidden dark:block"
               alt="Minatokens | MINA Launchpad"
             />
-            <div class="text-jacarta-900 dark:text-white -ms-3">Minatokens</div>
+            <div className="text-jacarta-900 dark:text-white -ms-3">
+              Minatokens
+            </div>
           </Link>
 
           <nav className="navbar w-full hidden lg:block xl:ml-[8%] --border">
@@ -84,29 +88,31 @@ export default function Header1() {
           </nav>
 
           {/* Search */}
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="relative ml-12 mr-8 hidden basis-3/12 lg:block xl:ml-[8%] --border"
-          >
-            <input
-              type="search"
-              className="--w-full rounded-2xl border border-jacarta-100 py-[0.6875rem] px-4 pl-10 text-jacarta-700 placeholder-jacarta-500 focus:ring-accent dark:border-transparent dark:bg-white/[.15] dark:text-white dark:placeholder-white"
-              placeholder="Search"
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <span className="absolute left-0 top-0 flex h-full w-12 items-center justify-center rounded-2xl">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                className="h-4 w-4 fill-jacarta-500 dark:fill-white"
-              >
-                <path fill="none" d="M0 0h24v24H0z" />
-                <path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z" />
-              </svg>
-            </span>
-          </form>
+          {showSearch && (
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              className="relative ml-12 mr-8 hidden basis-3/12 lg:block xl:ml-[8%] --border"
+            >
+              <input
+                type="search"
+                className="--w-full rounded-2xl border border-jacarta-100 py-[0.6875rem] px-4 pl-10 text-jacarta-700 placeholder-jacarta-500 focus:ring-accent dark:border-transparent dark:bg-white/[.15] dark:text-white dark:placeholder-white"
+                placeholder="Search"
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <span className="absolute left-0 top-0 flex h-full w-12 items-center justify-center rounded-2xl">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  className="h-4 w-4 fill-jacarta-500 dark:fill-white"
+                >
+                  <path fill="none" d="M0 0h24v24H0z" />
+                  <path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z" />
+                </svg>
+              </span>
+            </form>
+          )}
 
           {/* Menu / Actions */}
           <div className="js-mobile-menu invisible lg:visible fixed inset-0 z-10 ml-auto rtl:mr-auto rtl:ml-0 items-center bg-white opacity-0 dark:bg-jacarta-800 lg:relative lg:inset-auto lg:flex lg:bg-transparent lg:opacity-100 dark:lg:bg-transparent ">
@@ -128,7 +134,7 @@ export default function Header1() {
                   className="hidden --max-h-7 dark:block"
                   alt="Minatokens | MINA Launchpad"
                 />
-                <div class="text-jacarta-900 dark:text-white -ms-3">
+                <div className="text-jacarta-900 dark:text-white -ms-3">
                   Minatokens
                 </div>
               </Link>
@@ -385,4 +391,6 @@ export default function Header1() {
       </header>
     </>
   );
-}
+};
+
+export default TokenHeader;

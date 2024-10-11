@@ -14,7 +14,7 @@ const HomeToken: FC = () => {
   return (
     <SearchProvider>
       <AddressProvider>
-        <TokenHeader />
+        <TokenHeader showSearch={true} />
         <main>
           <Hero />
 

@@ -1,19 +1,22 @@
 import TokenFooter from "@/components/footer/TokenFooter";
 import TokenHeader from "@/components/headers/TokenHeader";
-import Create from "@/components/create/Create";
+import LaunchToken from "@/components/launch/LaunchToken";
+import { FC } from "react";
 
 export const metadata = {
   title: "Minatokens | Launchpad",
 };
 
-export default function CreatePage() {
+const LaunchTokenPage: FC = () => {
   return (
     <>
-      <TokenHeader />
+      <TokenHeader showSearch={false} />
       <main>
-        <Create />
+        <LaunchToken />
       </main>
       <TokenFooter />
     </>
   );
-}
+};
+
+export default LaunchTokenPage;
