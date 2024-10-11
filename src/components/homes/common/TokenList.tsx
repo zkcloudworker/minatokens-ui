@@ -16,6 +16,7 @@ import {
 import tippy from "tippy.js";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
+import Highlight from "./Highlight";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 /*
@@ -464,7 +465,7 @@ export default function TokenList() {
                 <div className="mt-7 flex items-center justify-between">
                   <Link href={`/token/${elm.tokenAddress}`}>
                     <span className="font-display text-base text-jacarta-700 hover:text-accent dark:text-white">
-                      {elm.name}
+                      <Highlight item={elm} attribute="name" />
                     </span>
                   </Link>
                   <div className="dropup rounded-full hover:bg-jacarta-100 dark:hover:bg-jacarta-600">
@@ -511,7 +512,7 @@ export default function TokenList() {
                 </div>
                 <div className="mt-2 text-sm">
                   <span className="text-jacarta-500 dark:text-jacarta-300 float-left">
-                    {elm.symbol}
+                    <Highlight item={elm} attribute="symbol" />
                   </span>
                   <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
                     {`Supply: ${elm.totalSupply / 1_000_000_000}`}
