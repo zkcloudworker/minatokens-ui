@@ -12,6 +12,7 @@ import BidModal from "@/components/modals/BidModal";
 import PropertiesModal from "@/components/modals/PropertiesModal";
 import LevelsModal from "@/components/modals/LevelsModal";
 import ModeChanger from "@/components/common/ModeChanger";
+
 if (typeof window !== "undefined") {
   // Import the script only on the client side
   import("bootstrap/dist/js/bootstrap.esm").then((module) => {
@@ -21,7 +22,7 @@ if (typeof window !== "undefined") {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
         itemScope
         itemType="http://schema.org/WebPage"

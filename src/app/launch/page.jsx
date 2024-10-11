@@ -1,5 +1,5 @@
-import Footer1 from "@/components/footer/Footer1";
-import Header1 from "@/components/headers/Header1";
+import TokenFooter from "@/components/footer/TokenFooter";
+import TokenHeader from "@/components/headers/TokenHeader";
 import Create from "@/components/create/Create";
 
 export const metadata = {
@@ -9,11 +9,11 @@ export const metadata = {
 export default function CreatePage() {
   return (
     <>
-      <Header1 />
+      <TokenHeader />
       <main>
         <Create />
       </main>
-      <Footer1 />
+      <TokenFooter />
     </>
   );
 }

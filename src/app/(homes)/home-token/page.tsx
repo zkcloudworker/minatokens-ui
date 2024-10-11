@@ -1,5 +1,5 @@
 "use client";
-import Footer1 from "@/components/footer/Footer1";
+import TokenFooter from "@/components/footer/TokenFooter";
 import TokenHeader from "@/components/headers/TokenHeader";
 import TokenList from "@/components/homes/common/TokenList";
 //import Collections from "@/components/homes/common/Collections";
@@ -23,7 +23,7 @@ const HomeToken: FC = () => {
           <TokenList />
           <Process />
         </main>
-        <Footer1 />
+        <TokenFooter />
       </AddressProvider>
     </SearchProvider>
   );
