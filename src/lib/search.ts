@@ -2,7 +2,10 @@
 import { searchClient } from "@algolia/client-search";
 import { DeployedTokenInfo } from "./token";
 import { Like } from "./likes";
-
+import {
+  getAllTokensByAddress,
+  BlockberryTokenData,
+} from "./blockberry-tokens";
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 const chain = process.env.NEXT_PUBLIC_CHAIN;
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
@@ -17,7 +20,6 @@ export interface TokenList {
   exhaustiveTypo: boolean;
   exhaustive: { nbHits: boolean; typo: boolean };
   processingTimeMS: number;
-  _highlightResult: any;
 }
 
 export async function algoliaGetTokenList(
@@ -26,10 +28,11 @@ export async function algoliaGetTokenList(
     hitsPerPage?: number;
     page?: number;
     favoritesOfAddress?: string;
+    issuedByAddress?: string;
     ownedByAddress?: string;
   } = {}
 ): Promise<TokenList | undefined> {
-  const { favoritesOfAddress, ownedByAddress } = params;
+  const { favoritesOfAddress, issuedByAddress, ownedByAddress } = params;
   if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
   if (chain !== "devnet" && chain !== "mainnet")
     throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
@@ -44,10 +47,37 @@ export async function algoliaGetTokenList(
   const indexName = `tokens-${chain}`;
   const likesIndexName = `token-likes-${chain}`;
 
+  async function filterFromBlockberryTokens(
+    blockberryTokensPromise: Promise<BlockberryTokenData[]> | undefined
+  ): Promise<string | undefined> {
+    if (blockberryTokensPromise === undefined) return undefined;
+    const blockberryTokens = await blockberryTokensPromise;
+    if (blockberryTokens.length === 0) return undefined;
+    return blockberryTokens
+      .map((token) => `tokenId:${token.tokenId}`)
+      .join(" OR ");
+  }
+
+  async function listFromBlockberryTokens(
+    blockberryTokensPromise: Promise<BlockberryTokenData[]> | undefined
+  ): Promise<string[]> {
+    if (blockberryTokensPromise === undefined) return [];
+    const blockberryTokens = await blockberryTokensPromise;
+    if (blockberryTokens.length === 0) return [];
+    return blockberryTokens.map((token) => token.tokenId);
+  }
+
   try {
     let tokenList: TokenList | undefined = undefined;
+    let blockberryTokensFilter: string | undefined = undefined;
     if (DEBUG) console.log("algoliaGetTokenList", params, indexName);
-    if (favoritesOfAddress !== undefined && ownedByAddress !== undefined) {
+    const blockberryTokensPromise = ownedByAddress
+      ? getAllTokensByAddress({
+          account: ownedByAddress,
+        })
+      : undefined;
+
+    if (favoritesOfAddress !== undefined && issuedByAddress !== undefined) {
       const likesResult = await client.searchSingleIndex({
         indexName: likesIndexName,
         searchParams: {
@@ -66,17 +96,26 @@ export async function algoliaGetTokenList(
         const filters = likedTokens
           .map((tokenAddress) => `tokenAddress:${tokenAddress}`)
           .join(" OR ");
+
         const result = await client.searchSingleIndex({
           indexName,
           searchParams: {
             query,
             hitsPerPage,
             page,
-            facetFilters: [`adminAddress:${ownedByAddress}`],
-            filters: likedTokens.length > 0 ? filters : undefined,
+            facetFilters: [`adminAddress:${issuedByAddress}`],
+            filters,
           },
         });
         tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
+        if (ownedByAddress && tokenList?.hits !== undefined) {
+          const blockberryTokenIdsList = await listFromBlockberryTokens(
+            blockberryTokensPromise
+          );
+          tokenList.hits = tokenList.hits.filter((token) =>
+            blockberryTokenIdsList.includes(token.tokenId)
+          );
+        }
       }
     } else if (favoritesOfAddress !== undefined) {
       const likesResult = await client.searchSingleIndex({
@@ -107,18 +146,48 @@ export async function algoliaGetTokenList(
           },
         });
         tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
+        if (ownedByAddress && tokenList?.hits !== undefined) {
+          const blockberryTokenIdsList = await listFromBlockberryTokens(
+            blockberryTokensPromise
+          );
+          tokenList.hits = tokenList.hits.filter((token) =>
+            blockberryTokenIdsList.includes(token.tokenId)
+          );
+        }
       }
-    } else if (ownedByAddress !== undefined) {
+    } else if (issuedByAddress !== undefined) {
       const result = await client.searchSingleIndex({
         indexName,
         searchParams: {
           query,
           hitsPerPage,
           page,
-          facetFilters: [`adminAddress:${ownedByAddress}`],
+          facetFilters: [`adminAddress:${issuedByAddress}`],
         },
       });
       tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
+      if (ownedByAddress && tokenList?.hits !== undefined) {
+        const blockberryTokenIdsList = await listFromBlockberryTokens(
+          blockberryTokensPromise
+        );
+        tokenList.hits = tokenList.hits.filter((token) =>
+          blockberryTokenIdsList.includes(token.tokenId)
+        );
+      }
+    } else if (ownedByAddress !== undefined) {
+      const filters = await filterFromBlockberryTokens(blockberryTokensPromise);
+      if (filters !== undefined) {
+        const result = await client.searchSingleIndex({
+          indexName,
+          searchParams: {
+            query,
+            hitsPerPage,
+            page,
+            filters,
+          },
+        });
+        tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
+      }
     } else {
       const result = await client.searchSingleIndex({
         indexName,

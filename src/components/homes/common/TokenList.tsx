@@ -14,7 +14,7 @@ import {
 } from "@/lib/likes";
 
 import tippy from "tippy.js";
-import { getWalletInfo } from "@/lib/wallet";
+import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
@@ -39,7 +39,7 @@ interface Item {
   */
 
 const sortingOptions: string[] = ["Price: Low to High", "Price: High to Low"];
-type categoriesTypes = "myTokens" | "favorites";
+type categoriesTypes = "issued" | "owned" | "favorites";
 interface Category {
   id: categoriesTypes;
   name: string;
@@ -48,14 +48,22 @@ interface Category {
 }
 
 const categoriesIndexes: Record<categoriesTypes, number> = {
-  myTokens: 0,
-  favorites: 1,
+  owned: 0,
+  issued: 1,
+  favorites: 2,
 };
+
 const initialCategories: Category[] = [
   {
-    id: "myTokens",
+    id: "owned",
     selected: false,
-    name: "My tokens",
+    name: "Tokens I own",
+    icon: "M2 4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v5.5a2.5 2.5 0 1 0 0 5V20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4zm6.085 15a1.5 1.5 0 0 1 2.83 0H20v-2.968a4.5 4.5 0 0 1 0-8.064V5h-9.085a1.5 1.5 0 0 1-2.83 0H4v14h4.085zM9.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
+  },
+  {
+    id: "issued",
+    selected: false,
+    name: "Tokens I issued",
     icon: "M2 4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v5.5a2.5 2.5 0 1 0 0 5V20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4zm6.085 15a1.5 1.5 0 0 1 2.83 0H20v-2.968a4.5 4.5 0 0 1 0-8.064V5h-9.085a1.5 1.5 0 0 1-2.83 0H4v14h4.085zM9.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
   },
   {
@@ -126,8 +134,24 @@ export default function TokenList() {
   useEffect(() => {
     const fetchTokenList = async () => {
       let userAddress = address;
+      let onlyFavorites = categories[categoriesIndexes.favorites].selected;
+      let onlyOwned = categories[categoriesIndexes.owned].selected;
+      let onlyIssued = categories[categoriesIndexes.issued].selected;
       if (userAddress === undefined) {
         userAddress = (await getWalletInfo()).address;
+        if (
+          userAddress === undefined &&
+          (onlyFavorites || onlyOwned || onlyIssued)
+        ) {
+          userAddress = (await connectWallet())?.address;
+          if (userAddress === undefined) {
+            console.error("Cannot connect wallet");
+            onlyFavorites = false;
+            onlyOwned = false;
+            onlyIssued = false;
+            setCategories(initialCategories);
+          }
+        }
         if (address !== userAddress) {
           setAddress(userAddress);
           if (DEBUG) console.log("address", userAddress);
@@ -139,18 +163,15 @@ export default function TokenList() {
             query: search,
             page: 0,
             hitsPerPage: 8, // TODO: decide how many to fetch
-            favoritesOfAddress: categories[categoriesIndexes.favorites].selected
-              ? userAddress
-              : undefined,
-            ownedByAddress: categories[categoriesIndexes.myTokens].selected
-              ? userAddress
-              : undefined,
+            favoritesOfAddress: onlyFavorites ? userAddress : undefined,
+            ownedByAddress: onlyOwned ? userAddress : undefined,
+            issuedByAddress: onlyIssued ? userAddress : undefined,
           })
         )?.hits ?? [];
       setItems(newItems);
 
       let likedTokens: string[] = [];
-      if (categories[categoriesIndexes.favorites].selected && userAddress) {
+      if (onlyFavorites && userAddress) {
         likedTokens = newItems.map((elm) => elm.tokenAddress);
       } else if (userAddress) {
         likedTokens = await algoliaGetUsersLikes({ userAddress });

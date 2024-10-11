@@ -12,10 +12,7 @@ export interface Like {
   userAddress: string;
 }
 
-export async function algoliaWriteLike(params: {
-  tokenAddress: string;
-  userAddress: string;
-}): Promise<boolean> {
+export async function algoliaWriteLike(params: Like): Promise<boolean> {
   const { tokenAddress, userAddress } = params;
   if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
   if (chain !== "devnet" && chain !== "mainnet")
