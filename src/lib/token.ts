@@ -33,6 +33,7 @@ export interface TokenInfo {
 
 export interface TokenState {
   tokenAddress: string;
+  tokenId: string;
   adminContractAddress: string;
   adminAddress: string;
   totalSupply: number;

@@ -1,6 +1,6 @@
 "use server";
 import { fetchMinaAccount, initBlockchain, FungibleToken } from "zkcloudworker";
-import { Mina, PublicKey, Bool } from "o1js";
+import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo } from "./token";
 import { algoliaGetToken, algoliaWriteToken } from "./algolia";
 const chain = process.env.NEXT_PUBLIC_CHAIN;
@@ -87,6 +87,7 @@ export async function getTokenState(params: {
     const adminAddress = PublicKey.fromFields([adminAddress0, adminAddress1]);
     const tokenState: TokenState = {
       tokenAddress: tokenContractPublicKey.toBase58(),
+      tokenId: TokenId.toBase58(tokenId),
       adminContractAddress: adminContractPublicKey.toBase58(),
       adminAddress: adminAddress.toBase58(),
       totalSupply,
@@ -113,13 +114,15 @@ export async function getTokenState(params: {
         tokenInfo.decimals !== tokenState.decimals ||
         tokenInfo.chain === undefined ||
         tokenInfo.created === undefined ||
-        tokenInfo.updated === undefined
+        tokenInfo.updated === undefined ||
+        tokenInfo.tokenId !== tokenState.tokenId
       ) {
         console.error("getTokenState: Token info mismatch, updating the info", {
           tokenAddress,
           tokenInfo,
           tokenState,
         });
+        tokenInfo.tokenId = tokenState.tokenId;
         tokenInfo.adminContractAddress = tokenState.adminContractAddress;
         tokenInfo.adminAddress = tokenState.adminAddress;
         tokenInfo.totalSupply = tokenState.totalSupply;
