@@ -9,6 +9,7 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { checkAddress } from "@/lib/address";
 import { shortenString } from "@/lib/short";
+import { MintAddressesModal, MintAddress } from "../modals/MintAddressesModal";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 interface TokenLinks {
@@ -38,7 +39,33 @@ export function LaunchForm() {
   const [launchTip, setLaunchTip] = useState<string>(
     "Please connect your wallet"
   );
+  const [mintAddresses, setMintAddresses] = useState<MintAddress[]>([]);
+  const [mintAddressesText, setMintAddressesText] = useState<string>("");
+
   const { address, setAddress } = useContext(AddressContext);
+
+  useEffect(() => {
+    const text = mintAddresses
+      .map((mintAddress) => `${mintAddress.address}`)
+      .join(", ");
+    const maxLength = 40;
+    if (text.length > maxLength) {
+      const addresses = mintAddresses.map((mintAddress) =>
+        shortenString(mintAddress.address, 10)
+      );
+      let displayText = "";
+      for (let i = 0; i < addresses.length; i++) {
+        if ((displayText + addresses[i]).length > maxLength) {
+          displayText += " ...";
+          break;
+        }
+        displayText += (displayText ? ", " : "") + addresses[i];
+      }
+      setMintAddressesText(displayText);
+    } else {
+      setMintAddressesText(text);
+    }
+  }, [mintAddresses]);
 
   useEffect(() => {
     tippy("[data-tippy-content]");
@@ -412,6 +439,7 @@ export function LaunchForm() {
                 />
               </div>
             </div>
+
             {/* Wallet address */}
             <div className="mb-6">
               <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
@@ -423,6 +451,7 @@ export function LaunchForm() {
                     ? "border-jacarta-100 dark:border-jacarta-600"
                     : "border-2 border-red"
                 }`}
+                id="admin-address"
                 data-tippy-content="Copy"
                 onClick={() => {
                   navigator.clipboard.writeText(adminAddress ?? "");
@@ -443,36 +472,40 @@ export function LaunchForm() {
                 </div>
               </button>
             </div>
+
             {/* Mint addresses */}
             <div className="mb-6">
               <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
                 Mint Addresses
               </label>
-              <button
-                className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
-                  addressValid
-                    ? "border-jacarta-100 dark:border-jacarta-600"
-                    : "border-2 border-red"
-                }`}
-                id="mint-addresses"
-                data-bs-toggle="modal"
-                data-bs-target="#MintAddressesModal"
-              >
-                <span>{"B62..., B62..., B62..."}</span>
+              <Tippy content={"Click to add"} hideOnClick={true}>
+                <button
+                  className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
+                    addressValid
+                      ? "border-jacarta-100 dark:border-jacarta-600"
+                      : "border-2 border-red"
+                  }`}
+                  id="mint-addresses"
+                  data-bs-toggle="modal"
+                  data-bs-target="#MintAddressesModal"
+                >
+                  <span>{mintAddressesText}</span>
 
-                <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="15"
-                    height="16"
-                    className="fill-accent group-hover:fill-white rounded-md border border-accent "
-                  >
-                    <path fill="none" d="M0 0h24v24H0z" />
-                    <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />{" "}
-                  </svg>
-                </div>
-              </button>
+                  <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="15"
+                      height="16"
+                      className="fill-accent group-hover:fill-white rounded-md border border-accent "
+                    >
+                      <path fill="none" d="M0 0h24v24H0z" />
+                      <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />{" "}
+                    </svg>
+                  </div>
+                </button>
+              </Tippy>
+              <MintAddressesModal onSubmit={setMintAddresses} />
             </div>
 
             <Tippy content={launchTip}>
@@ -485,8 +518,11 @@ export function LaunchForm() {
               </button>
             </Tippy>
           </div>
-
-          <FileUpload setImage={setImage} />
+          <div className="mb-12 md:w-1/2 md:pr-8">
+            <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+              <FileUpload setImage={setImage} />
+            </div>
+          </div>
         </div>
       </div>
     </section>

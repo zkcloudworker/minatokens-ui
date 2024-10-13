@@ -42,7 +42,7 @@ export function FileUpload({ setImage }: { setImage: (image: File) => void }) {
   };
 
   return (
-    <div className="flex space-x-5 md:w-1/2 md:pl-8 shrink-0">
+    <>
       <div
         className="shrink-0"
         onDragEnter={handleDragEnter}
@@ -95,7 +95,7 @@ export function FileUpload({ setImage }: { setImage: (image: File) => void }) {
           Upload an image or GIF (max 5MB). Drag and drop supported.
         </p>
       </div>
-    </div>
+    </>
   );
 }
 
