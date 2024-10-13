@@ -4,8 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState, useContext } from "react";
 import { AddressContext } from "@/context/address";
+import { MintAddressesModal, MintAddress } from "../modals/MintAddressesModal";
 import { TokenProgress } from "./TokenProgress";
-import { LaunchForm } from "./LaunchForm";
+import { LaunchForm, TokenLinks, LaunchTokenData } from "./LaunchForm";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
 import { exampleItems } from "./TimeLineExample";
@@ -13,24 +14,11 @@ import { TimelineDatedItem, logItem, updateLogItem } from "./TimeLine";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 const LaunchToken: React.FC = () => {
-  const [image, setImage] = useState<File | undefined>(undefined);
-  const [name, setName] = useState<string | undefined>(undefined);
-  const [symbol, setSymbol] = useState<string | undefined>(undefined);
-  const [description, setDescription] = useState<string | undefined>(undefined);
   const [isLaunching, setIsLaunching] = useState<boolean>(false);
   const [timelineItems, setTimelineItems] = useState<TimelineDatedItem[]>([]);
-  const { address, setAddress } = useContext(AddressContext);
 
-  const handleLaunchButtonClick = async () => {
-    if (DEBUG)
-      console.log(
-        "Launching token with name:",
-        name,
-        "symbol:",
-        symbol,
-        "description:",
-        description
-      );
+  const handleLaunchButtonClick = async (data: LaunchTokenData) => {
+    if (DEBUG) console.log("Launching token:", data);
 
     setIsLaunching(true);
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -47,7 +35,7 @@ const LaunchToken: React.FC = () => {
             items,
           })
         );
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   };
 
@@ -66,7 +54,7 @@ const LaunchToken: React.FC = () => {
           isLiked={true}
         />
       )}
-      {!isLaunching && <LaunchForm />}
+      {!isLaunching && <LaunchForm onLaunch={handleLaunchButtonClick} />}
     </>
   );
 };

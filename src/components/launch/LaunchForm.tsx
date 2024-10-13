@@ -12,7 +12,7 @@ import { shortenString } from "@/lib/short";
 import { MintAddressesModal, MintAddress } from "../modals/MintAddressesModal";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
-interface TokenLinks {
+export interface TokenLinks {
   twitter: string;
   discord: string;
   telegram: string;
@@ -20,7 +20,21 @@ interface TokenLinks {
   website: string;
 }
 
-export function LaunchForm() {
+export interface LaunchTokenData {
+  symbol: string;
+  name: string;
+  description: string;
+  links: TokenLinks;
+  image: File | undefined;
+  address: string;
+  mintAddresses: MintAddress[];
+}
+
+export function LaunchForm({
+  onLaunch,
+}: {
+  onLaunch: (data: LaunchTokenData) => void;
+}) {
   const [image, setImage] = useState<File | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
   const [symbol, setSymbol] = useState<string | undefined>(undefined);
@@ -117,8 +131,16 @@ export function LaunchForm() {
       await getAddress();
       return;
     }
-
     if (DEBUG) console.log("Launching token for", adminAddress);
+    onLaunch({
+      symbol: symbol ?? "",
+      name: name ?? "",
+      description: description ?? "",
+      links,
+      image,
+      address: adminAddress,
+      mintAddresses,
+    });
   };
 
   return (
