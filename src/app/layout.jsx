@@ -9,7 +9,7 @@ import "tippy.js/dist/tippy.css";
 import "react-modal-video/css/modal-video.css";
 import BuyModal from "@/components/modals/BuyModal";
 import BidModal from "@/components/modals/BidModal";
-import MintAddressesModal from "@/components/modals/MintAddressesModal";
+import { MintAddressesModal } from "@/components/modals/MintAddressesModal";
 import LevelsModal from "@/components/modals/LevelsModal";
 import ModeChanger from "@/components/common/ModeChanger";
 
