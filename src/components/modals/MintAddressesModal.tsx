@@ -10,10 +10,10 @@ export default function MintAddressesModal() {
       aria-labelledby="addMintAddressesLabel"
       aria-hidden="true"
     >
-      <div className="modal-dialog max-w-2xl">
+      <div className="modal-dialog max-w-3xl">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title" id="addPropertiesLabel">
+            <h5 className="modal-title text-sm" id="addPropertiesLabel">
               Mint addresses
             </h5>
             <button
@@ -50,24 +50,24 @@ export default function MintAddressesModal() {
                 </svg>
               </button>
 
-              <div className="flex-1">
-                <label className="mb-3 block font-display text-base font-semibold text-jacarta-700 dark:text-white">
+              <div className="w-1/5">
+                <label className="mb-3 text-sm block font-display text-base font-semibold text-jacarta-700 dark:text-white">
                   Amount
                 </label>
                 <input
                   type="text"
-                  className="h-12 w-full border border-r-0 border-jacarta-100 focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
+                  className="h-12 w-full border border-r-0 border-jacarta-100 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                   placeholder="Amount"
                 />
               </div>
 
-              <div className="flex-1">
-                <label className="mb-3 block font-display text-base font-semibold text-jacarta-700 dark:text-white">
+              <div className="w-4/5">
+                <label className="mb-3 text-sm block font-display text-base font-semibold text-jacarta-700 dark:text-white">
                   Address (B62...)
                 </label>
                 <input
                   type="text"
-                  className="h-12 w-full rounded-r-lg border border-jacarta-100 focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
+                  className="h-12 w-full rounded-r-lg border border-jacarta-100 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                   placeholder="Address"
                 />
               </div>

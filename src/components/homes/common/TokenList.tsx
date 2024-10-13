@@ -153,10 +153,10 @@ export default function TokenList() {
             setCategories(initialCategories);
           }
         }
-        if (address !== userAddress) {
-          setAddress(userAddress);
-          if (DEBUG) console.log("address", userAddress);
-        }
+      }
+      if (address !== userAddress) {
+        setAddress(userAddress);
+        if (DEBUG) console.log("address", userAddress);
       }
       let newItems: DeployedTokenInfo[] =
         (

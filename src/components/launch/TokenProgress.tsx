@@ -42,19 +42,19 @@ export function TokenProgress({
         </div>
 
         <div className="lg:flex">
-          {/* Records */}
+          {/* Timeline */}
           <TimeLine items={items} />
 
-          {/* Filters */}
+          {/* Token Preview */}
           <aside className="basis-4/12 lg:pl-5">
             <TokenPreview
-              tokenAddress="0x1234567890abcdef"
-              image="token.png"
-              likes={10}
-              name="Example Token"
-              symbol="EXT"
-              totalSupply={10000}
-              isLiked={true}
+              tokenAddress={tokenAddress}
+              image={image}
+              likes={likes}
+              name={name}
+              symbol={symbol}
+              totalSupply={totalSupply}
+              isLiked={isLiked}
             />
           </aside>
         </div>
