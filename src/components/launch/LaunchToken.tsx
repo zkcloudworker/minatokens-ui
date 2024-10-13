@@ -9,42 +9,68 @@ import { TokenProgress } from "./TokenProgress";
 import { LaunchForm, TokenLinks, LaunchTokenData } from "./LaunchForm";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
+import { launchToken } from "./lib/launch";
+import { useLaunchToken } from "@/context/launch";
+import {
+  TimelineDatedItem,
+  TimelineItem,
+  logItem,
+  logList,
+  updateLogItem,
+} from "./TimeLine";
 import { exampleItems } from "./TimeLineExample";
-import { TimelineDatedItem, logItem, updateLogItem } from "./TimeLine";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 const LaunchToken: React.FC = () => {
-  const [isLaunching, setIsLaunching] = useState<boolean>(false);
-  const [timelineItems, setTimelineItems] = useState<TimelineDatedItem[]>([]);
+  const { state, dispatch } = useLaunchToken();
+
+  function addLog(item: TimelineItem) {
+    dispatch({
+      type: "ADD_TIMELINE_ITEM",
+      payload: item,
+    });
+  }
+
+  function updateLog(id: string, update: Partial<TimelineItem>) {
+    dispatch({
+      type: "UPDATE_TIMELINE_ITEM",
+      payload: { id, update },
+    });
+  }
+
+  useEffect(() => {
+    console.log("State isLaunching changed:", state.isLaunching);
+  }, [state.isLaunching]);
+
+  useEffect(() => {
+    console.log(
+      "Timeline items changed:",
+      state.timelineItems.map((item) => item.id).join(", ")
+    );
+  }, [state.timelineItems]);
 
   const handleLaunchButtonClick = async (data: LaunchTokenData) => {
     if (DEBUG) console.log("Launching token:", data);
-
-    setIsLaunching(true);
+    console.log("Launching token:", state.isLaunching);
+    dispatch({ type: "SET_LAUNCHING", payload: true });
+    dispatch({ type: "SET_TIMELINE_ITEMS", payload: [] });
     window.scrollTo({ top: 0, behavior: "instant" });
-    for (let i = 0; i < exampleItems.length; i++) {
-      setTimelineItems((items) => logItem({ item: exampleItems[i], items }));
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-    for (let i = 0; i < exampleItems.length; i++) {
-      if (exampleItems[i].status === "waiting")
-        setTimelineItems((items) =>
-          updateLogItem({
-            id: exampleItems[i].id,
-            update: { status: "success" },
-            items,
-          })
-        );
+    console.log("Launching token started:", state.isLaunching);
+
+    for (const item of exampleItems) {
+      console.log("Adding log:", item.id);
+      addLog(item);
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
+    //launchToken(data, addLog, updateLog);
   };
 
   return (
     <>
-      {isLaunching && (
+      {state.isLaunching && (
         <TokenProgress
           caption="Launching Token"
-          items={timelineItems}
+          items={state.timelineItems}
           tokenAddress="0x1234567890abcdef"
           image="token.png"
           likes={10}
@@ -54,7 +80,7 @@ const LaunchToken: React.FC = () => {
           isLiked={true}
         />
       )}
-      {!isLaunching && <LaunchForm onLaunch={handleLaunchButtonClick} />}
+      {!state.isLaunching && <LaunchForm onLaunch={handleLaunchButtonClick} />}
     </>
   );
 };

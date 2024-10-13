@@ -12,6 +12,7 @@ import BidModal from "@/components/modals/BidModal";
 import { MintAddressesModal } from "@/components/modals/MintAddressesModal";
 import LevelsModal from "@/components/modals/LevelsModal";
 import ModeChanger from "@/components/common/ModeChanger";
+import { LaunchTokenProvider } from "@/context/launch";
 
 if (typeof window !== "undefined") {
   // Import the script only on the client side
@@ -30,13 +31,15 @@ export default function RootLayout({ children }) {
           "overflow-x-hidden font-body text-jacarta-500 dark:bg-jacarta-900"
         }
       >
-        <ModeChanger />
-        <MetaMaskProvider>{children}</MetaMaskProvider>
-        <WalletModal />
-        <BuyModal />
-        <BidModal />
-        <MintAddressesModal />
-        <LevelsModal />
+        <LaunchTokenProvider>
+          <ModeChanger />
+          <MetaMaskProvider>{children}</MetaMaskProvider>
+          <WalletModal />
+          <BuyModal />
+          <BidModal />
+          <MintAddressesModal />
+          <LevelsModal />
+        </LaunchTokenProvider>
       </body>
     </html>
   );

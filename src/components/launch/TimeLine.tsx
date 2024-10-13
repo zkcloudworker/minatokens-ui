@@ -40,18 +40,31 @@ export function updateLogItem(params: {
       ? {
           ...item,
           ...update,
-          time: update.status === "waiting" ? item.time : Date.now(),
+          time:
+            (update.status ?? item.status) === "waiting"
+              ? item.time
+              : Date.now(),
         }
       : item
   );
 }
 
-export function deleteTimelineItem(params: {
+export function deleteLogItem(params: {
   items: TimelineDatedItem[];
   id: string;
 }) {
   const { items, id } = params;
   return items.filter((item) => item.id !== id);
+}
+
+export function logList(items: React.ReactNode[]): React.ReactNode {
+  return (
+    <ul className="list-disc pl-5">
+      {items.map((item, i) => (
+        <li key={"list-" + i}>{item}</li>
+      ))}
+    </ul>
+  );
 }
 
 export function TimeLine({ items }: TimeLineProps) {
