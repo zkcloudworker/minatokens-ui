@@ -14,7 +14,6 @@ export const exampleItems: TimelineItem[] = [
         .
       </>
     ),
-    time: Date.now(),
   },
   {
     id: "2",
@@ -22,14 +21,18 @@ export const exampleItems: TimelineItem[] = [
     title: "Design Review",
     details: (
       <>
-        Minor issues found during review. Check the{" "}
-        <a href="#" className="text-accent hover:underline">
-          design feedback
-        </a>
-        .
+        <ul className="list-disc pl-5">
+          <li>Minor issues found during review.</li>
+          <li>
+            Check the{" "}
+            <a href="#" className="text-accent hover:underline">
+              design feedback
+            </a>
+            .
+          </li>
+        </ul>
       </>
     ),
-    time: Date.now(),
   },
   {
     id: "3",
@@ -44,7 +47,6 @@ export const exampleItems: TimelineItem[] = [
         .
       </>
     ),
-    time: Date.now(),
   },
   {
     id: "4",
@@ -59,7 +61,6 @@ export const exampleItems: TimelineItem[] = [
         .
       </>
     ),
-    time: Date.now(),
   },
   {
     id: "5",
@@ -74,7 +75,6 @@ export const exampleItems: TimelineItem[] = [
         .
       </>
     ),
-    time: Date.now(),
   },
   {
     id: "6",
@@ -89,6 +89,5 @@ export const exampleItems: TimelineItem[] = [
         .
       </>
     ),
-    time: Date.now(),
   },
 ];

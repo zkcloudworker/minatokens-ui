@@ -2,14 +2,10 @@
 import React, { useState, ChangeEvent, DragEvent } from "react";
 import Image from "next/image";
 
-export default function FileUpload({
-  setImage,
-}: {
-  setImage: (image: File) => void;
-}) {
+export function FileUpload({ setImage }: { setImage: (image: File) => void }) {
   const [imageName, setImageName] = useState<string>("");
   const [dragging, setDragging] = useState<boolean>(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("token.png");
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -46,29 +42,71 @@ export default function FileUpload({
   };
 
   return (
-    <div className="mb-6">
-      <label className="mb-2 block font-display text-jacarta-700 dark:text-white">
-        Image <span className="text-red">*</span>
-      </label>
-      <p className="mb-3 text-sm dark:text-jacarta-300">
-        {!imageName ? (
-          "Drag or choose your file to upload."
-        ) : (
-          <span className="text-green">Successfully Uploaded {imageName}</span>
-        )}
-      </p>
+    <div className="flex space-x-5 md:w-1/2 md:pl-8 shrink-0">
+      <div
+        className="shrink-0"
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <figure className="relative inline-block w-300 h-300 ">
+          <Image
+            src={imagePreview}
+            alt="collection avatar"
+            height={300}
+            width={300}
+            className="rounded-xl border-[5px] border-white dark:border-jacarta-600 object-cover !w-[150px] !h-[150px] overflow-hidden "
+          />
+          <div className="group absolute -right-3 -bottom-2 h-8 w-8 overflow-hidden rounded-full border border-jacarta-100 bg-white text-center hover:border-transparent hover:bg-accent">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="absolute top-0 left-0 w-full cursor-pointer opacity-0"
+            />
+            <div className="flex h-full items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                className="h-4 w-4 fill-jacarta-400 group-hover:fill-white"
+              >
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M15.728 9.686l-1.414-1.414L5 17.586V19h1.414l9.314-9.314zm1.414-1.414l1.414-1.414-1.414-1.414-1.414 1.414 1.414 1.414zM7.242 21H3v-4.243L16.435 3.322a1 1 0 0 1 1.414 0l2.829 2.829a1 1 0 0 1 0 1.414L7.243 21z" />
+              </svg>
+            </div>
+          </div>
+          <input
+            type="file"
+            accept="image/*,video/*,audio/*,webgl/*,.glb,.gltf"
+            id="file-upload"
+            onChange={handleImageChange}
+            className="absolute inset-0 z-20 cursor-pointer opacity-0"
+          />
+        </figure>
+      </div>
+      <div className="mt-4">
+        <span className="mb-3 block font-display text-sm text-jacarta-700 dark:text-white">
+          Token Image
+        </span>
+        <p className="text-sm leading-normal dark:text-jacarta-300">
+          Upload an image or GIF (max 5MB). Drag and drop supported.
+        </p>
+      </div>
+    </div>
+  );
+}
 
+/* 
+    <div className="rounded-xl border-[5px] border-white dark:border-jacarta-600 object-cover !w-[150px] !h-[150px] overflow-hidden ">
       <div
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        style={{
-          border: dragging ? "2px dashed #000" : "",
-          borderRadius: "5px",
-          height: "220px",
-        }}
-        className="group relative flex max-w-md flex-col items-center justify-center rounded-lg border-2 border-dashed border-jacarta-100 bg-white py-20 px-5 text-center dark:border-jacarta-600 dark:bg-jacarta-700"
+        className="group relative flex max-w-md flex-col items-center justify-center rounded-lg  bg-white py-20 px-5 text-center dark:border-jacarta-600 dark:bg-jacarta-700"
       >
         {imagePreview ? (
           <Image
@@ -79,23 +117,22 @@ export default function FileUpload({
             className="absolute inset-0 z-10 rounded-lg"
           />
         ) : (
-          <div className="relative z-10 cursor-pointer">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              className="mb-4 inline-block fill-jacarta-500 dark:fill-white"
-            >
-              <path fill="none" d="M0 0h24v24H0z" />
-              <path d="M16 13l6.964 4.062-2.973.85 2.125 3.681-1.732 1-2.125-3.68-2.223 2.15L16 13zm-2-7h2v2h5a1 1 0 0 1 1 1v4h-2v-3H10v10h4v2H9a1 1 0 0 1-1-1v-5H6v-2h2V9a1 1 0 0 1 1-1h5V6zM4 14v2H2v-2h2zm0-4v2H2v-2h2zm0-4v2H2V6h2zm0-4v2H2V2h2zm4 0v2H6V2h2zm4 0v2h-2V2h2zm4 0v2h-2V2h2z" />
-            </svg>
-            <p className="mx-auto max-w-xs text-sm dark:text-jacarta-300">
-              SVG is recommended. Max size: 5 MB
-            </p>
+          <div className="group absolute -right-3 -bottom-2 h-8 w-8 overflow-hidden rounded-full border border-jacarta-100 bg-white text-center hover:border-transparent hover:bg-accent">
+            <div className="flex h-full items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                className="h-4 w-4 fill-jacarta-400 group-hover:fill-white"
+              >
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M15.728 9.686l-1.414-1.414L5 17.586V19h1.414l9.314-9.314zm1.414-1.414l1.414-1.414-1.414-1.414-1.414 1.414 1.414 1.414zM7.242 21H3v-4.243L16.435 3.322a1 1 0 0 1 1.414 0l2.829 2.829a1 1 0 0 1 0 1.414L7.243 21z" />
+              </svg>
+            </div>
           </div>
         )}
-        <div className="absolute inset-4 cursor-pointer rounded bg-jacarta-50 opacity-0 group-hover:opacity-100 dark:bg-jacarta-600"></div>
+
         <input
           type="file"
           accept="image/*,video/*,audio/*,webgl/*,.glb,.gltf"
@@ -105,5 +142,5 @@ export default function FileUpload({
         />
       </div>
     </div>
-  );
-}
+    );
+    */

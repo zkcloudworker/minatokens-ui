@@ -11,16 +11,52 @@ export interface TimelineItem {
   status: "success" | "warning" | "error" | "waiting" | "completed";
   title: string;
   details: React.ReactNode;
+}
+
+export interface TimelineDatedItem extends TimelineItem {
   time: number;
 }
 
 export interface TimeLineProps {
-  items: TimelineItem[];
+  items: TimelineDatedItem[];
+}
+
+export function logItem(params: {
+  item: TimelineItem;
+  items: TimelineDatedItem[];
+}): TimelineDatedItem[] {
+  const { item, items } = params;
+  return [...items, { ...item, time: Date.now() }];
+}
+
+export function updateLogItem(params: {
+  items: TimelineDatedItem[];
+  id: string;
+  update: Partial<TimelineItem>;
+}) {
+  const { items, id, update } = params;
+  return items.map((item) =>
+    item.id === id
+      ? {
+          ...item,
+          ...update,
+          time: update.status === "waiting" ? item.time : Date.now(),
+        }
+      : item
+  );
+}
+
+export function deleteTimelineItem(params: {
+  items: TimelineDatedItem[];
+  id: string;
+}) {
+  const { items, id } = params;
+  return items.filter((item) => item.id !== id);
 }
 
 export function TimeLine({ items }: TimeLineProps) {
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const [sortedItems, setSortedItems] = useState<TimelineItem[]>([]);
+  const [sortedItems, setSortedItems] = useState<TimelineDatedItem[]>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,10 +77,7 @@ export function TimeLine({ items }: TimeLineProps) {
       if (a.status !== "waiting" && b.status === "waiting") {
         return 1;
       }
-      if (a.status === "waiting" && b.status === "waiting") {
-        return new Date(b.time).getTime() - new Date(a.time).getTime();
-      }
-      return 0;
+      return b.time - a.time;
     });
     setSortedItems(sorted);
   }, [items]);
