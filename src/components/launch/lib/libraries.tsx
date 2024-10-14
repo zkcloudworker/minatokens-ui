@@ -21,7 +21,7 @@ export async function loadLib(
   );
 
   updateTimelineItem({
-    groupId: "deploy",
+    groupId: "verify",
     update: {
       lineId: "o1js",
       content: loadedLibraries,

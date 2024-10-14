@@ -87,11 +87,6 @@ export async function deployToken(params: {
       ? adminPrivateKey.toPublicKey()
       : PublicKey.fromBase58(adminPublicKey);
 
-    updateTimelineItem({
-      groupId,
-      update: messages.transaction,
-    });
-
     if (DEBUG) console.log("initializing blockchain", chain);
     const net = await initBlockchain(chain);
     if (DEBUG) console.log("blockchain initialized", net);
@@ -112,7 +107,6 @@ export async function deployToken(params: {
     const zkToken = new FungibleToken(contractAddress);
     const zkAdmin = new FungibleTokenAdmin(adminContractPublicKey);
 
-    if (DEBUG) console.log(`Sending tx...`);
     console.time("prepared tx");
     const memo = `deploy token ${symbol}`.substring(0, 30);
 
@@ -213,7 +207,7 @@ export async function deployToken(params: {
     const serializedTransaction = serializeTransaction(tx);
     const transaction = tx.toJSON();
     const txJSON = JSON.parse(transaction);
-    if (DEBUG) console.log("Transaction", tx.toPretty());
+
     const payload = {
       transaction,
       onlySign: true,
@@ -226,10 +220,14 @@ export async function deployToken(params: {
     console.timeEnd("ready to sign");
     updateTimelineItem({
       groupId,
+      update: messages.txSigned,
+    });
+    updateTimelineItem({
+      groupId,
       update: {
-        lineId: "transaction",
-        content: "Token deployment transaction is prepared, please sign it",
-        status: "waiting",
+        lineId: "txPrepared",
+        content: "Token deploy transaction is built",
+        status: "success",
       },
     });
 
@@ -261,11 +259,14 @@ export async function deployToken(params: {
 
     updateTimelineItem({
       groupId,
+      update: messages.txProved,
+    });
+    updateTimelineItem({
+      groupId,
       update: {
-        lineId: "transaction",
-        content:
-          "Deploy transaction is prepared and signed, proving the transaction...",
-        status: "waiting",
+        lineId: "txSigned",
+        content: "Transaction is signed",
+        status: "success",
       },
     });
 
@@ -301,14 +302,13 @@ export async function deployToken(params: {
 
     const jobIdMessage = (
       <>
-        Deploy transaction is prepared and signed,{" "}
         <a
           href={`https://zkcloudworker.com/job/${jobId}`}
           className="text-accent hover:underline"
           target="_blank"
           rel="noopener noreferrer"
         >
-          proving
+          Proving
         </a>{" "}
         the transaction...
       </>
@@ -317,7 +317,7 @@ export async function deployToken(params: {
     updateTimelineItem({
       groupId,
       update: {
-        lineId: "transaction",
+        lineId: "txProved",
         content: jobIdMessage,
         status: "waiting",
       },

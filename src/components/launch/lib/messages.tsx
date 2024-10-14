@@ -1,17 +1,33 @@
 "use client";
 import { TimeLineItem } from "@/components/launch/TimeLine";
-export type GroupId = "pin" | "deploy" | "mint";
+export type GroupId =
+  | "verify"
+  | "image"
+  | "metadata"
+  | "deploy"
+  | "mint"
+  | "transaction";
+
 export type LineId =
   | "verifyData"
   | "mintDataError"
   | "o1js"
+  | "tokenAddress"
   | "adminRequired"
   | "adminAddressDoNotMatch"
   | "noAuroWallet"
   | "pinningImage"
   | "pinningMetadata"
-  | "saveDeployParams"
-  | "transaction"
+  | "privateKeysGenerated"
+  | "privateKeysSaved"
+  | "txPrepared"
+  | "txMint"
+  | "txSigned"
+  | "txProved"
+  | "txSent"
+  | "txIncluded"
+  | "contractStateVerified"
+  | "mintBalance"
   | "error"
   | "accountNotFound"
   | "insufficientBalance"
@@ -19,10 +35,12 @@ export type LineId =
   | "deployTransactionProveJobFailed"
   | "deployTransactionError"
   | "contractVerification"
-  | "mintingTokens";
+  | "mintingTokens"
+  | "arweaveTx"
+  | "arweaveIncluded";
 
 export type UpdateTimelineItemFunction = (params: {
-  groupId: GroupId;
+  groupId: string;
   update: TimeLineItem;
 }) => void;
 
@@ -55,7 +73,11 @@ export const messages: { [key in LineId]: TimeLineItem } = {
     ),
     status: "waiting",
   },
-
+  tokenAddress: {
+    lineId: "tokenAddress",
+    content: "Token address is generated",
+    status: "success",
+  },
   adminRequired: {
     lineId: "adminRequired",
     content: "Admin address is required to launch a token",
@@ -73,22 +95,62 @@ export const messages: { [key in LineId]: TimeLineItem } = {
   },
   pinningImage: {
     lineId: "pinningImage",
-    content: "Pinning token image to Arweave permanent storage...",
+    content: "Uploading token image to Arweave...",
     status: "waiting",
   },
   pinningMetadata: {
     lineId: "pinningMetadata",
-    content: "Pinning token metadata to Arweave permanent storage...",
+    content: "Uploading token metadata to Arweave...",
     status: "waiting",
   },
-  saveDeployParams: {
-    lineId: "saveDeployParams",
-    content: "Saving token private keys to a JSON file...",
+  privateKeysGenerated: {
+    lineId: "privateKeysGenerated",
+    content: "Generating token private keys...",
     status: "waiting",
   },
-  transaction: {
-    lineId: "transaction",
+  privateKeysSaved: {
+    lineId: "privateKeysSaved",
+    content: "Saving token private keys...",
+    status: "waiting",
+  },
+  txPrepared: {
+    lineId: "txPrepared",
     content: "Preparing the transaction for token deployment...",
+    status: "waiting",
+  },
+  txMint: {
+    lineId: "txMint",
+    content: "Preparing the transaction for token minting...",
+    status: "waiting",
+  },
+  txSigned: {
+    lineId: "txSigned",
+    content: "Please sign the transaction...",
+    status: "waiting",
+  },
+  txProved: {
+    lineId: "txProved",
+    content: "Proving the transaction...",
+    status: "waiting",
+  },
+  txSent: {
+    lineId: "txSent",
+    content: "Sending the transaction...",
+    status: "waiting",
+  },
+  txIncluded: {
+    lineId: "txIncluded",
+    content: "Waiting for transaction to be included in a block...",
+    status: "waiting",
+  },
+  mintBalance: {
+    lineId: "mintBalance",
+    content: "Checking token balance...",
+    status: "waiting",
+  },
+  contractStateVerified: {
+    lineId: "contractStateVerified",
+    content: "Verifying the token contract state...",
     status: "waiting",
   },
   error: {
@@ -114,7 +176,7 @@ export const messages: { [key in LineId]: TimeLineItem } = {
 
   deployTransactionProveJobFailed: {
     lineId: "deployTransactionProveJobFailed",
-    content: "Deploy transaction prove job failed",
+    content: "Deploy transaction proof job failed",
     status: "error",
   },
 
@@ -131,6 +193,16 @@ export const messages: { [key in LineId]: TimeLineItem } = {
   mintingTokens: {
     lineId: "mintingTokens",
     content: "Minting tokens...",
+    status: "waiting",
+  },
+  arweaveTx: {
+    lineId: "arweaveTx",
+    content: "Sending transaction to Arweave...",
+    status: "waiting",
+  },
+  arweaveIncluded: {
+    lineId: "arweaveIncluded",
+    content: "Waiting for arweave transaction to be included in a block...",
     status: "waiting",
   },
 };

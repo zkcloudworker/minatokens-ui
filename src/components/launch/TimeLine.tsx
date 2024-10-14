@@ -14,6 +14,11 @@ export type TimelineGroupStatus =
   | "waiting"
   | "completed";
 
+export type IsErrorFunction = () => boolean;
+export type GetMintStatisticsFunction = () => {
+  [key in TimelineItemStatus]: number;
+};
+
 export interface TimeLineItem {
   lineId: string;
   content: ReactNode;

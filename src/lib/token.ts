@@ -81,5 +81,6 @@ export interface TokenDeployParams {
   tokenPrivateKey: string;
   adminContractPrivateKey: string;
   tokenPublicKey: string;
+  tokenId: string;
   adminContractPublicKey: string;
 }
