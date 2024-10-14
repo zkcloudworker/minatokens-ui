@@ -1,3 +1,5 @@
+"use client";
+
 import { UpdateTimelineItemFunction, LineId, GroupId } from "./messages";
 import { arweaveTxStatus } from "@/lib/arweave";
 import { sleep } from "@/lib/sleep";

@@ -9,7 +9,8 @@ const DEBUG = debug();
 export async function deployTokenParams(
   lib: Libraries
 ): Promise<TokenDeployParams> {
-  const { PrivateKey } = lib.o1js;
+  const { PrivateKey, TokenId } = lib.o1js;
+  const { FungibleToken } = lib.zkcloudworker;
   const token: {
     privateKey: PrivateKey;
     publicKey: PublicKey;
@@ -20,10 +21,13 @@ export async function deployTokenParams(
   } = PrivateKey.randomKeypair();
   if (DEBUG) console.log("token:", token.publicKey.toBase58());
   if (DEBUG) console.log("adminContract:", adminContract.publicKey.toBase58());
+  const zkApp = new FungibleToken(token.publicKey);
+  const tokenId = zkApp.deriveTokenId();
   return {
     tokenPrivateKey: token.privateKey.toBase58(),
     adminContractPrivateKey: adminContract.privateKey.toBase58(),
     tokenPublicKey: token.publicKey.toBase58(),
     adminContractPublicKey: adminContract.publicKey.toBase58(),
+    tokenId: TokenId.toBase58(tokenId),
   };
 }

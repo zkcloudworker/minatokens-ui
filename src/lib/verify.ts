@@ -1,12 +1,13 @@
 "use server";
 import { fetchMinaAccount, initBlockchain, FungibleToken } from "zkcloudworker";
-import { Mina, PublicKey } from "o1js";
+import { Mina, PublicKey, TokenId } from "o1js";
 import { TokenInfo, DeployedTokenInfo } from "./token";
 import { getTokenState } from "./state";
 import { algoliaWriteToken } from "./algolia";
+import { getChain, getChainId } from "./chain";
 
-const chain = process.env.NEXT_PUBLIC_CHAIN;
-const chainId = process.env.NEXT_PUBLIC_CHAIN_ID;
+const chain = getChain();
+const chainId = getChainId();
 
 export async function verifyFungibleTokenState(params: {
   tokenContractAddress: string;
@@ -15,6 +16,7 @@ export async function verifyFungibleTokenState(params: {
   info: TokenInfo;
   created: number;
   updated: number;
+  tokenId: string;
 }): Promise<boolean> {
   const {
     tokenContractAddress,
@@ -23,20 +25,28 @@ export async function verifyFungibleTokenState(params: {
     info,
     created,
     updated,
+    tokenId,
   } = params;
   try {
-    if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-    if (chain !== "devnet" && chain !== "mainnet")
-      throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
-    if (chainId === undefined)
-      throw new Error("NEXT_PUBLIC_CHAIN_ID is undefined");
-
     await initBlockchain(chain);
     const tokenContractPublicKey = PublicKey.fromBase58(tokenContractAddress);
     const adminContractPublicKey = PublicKey.fromBase58(adminContractAddress);
     const adminPublicKey = PublicKey.fromBase58(adminAddress);
     const tokenContract = new FungibleToken(tokenContractPublicKey);
+    const tokenIdCheck = tokenContract.deriveTokenId();
+    if (TokenId.toBase58(tokenIdCheck) !== tokenId) {
+      console.error("verifyFungibleTokenState: Token ID does not match", {
+        tokenIdCheck: TokenId.toBase58(tokenIdCheck),
+        tokenId,
+      });
+      return false;
+    }
     await fetchMinaAccount({ publicKey: tokenContractPublicKey, force: false });
+    await fetchMinaAccount({
+      publicKey: tokenContractPublicKey,
+      tokenId,
+      force: false,
+    });
     await fetchMinaAccount({ publicKey: adminContractPublicKey, force: false });
     await fetchMinaAccount({ publicKey: adminPublicKey, force: false });
     if (!Mina.hasAccount(adminPublicKey)) {
@@ -55,6 +65,15 @@ export async function verifyFungibleTokenState(params: {
     if (!Mina.hasAccount(tokenContractPublicKey)) {
       console.error(
         "verifyFungibleTokenState: Token contract account not found",
+        {
+          tokenContractAddress,
+        }
+      );
+      return false;
+    }
+    if (!Mina.hasAccount(tokenContractPublicKey, tokenIdCheck)) {
+      console.error(
+        "verifyFungibleTokenState: Token contract totalSupply account not found",
         {
           tokenContractAddress,
         }
@@ -128,5 +147,38 @@ export async function verifyFungibleTokenState(params: {
   } catch (error) {
     console.error("verifyFungibleTokenState: catch", error);
     return false;
+  }
+}
+
+export async function getTokenBalance(params: {
+  tokenContractAddress: string;
+  address: string;
+}): Promise<{ success: boolean; balance?: number; error?: string }> {
+  const { tokenContractAddress, address } = params;
+  try {
+    await initBlockchain(chain);
+    const tokenContractPublicKey = PublicKey.fromBase58(tokenContractAddress);
+    const publicKey = PublicKey.fromBase58(address);
+    const tokenContract = new FungibleToken(tokenContractPublicKey);
+    const tokenId = tokenContract.deriveTokenId();
+    await fetchMinaAccount({
+      publicKey,
+      tokenId,
+      force: false,
+    });
+    if (!Mina.hasAccount(tokenContractPublicKey, tokenId)) {
+      console.error("getTokenBalance: Token contract user account not found", {
+        tokenContractAddress,
+        address,
+      });
+      return { success: false, error: "User account don't have tokens" };
+    }
+    const balance = Number(
+      Mina.getAccount(publicKey, tokenId).balance.toBigInt()
+    );
+    return { success: true, balance };
+  } catch (error: any) {
+    console.error("getTokenBalance: catch", error);
+    return { success: false, error: error?.message ?? "cannot fetch balance" };
   }
 }

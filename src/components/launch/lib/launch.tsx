@@ -1,17 +1,31 @@
+"use client";
+
 import { LaunchTokenData, MintAddressVerified } from "@/lib/token";
 import { checkMintData } from "@/lib/address";
 import { getChain, getChainId } from "@/lib/chain";
 import { getWalletInfo } from "@/lib/wallet";
 import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
+import { sleep } from "@/lib/sleep";
 import { deployToken } from "./deploy";
-import { mintToken } from "@/lib/mint";
-import { TimeLineItem, TimelineGroup, TimelineGroupStatus } from "../TimeLine";
+import { mintToken } from "./mint";
+import {
+  TimeLineItem,
+  TimelineGroup,
+  TimelineGroupStatus,
+  IsErrorFunction,
+  GetMintStatisticsFunction,
+} from "../TimeLine";
 import { pinImageToArweave, pinStringToArweave } from "@/lib/arweave";
 import { arweaveHashToUrl } from "@/lib/arweave";
 import { TokenInfo } from "@/lib/token";
 import { sendTransaction } from "@/lib/send";
-import { messages, LineId, GroupId } from "./messages";
+import {
+  messages,
+  LineId,
+  GroupId,
+  UpdateTimelineItemFunction,
+} from "./messages";
 import { loadLib } from "./libraries";
 import { waitForArweaveTx } from "./arweave-tx";
 import { getAccountNonce } from "@/lib/nonce";
@@ -21,20 +35,17 @@ import {
   waitForMinaDeployTx,
 } from "./mina-tx";
 import { deployTokenParams } from "@/lib/keys";
-import { ReactNode } from "react";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
-const chainId = getChainId();
 const chain = getChain();
 const DEBUG = debug();
 
 export async function launchToken(params: {
   data: LaunchTokenData;
   addLog: (item: TimelineGroup) => void;
-  updateTimelineItem: (params: {
-    groupId: string;
-    update: TimeLineItem;
-  }) => void;
+  updateTimelineItem: UpdateTimelineItemFunction;
+  isError: IsErrorFunction;
+  getMintStatistics: GetMintStatisticsFunction;
   setTotalSupply: (totalSupply: number) => void;
   setTokenAddress: (tokenAddress: string) => void;
   setLikes: (likes: number) => void;
@@ -46,6 +57,8 @@ export async function launchToken(params: {
     setTotalSupply,
     setTokenAddress,
     setLikes,
+    isError,
+    getMintStatistics,
   } = params;
   const {
     symbol,
@@ -68,7 +81,7 @@ export async function launchToken(params: {
   }
 
   function updateTimelineItem(params: {
-    groupId: GroupId;
+    groupId: string;
     update: TimeLineItem;
   }): void {
     const { groupId, update } = params;
@@ -78,26 +91,53 @@ export async function launchToken(params: {
     });
   }
 
-  function updateMintTimelineItem(params: {
-    groupId: GroupId;
-    update: TimeLineItem;
-  }): void {
-    const { groupId, update } = params;
-    updateTimeLineItemInternal({
-      groupId,
-      update,
-    });
+  function showMintStatistics(tokensToMint: number): boolean {
+    const statistics = getMintStatistics();
+    if (statistics.success > 0)
+      updateTimelineItem({
+        groupId: "mint",
+        update: {
+          lineId: "minted",
+          content: `${statistics.success} tokens minted`,
+          status: statistics.success === tokensToMint ? "success" : "waiting",
+        },
+      });
+    if (statistics.error > 0)
+      updateTimelineItem({
+        groupId: "mint",
+        update: {
+          lineId: "notMinted",
+          content: `${statistics.error} tokens failed to be minted`,
+          status: "error",
+        },
+      });
+    if (statistics.waiting > 0)
+      updateTimelineItem({
+        groupId: "mint",
+        update: {
+          lineId: "waitToMint",
+          content: `${statistics.waiting} tokens are waiting to be minted`,
+          status: statistics.waiting === 0 ? "success" : "waiting",
+        },
+      });
+    return statistics.success === tokensToMint;
   }
 
   try {
     addLog({
-      groupId: "pin",
+      groupId: "verify",
       status: "waiting",
-      title: `Pinning token metadata for ${data.symbol}`,
-      successTitle: `Token metadata for ${data.symbol} pinned`,
-      errorTitle: `Failed to pin token metadata for ${data.symbol}`,
+      title: `Verifying token data for ${data.symbol}`,
+      successTitle: `Token data for ${data.symbol} verified`,
+      errorTitle: `Failed to verify token data for ${data.symbol}`,
       lines: [messages.verifyData],
-      requiredForSuccess: ["pinningMetadata", "verifyData"],
+      requiredForSuccess: [
+        "verifyData",
+        "o1js",
+        "privateKeysGenerated",
+        "tokenAddress",
+        "privateKeysSaved",
+      ],
     });
 
     if (DEBUG) console.log("launchToken: launching token:", data);
@@ -108,11 +148,11 @@ export async function launchToken(params: {
     const adminPublicKey = AURO_TEST ? ADMIN_ADDRESS : adminAddress;
     if (!adminPublicKey) {
       updateTimelineItem({
-        groupId: "pin",
+        groupId: "verify",
         update: messages.adminRequired,
       });
       updateTimelineItem({
-        groupId: "pin",
+        groupId: "verify",
         update: {
           lineId: "verifyData",
           content: "Data verification failed",
@@ -123,7 +163,7 @@ export async function launchToken(params: {
     }
     if (adminPublicKey !== walletInfo.address) {
       updateTimelineItem({
-        groupId: "pin",
+        groupId: "verify",
         update: {
           lineId: "adminRequired",
           content: messages.adminAddressDoNotMatch.content,
@@ -131,7 +171,7 @@ export async function launchToken(params: {
         },
       });
       updateTimelineItem({
-        groupId: "pin",
+        groupId: "verify",
         update: {
           lineId: "verifyData",
           content: "Data verification failed",
@@ -140,10 +180,11 @@ export async function launchToken(params: {
       });
       return;
     }
+    if (isError()) return;
     const mina = (window as any).mina;
     if (mina === undefined || mina?.isAuro !== true) {
       updateTimelineItem({
-        groupId: "pin",
+        groupId: "verify",
         update: {
           lineId: "noAuroWallet",
           content: messages.noAuroWallet.content,
@@ -151,7 +192,7 @@ export async function launchToken(params: {
         },
       });
       updateTimelineItem({
-        groupId: "pin",
+        groupId: "verify",
         update: {
           lineId: "verifyData",
           content: "Data verification failed",
@@ -160,6 +201,7 @@ export async function launchToken(params: {
       });
       return;
     }
+    if (isError()) return;
 
     const mintItems: MintAddressVerified[] = [];
     if (DEBUG) console.log("Mint addresses:", mintAddresses);
@@ -171,7 +213,7 @@ export async function launchToken(params: {
       } else {
         if (DEBUG) console.log("Mint item skipped:", item);
         updateTimelineItem({
-          groupId: "pin",
+          groupId: "verify",
           update: {
             lineId: "mintDataError",
             content: `Cannot mint ${item.amount} ${symbol} tokens to ${item.address} because of wrong amount or address`,
@@ -179,7 +221,7 @@ export async function launchToken(params: {
           },
         });
         updateTimelineItem({
-          groupId: "pin",
+          groupId: "verify",
           update: {
             lineId: "verifyData",
             content: "Data verification failed",
@@ -190,9 +232,14 @@ export async function launchToken(params: {
       }
     }
     if (DEBUG) console.log("Mint items filtered:", mintItems);
+    if (isError()) return;
 
     updateTimelineItem({
-      groupId: "pin",
+      groupId: "verify",
+      update: messages.o1js,
+    });
+    updateTimelineItem({
+      groupId: "verify",
       update: {
         lineId: "verifyData",
         content: "Token data is verified",
@@ -200,29 +247,22 @@ export async function launchToken(params: {
       },
     });
     setLikes((likes += 10));
-
-    addLog({
-      groupId: "deploy",
-      status: "waiting",
-      title: `Launching token ${data.symbol}`,
-      successTitle: `Token ${data.symbol} launched`,
-      errorTitle: `Failed to launch token ${data.symbol}`,
-      lines: [messages.o1js, messages.saveDeployParams, messages.transaction],
-      requiredForSuccess: [
-        "o1js",
-        "saveDeployParams",
-        "transaction",
-        "contractVerification",
-      ],
-    });
-
     const libPromise = loadLib(updateTimelineItem);
+    updateTimelineItem({
+      groupId: "verify",
+      update: messages.privateKeysGenerated,
+    });
 
     let imageHash: string | undefined = undefined;
     if (image) {
-      updateTimelineItem({
-        groupId: "pin",
-        update: messages.pinningImage,
+      addLog({
+        groupId: "image",
+        status: "waiting",
+        title: `Pinning token image for ${data.symbol}`,
+        successTitle: `Token image for ${data.symbol} pinned`,
+        errorTitle: `Failed to pin token image for ${data.symbol}`,
+        lines: [messages.pinningImage],
+        requiredForSuccess: ["pinningImage", "arweaveTx", "arweaveIncluded"],
       });
 
       imageHash = await pinImageToArweave(image);
@@ -235,31 +275,45 @@ export async function launchToken(params: {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Pinning
+              Transaction
             </a>{" "}
-            token image to Arweave permanent storage...
+            is sent to Arweave.
           </>
         );
         updateTimelineItem({
-          groupId: "pin",
+          groupId: "image",
+          update: {
+            lineId: "arweaveTx",
+            content: imageTxMessage,
+            status: "success",
+          },
+        });
+        updateTimelineItem({
+          groupId: "image",
+          update: messages.arweaveIncluded,
+        });
+        updateTimelineItem({
+          groupId: "image",
           update: {
             lineId: "pinningImage",
-            content: imageTxMessage,
-            status: "waiting",
+            content: "Token image is uploaded to Arweave",
+            status: "success",
           },
         });
       } else {
         updateTimelineItem({
-          groupId: "pin",
+          groupId: "image",
           update: {
             lineId: "pinningImage",
-            content: "Failed to pin token image to Arweave permanent storage",
+            content:
+              "Failed to upload token image to Arweave permanent storage",
             status: "error",
           },
         });
         return;
       }
     }
+    if (isError()) return;
     setLikes((likes += 10));
 
     const imageURL = imageHash ? await arweaveHashToUrl(imageHash) : undefined;
@@ -282,9 +336,14 @@ export async function launchToken(params: {
       isMDA: undefined,
     };
 
-    updateTimelineItem({
-      groupId: "pin",
-      update: messages.pinningMetadata,
+    addLog({
+      groupId: "metadata",
+      status: "waiting",
+      title: `Pinning token metadata for ${data.symbol}`,
+      successTitle: `Token metadata for ${data.symbol} pinned`,
+      errorTitle: `Failed to pin token metadata for ${data.symbol}`,
+      lines: [messages.pinningMetadata],
+      requiredForSuccess: ["pinningMetadata", "arweaveTx", "arweaveIncluded"],
     });
 
     const metadataHash = await pinStringToArweave(
@@ -293,7 +352,7 @@ export async function launchToken(params: {
 
     if (!metadataHash) {
       updateTimelineItem({
-        groupId: "pin",
+        groupId: "metadata",
         update: {
           lineId: "pinningMetadata",
           content: "Failed to pin token metadata to Arweave permanent storage",
@@ -310,28 +369,41 @@ export async function launchToken(params: {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Pinning
+            Transaction
           </a>{" "}
-          token metadata to Arweave permanent storage...
+          is sent to Arweave.
         </>
       );
       updateTimelineItem({
-        groupId: "pin",
+        groupId: "metadata",
+        update: {
+          lineId: "arweaveTx",
+          content: metadataTxMessage,
+          status: "success",
+        },
+      });
+      updateTimelineItem({
+        groupId: "metadata",
+        update: messages.arweaveIncluded,
+      });
+      updateTimelineItem({
+        groupId: "metadata",
         update: {
           lineId: "pinningMetadata",
-          content: metadataTxMessage,
-          status: "waiting",
+          content: "Token metadata is uploaded to Arweave",
+          status: "success",
         },
       });
     }
+    if (isError()) return;
     setLikes((likes += 10));
 
     let waitForArweaveImageTxPromise = undefined;
     if (imageHash) {
       waitForArweaveImageTxPromise = waitForArweaveTx({
         hash: imageHash,
-        groupId: "pin",
-        lineId: "pinningImage",
+        groupId: "image",
+        lineId: "arweaveIncluded",
         updateTimelineItem,
         type: "image",
       });
@@ -339,8 +411,8 @@ export async function launchToken(params: {
 
     const waitForArweaveMetadataTxPromise = waitForArweaveTx({
       hash: metadataHash,
-      groupId: "pin",
-      lineId: "pinningMetadata",
+      groupId: "metadata",
+      lineId: "arweaveIncluded",
       updateTimelineItem,
       type: "metadata",
     });
@@ -353,10 +425,41 @@ export async function launchToken(params: {
       adminContractPrivateKey,
       tokenPublicKey,
       adminContractPublicKey,
+      tokenId,
     } = await deployTokenParams(lib);
     if (DEBUG) console.log("Deploy Params received");
     setTokenAddress(tokenPublicKey);
+    updateTimelineItem({
+      groupId: "verify",
+      update: {
+        lineId: "privateKeysGenerated",
+        content: `Token private keys are generated`,
+        status: "success",
+      },
+    });
 
+    const tokenAddressMsg = (
+      <>
+        Token address:{" "}
+        <a
+          href={`https://minascan.io/${chain}/account/${tokenPublicKey}`}
+          className="text-accent hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {tokenPublicKey}
+        </a>
+      </>
+    );
+    updateTimelineItem({
+      groupId: "verify",
+      update: {
+        lineId: "tokenAddress",
+        content: tokenAddressMsg,
+        status: "success",
+      },
+    });
+    if (isError()) return;
     // Save the result to a JSON file
     const deployParams = {
       symbol,
@@ -374,6 +477,10 @@ export async function launchToken(params: {
       adminPublicKey,
       metadata: uri,
     };
+    updateTimelineItem({
+      groupId: "verify",
+      update: messages.privateKeysSaved,
+    });
     // TODO: save with password encryption
     const deployParamsJson = JSON.stringify(deployParams, null, 2);
     const blob = new Blob([deployParamsJson], { type: "application/json" });
@@ -398,15 +505,30 @@ export async function launchToken(params: {
       </>
     );
     updateTimelineItem({
-      groupId: "deploy",
+      groupId: "verify",
       update: {
-        lineId: "saveDeployParams",
+        lineId: "privateKeysSaved",
         content: saveDeployParamsSuccessMsg,
         status: "success",
       },
     });
     setLikes((likes += 10));
-
+    addLog({
+      groupId: "deploy",
+      status: "waiting",
+      title: `Launching token ${data.symbol}`,
+      successTitle: `Token ${data.symbol} launched`,
+      errorTitle: `Failed to launch token ${data.symbol}`,
+      lines: [messages.txPrepared],
+      requiredForSuccess: [
+        "txPrepared",
+        "txSigned",
+        "txProved",
+        "txSent",
+        "txIncluded",
+        "contractStateVerified",
+      ],
+    });
     const deployResult = await deployToken({
       tokenPrivateKey,
       adminContractPrivateKey,
@@ -430,42 +552,17 @@ export async function launchToken(params: {
       });
       return;
     }
+    if (isError()) return;
     setLikes((likes += 10));
     const deployJobId = deployResult.jobId;
 
-    const transaction = await waitForProveJob({
+    const txIncluded = await waitForProveJob({
       jobId: deployJobId,
       groupId: "deploy",
-      lineId: "transaction",
       updateTimelineItem,
-    });
-    if (DEBUG) console.log("Transaction proved:", transaction?.slice(0, 50));
-    if (!transaction) {
-      return;
-    }
-
-    const sendResult = await sendTransaction(transaction);
-    if (DEBUG) console.log("Transaction sent:", sendResult);
-    if (sendResult.success === false || sendResult.hash === undefined) {
-      updateTimelineItem({
-        groupId: "deploy",
-        update: {
-          lineId: "transaction",
-          content: `Failed to send transaction to Mina blockchain: ${
-            sendResult.status ? "status: " + sendResult.status + ", " : ""
-          } ${String(sendResult.error ?? "error D437")}`,
-          status: "error",
-        },
-      });
-      return;
-    }
-
-    const txIncluded = await waitForMinaDeployTx({
-      hash: sendResult.hash,
-      jobId: deployJobId,
-      groupId: "deploy",
-      lineId: "transaction",
-      updateTimelineItem,
+      isError,
+      type: "deploy",
+      tokenContractAddress: tokenPublicKey,
     });
 
     if (!txIncluded) {
@@ -476,42 +573,117 @@ export async function launchToken(params: {
       tokenContractAddress: tokenPublicKey,
       adminContractAddress: adminContractPublicKey,
       adminAddress: adminPublicKey,
+      tokenId,
       groupId: "deploy",
-      lineId: "contractVerification",
       updateTimelineItem,
       info,
+      isError,
     });
     if (!contractVerified) {
       return;
     }
 
+    if (isError()) return;
+
     if (DEBUG) {
       console.log("Minting tokens", mintItems);
     }
-    /*
+    setLikes((likes += 10));
+
     let minted = 0;
     if (mintItems.length > 0) {
+      const tokensToMint = mintItems.length;
+
+      const mintingTokensMsg = (
+        <>
+          Minting{" "}
+          <a
+            href={`https://minascan.io/${chain}/token/${tokenId}/zk-txs`}
+            className="text-accent hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {symbol}
+          </a>{" "}
+          tokens to {mintItems.length} addresses...
+        </>
+      );
       addLog({
-        id: "mint",
+        groupId: "mint",
         status: "waiting",
-        title: "Minting tokens",
-        details: [
+        title: `Minting ${data.symbol} tokens`,
+        successTitle: `${mintItems.length} ${data.symbol} tokens minted`,
+        errorTitle: `Failed to mint ${mintItems.length} ${data.symbol} tokens`,
+        lines: [
           {
-            id: "mintingTokens",
-            content: `Minting ${symbol} tokens to ${mintItems.length} addresses...`,
+            lineId: "mintingTokens",
+            content: mintingTokensMsg,
+            status: "waiting",
           },
         ],
+        requiredForSuccess: ["mintingTokens", "minted"],
       });
 
       let nonce = await getAccountNonce(adminPublicKey);
-      let mintPromises: Promise<string | undefined>[] = [];
+      let mintPromises: Promise<boolean>[] = [];
+
       for (let i = 0; i < mintItems.length; i++) {
         const item = mintItems[i];
-        const itemId = `mint-${symbol}-${i}`;
-        updateMintTimelineItem({
-          id: "mint",
-          itemToUpdate: itemId,
-          updatedItem: `Minting ${item.amount} ${symbol} tokens to ${item.address}`,
+        const groupId = `mint-${symbol}-${i}`;
+        const amountMsg = (
+          <>
+            Amount: {item.amount}{" "}
+            <a
+              href={`https://minascan.io/${chain}/token/${tokenId}/zk-txs`}
+              className="text-accent hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {symbol}
+            </a>{" "}
+            tokens
+          </>
+        );
+        const tokenAddressMsg = (
+          <>
+            Address:{" "}
+            <a
+              href={`https://minascan.io/${chain}/account/${item.address}`}
+              className="text-accent hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {item.address}
+            </a>
+          </>
+        );
+        addLog({
+          groupId,
+          status: "waiting",
+          title: `Minting ${item.amount} ${data.symbol} tokens`,
+          successTitle: `${item.amount} ${data.symbol} tokens minted`,
+          errorTitle: `Failed to mint ${item.amount} ${data.symbol} tokens`,
+          lines: [
+            messages.txMint,
+            {
+              lineId: "amount",
+              content: amountMsg,
+              status: "success",
+            },
+            {
+              lineId: "address",
+              content: tokenAddressMsg,
+              status: "success",
+            },
+          ],
+          requiredForSuccess: [
+            "txMint",
+            "txSigned",
+            "txProved",
+            "txSent",
+            "txIncluded",
+            "mintBalance",
+          ],
         });
 
         const mintResult = await mintToken({
@@ -521,75 +693,62 @@ export async function launchToken(params: {
           to: item.address,
           amount: item.amount,
           nonce: nonce++,
-          id,
-          updateLogItem,
-          symbol: tokenSymbol,
+          groupId,
+          updateTimelineItem,
+          symbol,
           lib,
+          isError,
         });
-        if (
-          mintResult.success === false ||
-          mintResult.jobId === undefined ||
-          isError
-        ) {
-          logItem({
-            id,
-            status: "error",
-            title: "Failed to mint tokens",
-            description: mintResult.error ?? "Mint error",
-            date: new Date(),
-          });
-          setWaitingItem(undefined);
-          setIsError(true);
+        if (mintResult.success === false || mintResult.jobId === undefined) {
           return;
         }
         const mintJobId = mintResult.jobId;
         await sleep(1000);
-
-        const waitForMintJobPromise = waitForMintJob({
+        showMintStatistics(tokensToMint);
+        await sleep(1000);
+        const waitForMintJobPromise = waitForProveJob({
           jobId: mintJobId,
-          id: `mint-${i}`,
-          sequence: i,
+          groupId,
+          updateTimelineItem,
+          isError,
+          type: "mint",
+          tokenContractAddress: tokenPublicKey,
+          address: item.address,
         });
         mintPromises.push(waitForMintJobPromise);
+        if (isError()) return;
       }
-      if (isError) {
-        logItem({
-          id: "mint",
-          status: "error",
-          title: "Failed to mint tokens",
-          description: "Failed to mint tokens",
-          date: new Date(),
-        });
-        setWaitingItem(undefined);
-        setIsError(true);
-        return;
+      while (!showMintStatistics(tokensToMint) && !isError()) {
+        await sleep(5000);
       }
-      logWaitingItem({
-        title: "Minting tokens",
-        description: `Waiting for mint transactions to be included into a block`,
-      });
+      setLikes((likes += 10));
+
       await Promise.all(mintPromises);
-      if (isError) {
-        logItem({
-          id: "mint",
-          status: "error",
-          title: "Failed to mint tokens",
-          description: "Failed to mint tokens",
-          date: new Date(),
-        });
-        setWaitingItem(undefined);
-        setIsError(true);
-        return;
-      }
-      logItem({
-        id: "mint",
-        status: "success",
-        title: `Tokens are minted to ${mintItems.length} addresses`,
-        description: `All mint transactions are included into a block`,
-        date: new Date(),
+      const statistics = getMintStatistics();
+      const mintedTokensMsg = (
+        <>
+          Minted{" "}
+          <a
+            href={`https://minascan.io/${chain}/token/${tokenId}/zk-txs`}
+            className="text-accent hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {symbol}
+          </a>{" "}
+          tokens to {statistics.success} addresses
+        </>
+      );
+      updateTimelineItem({
+        groupId: "mint",
+        update: {
+          lineId: "mintingTokens",
+          content: mintedTokensMsg,
+          status: statistics.success === tokensToMint ? "success" : "error",
+        },
       });
     }
-    */
+
     if (waitForArweaveImageTxPromise) await waitForArweaveImageTxPromise;
     setLikes((likes += 10));
     await waitForArweaveMetadataTxPromise;

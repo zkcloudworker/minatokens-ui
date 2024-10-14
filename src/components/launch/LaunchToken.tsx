@@ -8,7 +8,12 @@ import { LaunchForm } from "./LaunchForm";
 import { LaunchTokenData } from "@/lib/token";
 import { launchToken } from "./lib/launch";
 import { useLaunchToken } from "@/context/launch";
-import { TimeLineItem, TimelineGroup, TimelineGroupStatus } from "./TimeLine";
+import {
+  TimeLineItem,
+  TimelineGroup,
+  TimelineGroupStatus,
+  TimelineItemStatus,
+} from "./TimeLine";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 const LaunchToken: React.FC = () => {
@@ -53,6 +58,31 @@ const LaunchToken: React.FC = () => {
     });
   }
 
+  function isError() {
+    return state.timelineItems.some((item) => item.status === "error");
+  }
+
+  function getMintStatistics(): { [key in TimelineItemStatus]: number } {
+    const mintItems = state.timelineItems.filter((item) =>
+      item.groupId.startsWith("mint")
+    );
+    const statistics = {
+      success: 0,
+      error: 0,
+      waiting: 0,
+    };
+    mintItems.forEach((item) => {
+      if (item.status === "success") {
+        statistics.success++;
+      } else if (item.status === "error") {
+        statistics.error++;
+      } else if (item.status === "waiting") {
+        statistics.waiting++;
+      }
+    });
+    return statistics;
+  }
+
   const handleLaunchButtonClick = async (data: LaunchTokenData) => {
     if (DEBUG) console.log("Launching token:", data);
 
@@ -71,6 +101,8 @@ const LaunchToken: React.FC = () => {
       setTotalSupply,
       setTokenAddress,
       setLikes,
+      isError,
+      getMintStatistics,
     });
   };
 
