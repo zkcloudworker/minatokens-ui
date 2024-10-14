@@ -1,8 +1,8 @@
-import { UpdateLogListFunction, MessageId, LogItemId } from "./messages";
+import { UpdateTimelineItemFunction } from "./messages";
 import { loadLibraries, Libraries } from "@/lib/libraries";
 
 export async function loadLib(
-  updateLogList: UpdateLogListFunction
+  updateTimelineItem: UpdateTimelineItemFunction
 ): Promise<Libraries> {
   const lib = await loadLibraries();
   const loadedLibraries = (
@@ -20,10 +20,13 @@ export async function loadLib(
     </>
   );
 
-  updateLogList({
-    id: "deploy",
-    itemToUpdate: "o1js",
-    updatedItem: loadedLibraries,
+  updateTimelineItem({
+    groupId: "deploy",
+    update: {
+      lineId: "o1js",
+      content: loadedLibraries,
+      status: "success",
+    },
   });
   return lib;
 }

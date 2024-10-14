@@ -17,11 +17,11 @@ const initialMintAddresses: MintAddress[] = MINT_TEST
     ]
   : [];
 
-export function MintAddressesModal({
-  onSubmit,
-}: {
-  onSubmit: (mintAddresses: MintAddress[]) => void;
-}) {
+export interface MintAddressesModalProps {
+  onSubmit?: (mintAddresses: MintAddress[]) => void;
+}
+
+export function MintAddressesModal({ onSubmit }: MintAddressesModalProps = {}) {
   const [mintAddresses, setMintAddresses] =
     useState<MintAddress[]>(initialMintAddresses);
 
@@ -44,7 +44,9 @@ export function MintAddressesModal({
   }
 
   const handleSubmit = () => {
-    onSubmit(mintAddresses);
+    if (onSubmit) {
+      onSubmit(mintAddresses);
+    }
   };
 
   return (

@@ -1,7 +1,7 @@
-import { LogListItem, TimelineStatus } from "@/components/launch/TimeLine";
-import { ReactNode } from "react";
-export type LogItemId = "deploy" | "mint";
-export type MessageId =
+"use client";
+import { TimeLineItem } from "@/components/launch/TimeLine";
+export type GroupId = "pin" | "deploy" | "mint";
+export type LineId =
   | "verifyData"
   | "mintDataError"
   | "o1js"
@@ -20,21 +20,25 @@ export type MessageId =
   | "deployTransactionError"
   | "contractVerification"
   | "mintingTokens";
-export type UpdateLogListFunction = (params: {
-  id: LogItemId;
-  itemToUpdate: MessageId;
-  updatedItem: ReactNode;
-  status?: TimelineStatus;
+
+export type UpdateTimelineItemFunction = (params: {
+  groupId: GroupId;
+  update: TimeLineItem;
 }) => void;
 
-export const messages: { [key in MessageId]: LogListItem } = {
-  verifyData: { id: "verifyData", content: "Verifying data..." },
+export const messages: { [key in LineId]: TimeLineItem } = {
+  verifyData: {
+    lineId: "verifyData",
+    content: "Verifying data...",
+    status: "waiting",
+  },
   mintDataError: {
-    id: "mintDataError",
+    lineId: "mintDataError",
     content: "Mint data error",
+    status: "error",
   },
   o1js: {
-    id: "o1js",
+    lineId: "o1js",
     content: (
       <>
         Loading{" "}
@@ -49,68 +53,84 @@ export const messages: { [key in MessageId]: LogListItem } = {
         library...
       </>
     ),
+    status: "waiting",
   },
 
   adminRequired: {
-    id: "adminRequired",
+    lineId: "adminRequired",
     content: "Admin address is required to launch a token",
+    status: "error",
   },
   adminAddressDoNotMatch: {
-    id: "adminAddressDoNotMatch",
+    lineId: "adminAddressDoNotMatch",
     content: "Admin address does not match with wallet address",
+    status: "error",
   },
   noAuroWallet: {
-    id: "noAuroWallet",
+    lineId: "noAuroWallet",
     content: "No Auro Wallet found",
+    status: "error",
   },
   pinningImage: {
-    id: "pinningImage",
+    lineId: "pinningImage",
     content: "Pinning token image to Arweave permanent storage...",
+    status: "waiting",
   },
   pinningMetadata: {
-    id: "pinningMetadata",
+    lineId: "pinningMetadata",
     content: "Pinning token metadata to Arweave permanent storage...",
+    status: "waiting",
   },
   saveDeployParams: {
-    id: "saveDeployParams",
+    lineId: "saveDeployParams",
     content: "Saving token private keys to a JSON file...",
+    status: "waiting",
   },
   transaction: {
-    id: "transaction",
+    lineId: "transaction",
     content: "Preparing the transaction for token deployment...",
+    status: "waiting",
   },
   error: {
-    id: "error",
+    lineId: "error",
     content: "Error launching token",
+    status: "error",
   },
   accountNotFound: {
-    id: "accountNotFound",
+    lineId: "accountNotFound",
     content: "Account not found",
+    status: "error",
   },
   insufficientBalance: {
-    id: "insufficientBalance",
+    lineId: "insufficientBalance",
     content: "Insufficient balance",
+    status: "error",
   },
   noUserSignature: {
-    id: "noUserSignature",
+    lineId: "noUserSignature",
     content: "No user signature received",
+    status: "error",
   },
 
   deployTransactionProveJobFailed: {
-    id: "deployTransactionProveJobFailed",
+    lineId: "deployTransactionProveJobFailed",
     content: "Deploy transaction prove job failed",
+    status: "error",
   },
 
   deployTransactionError: {
-    id: "deployTransactionError",
+    lineId: "deployTransactionError",
     content: "Deploy transaction error",
+    status: "error",
   },
   contractVerification: {
-    id: "contractVerification",
+    lineId: "contractVerification",
     content: "Verifying token contract state...",
+    status: "waiting",
   },
   mintingTokens: {
-    id: "mintingTokens",
+    lineId: "mintingTokens",
     content: "Minting tokens...",
+    status: "waiting",
   },
 };

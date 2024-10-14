@@ -1,6 +1,8 @@
 "use client";
 // TODO: move to server
 import Arweave from "arweave";
+import { debug } from "@/lib/debug";
+const DEBUG = debug();
 const ARWEAVE_KEY_STRING = process.env.NEXT_PUBLIC_ARWEAVE_KEY_STRING;
 const ARWEAVE_TEST = process.env.NEXT_PUBLIC_ARWEAVE_TEST;
 
@@ -63,7 +65,8 @@ export async function pinStringToArweave(
     console.error(`Arweave pin failed`);
     return undefined;
   }
-  console.log("url:", ArweaveService.hashToUrl(hash));
+  if (DEBUG)
+    console.log("pinStringToArweave url:", ArweaveService.hashToUrl(hash));
   return hash;
 }
 
@@ -106,7 +109,8 @@ export async function pinImageToArweave(
     });
 
     if (hash === undefined) throw new Error(`Arweave pin failed`);
-    console.log("url:", ArweaveService.hashToUrl(hash));
+    if (DEBUG)
+      console.log("pinImageToArweave url:", ArweaveService.hashToUrl(hash));
     return hash;
   } catch (err) {
     console.error(err);
@@ -144,7 +148,7 @@ class ArweaveService {
     const { data, waitForConfirmation } = params;
     try {
       if (this.key === undefined) {
-        console.log("no key");
+        console.error("no key");
         return undefined;
       }
       if (this.key?.test === true)
@@ -170,13 +174,14 @@ class ArweaveService {
 
       while (!uploader.isComplete) {
         await uploader.uploadChunk();
-        console.log(
-          `${uploader.pctComplete}% complete, ${uploader.uploadedChunks}/${uploader.totalChunks}`
-        );
+        if (DEBUG)
+          console.log(
+            `Arweave: ${uploader.pctComplete}% complete, ${uploader.uploadedChunks}/${uploader.totalChunks}`
+          );
       }
       //console.log("transaction", transaction);
       const hash = transaction.id;
-      console.log("arweave hash", hash);
+      if (DEBUG) console.log("arweave hash", hash);
       if (waitForConfirmation === true) await this.wait({ hash }); // wait for confirmation, can take a while
 
       return hash;
@@ -221,7 +226,7 @@ class ArweaveService {
       }
       //console.log("transaction", transaction);
       const hash = transaction.id;
-      console.log("arweave hash", hash);
+      if (DEBUG) console.log("pinFile: arweave hash:", hash);
       if (waitForConfirmation === true) await this.wait({ hash }); // wait for confirmation, can take a while
       return hash;
     } catch (err) {

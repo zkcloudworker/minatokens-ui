@@ -2,19 +2,20 @@
 
 import React, { createContext, useReducer, useContext, ReactNode } from "react";
 import {
-  TimelineDatedItem,
-  TimelineItem,
-  updateLogItem,
-  logItem,
-  deleteLogItem,
-  updateLogItemDetails,
-  LogListItem,
-  TimelineStatus,
+  TimeLineItem,
+  TimelineGroup,
+  TimelineGroupDated,
+  addTimelineGroup,
+  updateTimelineGroup,
+  updateTimelineItem,
+  deleteTimelineGroup,
+  TimelineItemStatus,
+  TimelineGroupStatus,
 } from "@/components/launch/TimeLine";
 import { LaunchTokenData } from "@/lib/token";
 
 interface LaunchTokenState {
-  timelineItems: TimelineDatedItem[];
+  timelineItems: TimelineGroupDated[];
   tokenData: LaunchTokenData | null;
   totalSupply: number;
   tokenAddress: string;
@@ -23,22 +24,20 @@ interface LaunchTokenState {
 
 type Action =
   | { type: "SET_TOKEN_DATA"; payload: LaunchTokenData }
-  | { type: "SET_TIMELINE_ITEMS"; payload: TimelineDatedItem[] }
-  | { type: "ADD_TIMELINE_ITEM"; payload: TimelineItem }
+  | { type: "SET_TIMELINE_GROUPS"; payload: TimelineGroupDated[] }
+  | { type: "ADD_TIMELINE_GROUP"; payload: TimelineGroup }
+  | {
+      type: "UPDATE_TIMELINE_GROUP";
+      payload: { groupId: string; update: Partial<TimelineGroup> };
+    }
   | {
       type: "UPDATE_TIMELINE_ITEM";
-      payload: { id: string; update: Partial<TimelineItem> };
-    }
-  | {
-      type: "UPDATE_TIMELINE_ITEM_DETAIL";
       payload: {
-        id: string;
-        detailId: string;
-        update: ReactNode;
-        status?: TimelineStatus;
+        groupId: string;
+        update: TimeLineItem;
       };
     }
-  | { type: "DELETE_TIMELINE_ITEM"; payload: string }
+  | { type: "DELETE_TIMELINE_GROUP"; payload: string }
   | { type: "SET_TOTAL_SUPPLY"; payload: number }
   | { type: "SET_TOKEN_ADDRESS"; payload: string }
   | { type: "SET_LIKES"; payload: number };
@@ -66,45 +65,42 @@ const launchTokenReducer = (
   state: LaunchTokenState,
   action: Action
 ): LaunchTokenState => {
-  console.log("LaunchTokenReducer:", { state, action });
   switch (action.type) {
     case "SET_TOKEN_DATA":
       return { ...state, tokenData: action.payload };
-    case "SET_TIMELINE_ITEMS":
+    case "SET_TIMELINE_GROUPS":
       return { ...state, timelineItems: action.payload };
-    case "ADD_TIMELINE_ITEM":
+    case "ADD_TIMELINE_GROUP":
       return {
         ...state,
-        timelineItems: logItem({
+        timelineItems: addTimelineGroup({
           item: action.payload,
+          items: state.timelineItems,
+        }),
+      };
+    case "UPDATE_TIMELINE_GROUP":
+      return {
+        ...state,
+        timelineItems: updateTimelineGroup({
+          groupId: action.payload.groupId,
+          update: action.payload.update,
           items: state.timelineItems,
         }),
       };
     case "UPDATE_TIMELINE_ITEM":
       return {
         ...state,
-        timelineItems: updateLogItem({
-          id: action.payload.id,
-          update: action.payload.update,
+        timelineItems: updateTimelineItem({
           items: state.timelineItems,
+          groupId: action.payload.groupId,
+          update: action.payload.update,
         }),
       };
-    case "UPDATE_TIMELINE_ITEM_DETAIL":
+    case "DELETE_TIMELINE_GROUP":
       return {
         ...state,
-        timelineItems: updateLogItemDetails({
-          items: state.timelineItems,
-          id: action.payload.id,
-          detailId: action.payload.detailId,
-          update: action.payload.update,
-          status: action.payload.status,
-        }),
-      };
-    case "DELETE_TIMELINE_ITEM":
-      return {
-        ...state,
-        timelineItems: deleteLogItem({
-          id: action.payload,
+        timelineItems: deleteTimelineGroup({
+          groupId: action.payload,
           items: state.timelineItems,
         }),
       };

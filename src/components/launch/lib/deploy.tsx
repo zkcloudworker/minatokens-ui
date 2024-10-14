@@ -1,7 +1,12 @@
 "use client";
 
 import { getAccountNonce } from "@/lib/nonce";
-import { UpdateLogListFunction, LogItemId, messages } from "./messages";
+import {
+  UpdateTimelineItemFunction,
+  LineId,
+  GroupId,
+  messages,
+} from "./messages";
 import { verificationKeys } from "@/lib/vk";
 import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
@@ -21,8 +26,8 @@ export async function deployToken(params: {
   symbol: string;
   uri: string;
   libraries: Libraries;
-  updateLogList: UpdateLogListFunction;
-  id: LogItemId;
+  updateTimelineItem: UpdateTimelineItemFunction;
+  groupId: GroupId;
 }): Promise<{
   success: boolean;
   error?: string;
@@ -35,8 +40,8 @@ export async function deployToken(params: {
     symbol,
     uri,
     libraries,
-    updateLogList,
-    id,
+    updateTimelineItem,
+    groupId,
   } = params;
 
   try {
@@ -82,10 +87,9 @@ export async function deployToken(params: {
       ? adminPrivateKey.toPublicKey()
       : PublicKey.fromBase58(adminPublicKey);
 
-    updateLogList({
-      id,
-      itemToUpdate: "transaction",
-      updatedItem: messages.transaction.content,
+    updateTimelineItem({
+      groupId,
+      update: messages.transaction,
     });
 
     if (DEBUG) console.log("initializing blockchain", chain);
@@ -123,11 +127,13 @@ export async function deployToken(params: {
 
     if (!Mina.hasAccount(sender)) {
       console.error("Sender does not have account");
-      updateLogList({
-        id,
-        itemToUpdate: "accountNotFound",
-        status: "error",
-        updatedItem: `Account ${sender.toBase58()} not activated. Please send 1 MINA to your account to activate it.`,
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "accountNotFound",
+          content: `Account ${sender.toBase58()} not activated. Please send 1 MINA to your account to activate it.`,
+          status: "error",
+        },
       });
 
       return {
@@ -137,11 +143,13 @@ export async function deployToken(params: {
     }
     const requiredBalance = 3 + (ISSUE_FEE + fee) / 1_000_000_000;
     if (requiredBalance > balance) {
-      updateLogList({
-        id,
-        itemToUpdate: "insufficientBalance",
-        status: "error",
-        updatedItem: `Insufficient balance of the sender: ${balance} MINA. Required: ${requiredBalance} MINA`,
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "insufficientBalance",
+          content: `Insufficient balance of the sender: ${balance} MINA. Required: ${requiredBalance} MINA`,
+          status: "error",
+        },
       });
       return {
         success: false,
@@ -216,10 +224,13 @@ export async function deployToken(params: {
     };
     console.timeEnd("prepared tx");
     console.timeEnd("ready to sign");
-    updateLogList({
-      id,
-      itemToUpdate: "transaction",
-      updatedItem: "Token deployment transaction is prepared, please sign it",
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: "transaction",
+        content: "Token deployment transaction is prepared, please sign it",
+        status: "waiting",
+      },
     });
 
     console.time("sent transaction");
@@ -232,11 +243,13 @@ export async function deployToken(params: {
       signedData = txResult?.signedData;
       if (signedData === undefined) {
         if (DEBUG) console.log("No signed data");
-        updateLogList({
-          id,
-          itemToUpdate: "transaction",
-          status: "error",
-          updatedItem: messages.noUserSignature.content,
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: "noUserSignature",
+            content: messages.noUserSignature.content,
+            status: "error",
+          },
         });
 
         return {
@@ -246,11 +259,14 @@ export async function deployToken(params: {
       }
     }
 
-    updateLogList({
-      id,
-      itemToUpdate: "transaction",
-      updatedItem:
-        "Deploy transaction is prepared and signed, proving the transaction...",
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: "transaction",
+        content:
+          "Deploy transaction is prepared and signed, proving the transaction...",
+        status: "waiting",
+      },
     });
 
     const jobId = await sendDeployTransaction({
@@ -268,11 +284,13 @@ export async function deployToken(params: {
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {
       console.error("JobId is undefined");
-      updateLogList({
-        id,
-        itemToUpdate: "deployTransactionProveJobFailed",
-        status: "error",
-        updatedItem: messages.deployTransactionProveJobFailed.content,
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "deployTransactionProveJobFailed",
+          content: messages.deployTransactionProveJobFailed.content,
+          status: "error",
+        },
       });
 
       return {
@@ -296,10 +314,13 @@ export async function deployToken(params: {
       </>
     );
 
-    updateLogList({
-      id,
-      itemToUpdate: "transaction",
-      updatedItem: jobIdMessage,
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: "transaction",
+        content: jobIdMessage,
+        status: "waiting",
+      },
     });
 
     return {
@@ -308,11 +329,13 @@ export async function deployToken(params: {
     };
   } catch (error) {
     console.error("Error in deployToken", error);
-    updateLogList({
-      id,
-      itemToUpdate: "error",
-      status: "error",
-      updatedItem: String(error),
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: "error",
+        content: String(error),
+        status: "error",
+      },
     });
 
     return {

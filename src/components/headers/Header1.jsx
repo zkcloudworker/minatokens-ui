@@ -59,15 +59,15 @@ export default function Header1() {
               className="hidden dark:block"
               alt="Minatokens | MINA Launchpad"
             />
-            <div class="text-jacarta-900 dark:text-white -ms-3">
+            <div className="text-jacarta-900 dark:text-white -ms-3">
               Minatokens
             </div>
           </Link>
 
           <nav className="navbar w-full hidden lg:block xl:ml-[8%] --border">
-              <ul className="flex flex-col lg:flex-row">
-                <Nav />
-              </ul>
+            <ul className="flex flex-col lg:flex-row">
+              <Nav />
+            </ul>
           </nav>
 
           {/* Search */}
@@ -114,7 +114,7 @@ export default function Header1() {
                   className="hidden --max-h-7 dark:block"
                   alt="Minatokens | MINA Launchpad"
                 />
-                <div class="text-jacarta-900 dark:text-white -ms-3">
+                <div Name="text-jacarta-900 dark:text-white -ms-3">
                   Minatokens
                 </div>
               </Link>
