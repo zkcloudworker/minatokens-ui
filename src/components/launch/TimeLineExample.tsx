@@ -42,7 +42,7 @@ export const exampleItems: TimelineGroup[] = [
             </ul>
           </>
         ),
-        status: "warning",
+        status: "success",
       },
     ],
   },

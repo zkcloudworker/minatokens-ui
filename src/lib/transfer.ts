@@ -1,6 +1,6 @@
 "use client";
 
-import { sendTransferTransaction } from "./zkcloudworker";
+import { sendTransferTransaction } from "./token-api";
 import { TimelineItem } from "../components/ui/timeline";
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
