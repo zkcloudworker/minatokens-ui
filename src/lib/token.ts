@@ -16,19 +16,48 @@
     };
 */
 
+export interface MintAddress {
+  amount: number | "";
+  address: string;
+}
+
+export interface MintAddressVerified {
+  amount: number;
+  address: string;
+}
+export interface TokenLinks {
+  twitter: string;
+  discord: string;
+  telegram: string;
+  instagram: string;
+  website: string;
+}
+
+export interface LaunchTokenData {
+  symbol: string;
+  name: string;
+  description: string;
+  links: TokenLinks;
+  image: File | undefined;
+  imageURL: string | undefined;
+  adminAddress: string;
+  mintAddresses: MintAddress[];
+}
+
 export interface TokenInfo {
   symbol: string;
-  name: string | undefined;
-  description: string | undefined;
-  image: string | undefined;
-  website: string | undefined;
-  telegram: string | undefined;
-  twitter: string | undefined;
-  discord: string | undefined;
-  tokenContractCode: string | undefined;
-  adminContractsCode: string[] | undefined;
-  data: object | undefined;
-  isMDA: boolean | undefined;
+  name: string;
+  description?: string;
+  image?: string;
+  twitter: string;
+  discord: string;
+  telegram: string;
+  instagram: string;
+  website: string;
+  tokenContractCode?: string;
+  adminContractsCode?: string[];
+  data?: object;
+  isMDA?: boolean;
 }
 
 export interface TokenState {

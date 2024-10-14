@@ -1,16 +1,25 @@
 "use client";
 
-import { TokenPreview, TokenPreviewProps } from "./TokenPreview";
-import Image from "next/image";
-import { useEffect, useState, createElement } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import { CheckCircle, AlertCircle, XCircle, CheckSquare } from "lucide-react";
 import { motion } from "framer-motion";
 
+export interface LogListItem {
+  id: string;
+  content: ReactNode;
+}
+
+export type TimelineStatus =
+  | "success"
+  | "warning"
+  | "error"
+  | "waiting"
+  | "completed";
 export interface TimelineItem {
   id: string;
-  status: "success" | "warning" | "error" | "waiting" | "completed";
+  status: TimelineStatus;
   title: string;
-  details: React.ReactNode;
+  details: LogListItem[];
 }
 
 export interface TimelineDatedItem extends TimelineItem {
@@ -49,6 +58,32 @@ export function updateLogItem(params: {
   );
 }
 
+export function updateLogItemDetails(params: {
+  items: TimelineDatedItem[];
+  id: string;
+  detailId: string;
+  update: ReactNode;
+  status?: TimelineStatus;
+}) {
+  const { items, id, detailId, update, status } = params;
+  return items.map((item) => {
+    if (item.id !== id) {
+      return item;
+    } else {
+      const index = item.details.findIndex((detail) => detail.id === detailId);
+      if (index === -1) {
+        item.details.push({ id: detailId, content: update });
+      } else {
+        item.details[index].content = update;
+      }
+      return {
+        ...item,
+        time: (status ?? item.status) === "waiting" ? item.time : Date.now(),
+      };
+    }
+  });
+}
+
 export function deleteLogItem(params: {
   items: TimelineDatedItem[];
   id: string;
@@ -57,11 +92,13 @@ export function deleteLogItem(params: {
   return items.filter((item) => item.id !== id);
 }
 
-export function logList(items: React.ReactNode[]): React.ReactNode {
+function logList(items: LogListItem[]): ReactNode {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0].content;
   return (
-    <ul className="list-disc pl-5">
+    <ul className="list-disc pl-5" id={`logList-${Date.now()}`}>
       {items.map((item, i) => (
-        <li key={"list-" + i}>{item}</li>
+        <li key={`logList-${i}-${item.id}`}>{item.content}</li>
       ))}
     </ul>
   );
@@ -103,11 +140,11 @@ export function TimeLine({ items }: TimeLineProps) {
           className="relative flex items-center rounded-2.5xl border border-jacarta-100 bg-white p-4 transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700"
         >
           <div>
-            <h3 className="mb-1 font-display text-sm font-semibold text-jacarta-700 dark:text-white">
+            <h3 className="mb-1 font-display font-semibold text-jacarta-700 dark:text-white">
               {elm.title}
             </h3>
-            <span className="mb-1 block text-sm text-jacarta-500 dark:text-jacarta-200">
-              {elm.details}
+            <span className="mb-1 block text-sm text-jacarta-500 dark:text-white">
+              {logList(elm.details)}
             </span>
           </div>
 
@@ -184,10 +221,8 @@ const statusIcons = {
 };
 
 const formatTime = (time: number, currentTime: number) => {
-  const secondsPassed = Math.floor((currentTime - time) / 1000);
-  const minutesPassed = Math.floor(secondsPassed / 60);
-  const remainingSeconds = secondsPassed % 60;
-  return `${minutesPassed > 0 ? `${minutesPassed} min ` : ""}${
-    secondsPassed > 0 ? `${remainingSeconds} sec` : ""
-  }`;
+  const timePassed = Math.floor((currentTime - time) / 1000);
+  const minutes = Math.floor(timePassed / 60);
+  const seconds = timePassed % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };

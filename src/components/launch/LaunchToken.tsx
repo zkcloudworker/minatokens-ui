@@ -1,24 +1,14 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
-import Image from "next/image";
-import Link from "next/link";
-import React, { useEffect, useState, useContext } from "react";
-import { AddressContext } from "@/context/address";
-import { MintAddressesModal, MintAddress } from "../modals/MintAddressesModal";
+
+import React, { useEffect, useState, useContext, ReactNode } from "react";
+
 import { TokenProgress } from "./TokenProgress";
-import { LaunchForm, TokenLinks, LaunchTokenData } from "./LaunchForm";
-import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { getTokenState } from "@/lib/state";
+import { LaunchForm } from "./LaunchForm";
+import { LaunchTokenData } from "@/lib/token";
 import { launchToken } from "./lib/launch";
 import { useLaunchToken } from "@/context/launch";
-import {
-  TimelineDatedItem,
-  TimelineItem,
-  logItem,
-  logList,
-  updateLogItem,
-} from "./TimeLine";
-import { exampleItems } from "./TimeLineExample";
+import { TimelineItem, LogListItem, TimelineStatus } from "./TimeLine";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 const LaunchToken: React.FC = () => {
@@ -31,56 +21,77 @@ const LaunchToken: React.FC = () => {
     });
   }
 
-  function updateLog(id: string, update: Partial<TimelineItem>) {
+  function updateLogList(params: {
+    id: string;
+    detailId: string;
+    update: ReactNode;
+    status?: TimelineStatus;
+  }) {
+    const { id, detailId, update, status } = params;
     dispatch({
-      type: "UPDATE_TIMELINE_ITEM",
-      payload: { id, update },
+      type: "UPDATE_TIMELINE_ITEM_DETAIL",
+      payload: { id, detailId, update, status },
     });
   }
 
-  useEffect(() => {
-    console.log("State isLaunching changed:", state.isLaunching);
-  }, [state.isLaunching]);
+  function setTotalSupply(totalSupply: number) {
+    dispatch({
+      type: "SET_TOTAL_SUPPLY",
+      payload: totalSupply,
+    });
+  }
 
-  useEffect(() => {
-    console.log(
-      "Timeline items changed:",
-      state.timelineItems.map((item) => item.id).join(", ")
-    );
-  }, [state.timelineItems]);
+  function setTokenAddress(tokenAddress: string) {
+    dispatch({
+      type: "SET_TOKEN_ADDRESS",
+      payload: tokenAddress,
+    });
+  }
+
+  function setLikes(likes: number) {
+    dispatch({
+      type: "SET_LIKES",
+      payload: likes,
+    });
+  }
 
   const handleLaunchButtonClick = async (data: LaunchTokenData) => {
     if (DEBUG) console.log("Launching token:", data);
-    console.log("Launching token:", state.isLaunching);
-    dispatch({ type: "SET_LAUNCHING", payload: true });
-    dispatch({ type: "SET_TIMELINE_ITEMS", payload: [] });
-    window.scrollTo({ top: 0, behavior: "instant" });
-    console.log("Launching token started:", state.isLaunching);
 
-    for (const item of exampleItems) {
-      console.log("Adding log:", item.id);
-      addLog(item);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    }
-    //launchToken(data, addLog, updateLog);
+    dispatch({ type: "SET_TOKEN_DATA", payload: data });
+    dispatch({ type: "SET_TIMELINE_ITEMS", payload: [] });
+    dispatch({ type: "SET_TOTAL_SUPPLY", payload: 0 });
+    dispatch({ type: "SET_TOKEN_ADDRESS", payload: "launching" });
+    dispatch({ type: "SET_LIKES", payload: 10 });
+
+    window.scrollTo({ top: 0, behavior: "instant" });
+
+    launchToken({
+      data,
+      addLog,
+      updateLogList,
+      setTotalSupply,
+      setTokenAddress,
+      setLikes,
+    });
   };
 
   return (
     <>
-      {state.isLaunching && (
+      {state.tokenData && (
         <TokenProgress
           caption="Launching Token"
           items={state.timelineItems}
-          tokenAddress="0x1234567890abcdef"
-          image="token.png"
-          likes={10}
-          name="Example Token"
-          symbol="EXT"
-          totalSupply={10000}
+          tokenAddress={state.tokenAddress}
+          image={state.tokenData.imageURL ?? "token.png"}
+          likes={state.likes}
+          name={state.tokenData.name}
+          symbol={state.tokenData.symbol}
+          totalSupply={state.totalSupply}
           isLiked={true}
         />
       )}
-      {!state.isLaunching && <LaunchForm onLaunch={handleLaunchButtonClick} />}
+      {!state.tokenData && <LaunchForm onLaunch={handleLaunchButtonClick} />}
     </>
   );
 };

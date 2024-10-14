@@ -2,8 +2,12 @@
 import React, { useState, ChangeEvent, DragEvent } from "react";
 import Image from "next/image";
 
-export function FileUpload({ setImage }: { setImage: (image: File) => void }) {
-  const [imageName, setImageName] = useState<string>("");
+export interface FileUploadProps {
+  setImage: (image: File) => void;
+  setImageURL: (url: string | undefined) => void;
+}
+
+export function FileUpload({ setImage, setImageURL }: FileUploadProps) {
   const [dragging, setDragging] = useState<boolean>(false);
   const [imagePreview, setImagePreview] = useState<string>("token.png");
 
@@ -26,9 +30,10 @@ export function FileUpload({ setImage }: { setImage: (image: File) => void }) {
     setDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) {
+      const url = URL.createObjectURL(file);
+      setImagePreview(url);
       setImage(file);
-      setImageName(file.name); // Set the image name
-      setImagePreview(URL.createObjectURL(file)); // Set the image preview
+      setImageURL(url);
     }
   };
 
@@ -36,7 +41,6 @@ export function FileUpload({ setImage }: { setImage: (image: File) => void }) {
     const file = e.target.files?.[0];
     if (file) {
       setImage(file);
-      setImageName(file.name); // Set the image name
       setImagePreview(URL.createObjectURL(file)); // Set the image preview
     }
   };

@@ -7,26 +7,48 @@ import {
   updateLogItem,
   logItem,
   deleteLogItem,
+  updateLogItemDetails,
+  LogListItem,
+  TimelineStatus,
 } from "@/components/launch/TimeLine";
+import { LaunchTokenData } from "@/lib/token";
 
 interface LaunchTokenState {
-  isLaunching: boolean;
   timelineItems: TimelineDatedItem[];
+  tokenData: LaunchTokenData | null;
+  totalSupply: number;
+  tokenAddress: string;
+  likes: number;
 }
 
 type Action =
-  | { type: "SET_LAUNCHING"; payload: boolean }
+  | { type: "SET_TOKEN_DATA"; payload: LaunchTokenData }
   | { type: "SET_TIMELINE_ITEMS"; payload: TimelineDatedItem[] }
   | { type: "ADD_TIMELINE_ITEM"; payload: TimelineItem }
   | {
       type: "UPDATE_TIMELINE_ITEM";
       payload: { id: string; update: Partial<TimelineItem> };
     }
-  | { type: "DELETE_TIMELINE_ITEM"; payload: string };
+  | {
+      type: "UPDATE_TIMELINE_ITEM_DETAIL";
+      payload: {
+        id: string;
+        detailId: string;
+        update: ReactNode;
+        status?: TimelineStatus;
+      };
+    }
+  | { type: "DELETE_TIMELINE_ITEM"; payload: string }
+  | { type: "SET_TOTAL_SUPPLY"; payload: number }
+  | { type: "SET_TOKEN_ADDRESS"; payload: string }
+  | { type: "SET_LIKES"; payload: number };
 
 const initialState: LaunchTokenState = {
-  isLaunching: false,
+  tokenData: null,
   timelineItems: [],
+  totalSupply: 0,
+  tokenAddress: "launching",
+  likes: 0,
 };
 
 const LaunchTokenContext = createContext<{
@@ -46,8 +68,8 @@ const launchTokenReducer = (
 ): LaunchTokenState => {
   console.log("LaunchTokenReducer:", { state, action });
   switch (action.type) {
-    case "SET_LAUNCHING":
-      return { ...state, isLaunching: action.payload };
+    case "SET_TOKEN_DATA":
+      return { ...state, tokenData: action.payload };
     case "SET_TIMELINE_ITEMS":
       return { ...state, timelineItems: action.payload };
     case "ADD_TIMELINE_ITEM":
@@ -67,6 +89,17 @@ const launchTokenReducer = (
           items: state.timelineItems,
         }),
       };
+    case "UPDATE_TIMELINE_ITEM_DETAIL":
+      return {
+        ...state,
+        timelineItems: updateLogItemDetails({
+          items: state.timelineItems,
+          id: action.payload.id,
+          detailId: action.payload.detailId,
+          update: action.payload.update,
+          status: action.payload.status,
+        }),
+      };
     case "DELETE_TIMELINE_ITEM":
       return {
         ...state,
@@ -75,6 +108,12 @@ const launchTokenReducer = (
           items: state.timelineItems,
         }),
       };
+    case "SET_TOTAL_SUPPLY":
+      return { ...state, totalSupply: action.payload };
+    case "SET_TOKEN_ADDRESS":
+      return { ...state, tokenAddress: action.payload };
+    case "SET_LIKES":
+      return { ...state, likes: action.payload };
     default:
       return state;
   }
