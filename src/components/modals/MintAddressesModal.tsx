@@ -1,46 +1,29 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState } from "react";
 import { checkAddress } from "@/lib/address";
-import { menuItems } from "@/data/footerLinks";
+import { MintAddress } from "@/lib/token";
 
-export interface MintAddress {
-  amount: number | "";
-  address: string;
-}
-
-const testData: MintAddress[] = [
-  {
-    amount: 1,
-    address: "B62qiq7iTTP7Z2KEpQ9eF9UVGLiEKAjBpz1yxyd2MwMrxVwpAMLta2h",
-  },
-  {
-    amount: 2,
-    address: "B62qiq7iTTP7Z2KEpQ9eF9UVGLiEKAjBpz1yxyd2MwMrxVwpAMLta2h",
-  },
-  {
-    amount: 3,
-    address: "B62qiq7iTTP7Z2KEpQ9eF9UVGLiEKAjBpz1yxyd2MwMrxVwpAMLta2h",
-  },
-  {
-    amount: 4,
-    address: "B62qiq7iTTP7Z2KEpQ9eF9UVGLiEKAjBpz1yxyd2MwMrxVwpAMLta2h",
-  },
-  {
-    amount: 5,
-    address: "B62qiq7iTTP7Z2KEpQ9eF9UVGLiEKAjBpz1yxyd2MwMrxVwpAMLta2h",
-  },
-  {
-    amount: 6,
-    address: "B62qiq7iTTP7Z2KEpQ9eF9UVGLiEKAjBpz1yxyd2MwMrxVwpAMLta2h",
-  },
-];
+const MINT_TEST = process.env.NEXT_PUBLIC_MINT_TEST === "true";
+const initialMintAddresses: MintAddress[] = MINT_TEST
+  ? [
+      {
+        amount: 1000,
+        address: "B62qobAYQBkpC8wVnRzydrtCgWdkYTqsfXTcaLdGq1imtqtKgAHN29K",
+      },
+      {
+        amount: 2000,
+        address: "B62qiq7iTTP7Z2KEpQ9eF9UVGLiEKAjBpz1yxyd2MwMrxVwpAMLta2h",
+      },
+    ]
+  : [];
 
 export function MintAddressesModal({
   onSubmit,
 }: {
   onSubmit: (mintAddresses: MintAddress[]) => void;
 }) {
-  const [mintAddresses, setMintAddresses] = useState<MintAddress[]>(testData);
+  const [mintAddresses, setMintAddresses] =
+    useState<MintAddress[]>(initialMintAddresses);
 
   async function onChangeAddress(
     index: number,
@@ -61,7 +44,7 @@ export function MintAddressesModal({
   }
 
   const handleSubmit = () => {
-    onSubmit(testData);
+    onSubmit(mintAddresses);
   };
 
   return (
@@ -100,13 +83,13 @@ export function MintAddressesModal({
           <div className="modal-body p-6">
             <div className="relative my-3 flex items-center" key="title-mint">
               <div className="w-1/4 flex justify-center">
-                <label className="mb-3 text-sm block font-display text-base font-semibold text-jacarta-700 dark:text-white text-center">
+                <label className="mb-3 text-sm block font-display font-semibold text-jacarta-700 dark:text-white text-center">
                   Amount
                 </label>
               </div>
 
               <div className="w-3/4 flex justify-center">
-                <label className="mb-3 text-sm block font-display text-base font-semibold text-jacarta-700 dark:text-white text-center">
+                <label className="mb-3 text-sm block font-display  font-semibold text-jacarta-700 dark:text-white text-center">
                   Address
                 </label>
               </div>

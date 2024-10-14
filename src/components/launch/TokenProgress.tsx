@@ -10,8 +10,8 @@ export interface TokenProgressProps extends TimeLineProps, TokenPreviewProps {
 }
 
 export function TokenProgress({
-  items,
   tokenAddress,
+  items,
   image,
   likes,
   name,

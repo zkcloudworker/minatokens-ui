@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  useState,
-  useRef,
-  Dispatch,
-  SetStateAction,
-  createElement,
+useState,
+useRef,
+Dispatch,
+SetStateAction,
+createElement,
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,19 +13,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Code, Zap, DollarSign } from "lucide-react";
 import {
-  arweaveTxStatus,
-  pinImageToArweave,
-  pinStringToArweave,
-  arweaveHashToUrl,
+arweaveTxStatus,
+pinImageToArweave,
+pinStringToArweave,
+arweaveHashToUrl,
 } from "@/lib/arweave";
 import { deployTokenParams } from "@/lib/keys";
 import { deployToken } from "@/lib/deploy";
 import { mintToken } from "@/lib/mint";
 import { getResult } from "@/lib/zkcloudworker";
 import {
-  Timeline,
-  TimelineItem,
-  updateTimelineItem,
+Timeline,
+TimelineItem,
+updateTimelineItem,
 } from "@/components/ui/timeline";
 import { useDropzone } from "react-dropzone";
 import { getTxStatusFast } from "@/lib/txstatus-fast";
@@ -48,316 +48,314 @@ const chainId = process.env.NEXT_PUBLIC_CHAIN_ID;
 let minted = 0;
 
 export default function LaunchToken() {
-  const [image, setImage] = useState<File | undefined>(undefined);
-  const [url, setUrl] = useState<string | undefined>(undefined);
-  const [tokenName, setTokenName] = useState<string>("");
-  const [tokenSymbol, setTokenSymbol] = useState<string>("");
-  const [tokenDescription, setTokenDescription] = useState<string>("");
-  const [website, setWebsite] = useState<string>("");
-  const [telegram, setTelegram] = useState<string>("");
-  const [twitter, setTwitter] = useState<string>("");
-  const [discord, setDiscord] = useState<string>("");
-  const [mint, setMint] = useState<Mint[]>([{ amount: "", to: "" }]);
-  const [issuing, setIssuing] = useState<boolean>(false);
-  const [issued, setIssued] = useState<boolean>(false);
-  const [timelineItems, setTimeLineItems] = useState<TimelineItem[]>([]);
-  const [waitingItem, setWaitingItem] = useState<TimelineItem | undefined>(
-    undefined
-  );
-  const [isError, setIsError] = useState<boolean>(false);
-  const [libraries, setLibraries] = useState<
-    | Promise<{
-        o1js: typeof import("o1js");
-        zkcloudworker: typeof import("zkcloudworker");
-      }>
-    | undefined
-  >(undefined);
-  const bottomRef = useRef<HTMLDivElement>(null);
+const [image, setImage] = useState<File | undefined>(undefined);
+const [url, setUrl] = useState<string | undefined>(undefined);
+const [tokenName, setTokenName] = useState<string>("");
+const [tokenSymbol, setTokenSymbol] = useState<string>("");
+const [tokenDescription, setTokenDescription] = useState<string>("");
+const [website, setWebsite] = useState<string>("");
+const [telegram, setTelegram] = useState<string>("");
+const [twitter, setTwitter] = useState<string>("");
+const [discord, setDiscord] = useState<string>("");
+const [mint, setMint] = useState<Mint[]>([{ amount: "", to: "" }]);
+const [issuing, setIssuing] = useState<boolean>(false);
+const [issued, setIssued] = useState<boolean>(false);
+const [timelineItems, setTimeLineItems] = useState<TimelineItem[]>([]);
+const [waitingItem, setWaitingItem] = useState<TimelineItem | undefined>(
+undefined
+);
+const [isError, setIsError] = useState<boolean>(false);
+const [libraries, setLibraries] = useState<
+| Promise<{
+o1js: typeof import("o1js");
+zkcloudworker: typeof import("zkcloudworker");
+}>
+| undefined
 
-  const onDrop = (acceptedFiles: File[]) => {
-    if (DEBUG) console.log("acceptedFiles", acceptedFiles);
-    if (acceptedFiles.length > 0) {
-      setImage(acceptedFiles[0]);
-      setUrl(URL.createObjectURL(acceptedFiles[0]));
-    }
-  };
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    multiple: false,
-    accept: { "image/*": [".svg", ".jpg", ".jpeg", ".png", ".gif", ".webp"] },
-  });
+> (undefined);
+> const bottomRef = useRef<HTMLDivElement>(null);
 
-  function logItem(item: TimelineItem) {
-    setTimeLineItems((items) => [...items, item]);
-  }
+const onDrop = (acceptedFiles: File[]) => {
+if (DEBUG) console.log("acceptedFiles", acceptedFiles);
+if (acceptedFiles.length > 0) {
+setImage(acceptedFiles[0]);
+setUrl(URL.createObjectURL(acceptedFiles[0]));
+}
+};
+const { getRootProps, getInputProps, isDragActive } = useDropzone({
+onDrop,
+multiple: false,
+accept: { "image/\*": [".svg", ".jpg", ".jpeg", ".png", ".gif", ".webp"] },
+});
 
-  function updateLogItem(id: string, update: Partial<TimelineItem>) {
-    setTimeLineItems((items) => updateTimelineItem({ items, id, update }));
-  }
+function logItem(item: TimelineItem) {
+setTimeLineItems((items) => [...items, item]);
+}
 
-  async function waitForArweaveTx(params: {
-    hash: string;
-    id: string;
-    type: "image" | "metadata";
-    waitingTitle: string;
-    successTitle: string;
-    failedTitle: string;
-  }): Promise<string | undefined> {
-    const { hash, id, waitingTitle, successTitle, failedTitle, type } = params;
-    logItem({
-      id,
-      title: waitingTitle,
-      description: (
-        <>
-          It can take a few minutes for the transaction with hash{" "}
-          <a
-            href={`https://arscan.io/tx/${hash}`}
-            className="text-blue-500 hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {hash}
-          </a>{" "}
-          to be mined.
-        </>
-      ),
-      date: new Date(),
-      status: "waiting",
-    });
-    let status = await arweaveTxStatus(hash);
-    while (status.success && !status.data?.confirmed && !isError) {
-      if (DEBUG)
-        console.log(
-          "Waiting for Arweave transaction to be mined...",
-          status?.data?.confirmed,
-          status
-        );
-      await sleep(5000);
-      status = await arweaveTxStatus(hash);
-    }
-    if (DEBUG) console.log("Arweave transaction mined", status);
-    if (
-      !status.success ||
-      !status.data?.confirmed ||
-      !status.data?.confirmed?.number_of_confirmations ||
-      Number(status.data?.confirmed?.number_of_confirmations) < 1 ||
-      isError
-    ) {
-      updateLogItem(id, {
-        status: "error",
-        title: failedTitle,
-        description: isError ? "Cancelled" : "Failed to pin data to Arweave",
-        date: new Date(),
-      });
-      setWaitingItem(undefined);
-      setIsError(true);
-      setIssuing(false);
-      return;
-    }
-    updateLogItem(id, {
-      status: "success",
-      title: successTitle,
-      // TODO: continue to monitor the number of confirmations
-      description: (
-        <>
-          Successfully mined the arweave transaction with{" "}
-          {status.data?.confirmed?.number_of_confirmations} confirmations. View
-          the permanently stored {type} at{" "}
-          <a
+function updateLogItem(id: string, update: Partial<TimelineItem>) {
+setTimeLineItems((items) => updateTimelineItem({ items, id, update }));
+}
+
+async function waitForArweaveTx(params: {
+hash: string;
+id: string;
+type: "image" | "metadata";
+waitingTitle: string;
+successTitle: string;
+failedTitle: string;
+}): Promise<string | undefined> {
+const { hash, id, waitingTitle, successTitle, failedTitle, type } = params;
+logItem({
+id,
+title: waitingTitle,
+description: (
+<>
+It can take a few minutes for the transaction with hash{" "}
+<a
+href={`https://arscan.io/tx/${hash}`}
+className="text-blue-500 hover:underline"
+target="\_blank"
+rel="noopener noreferrer" >
+{hash}
+</a>{" "}
+to be mined.
+</>
+),
+date: new Date(),
+status: "waiting",
+});
+let status = await arweaveTxStatus(hash);
+while (status.success && !status.data?.confirmed && !isError) {
+if (DEBUG)
+
+console.log(
+"Waiting for Arweave transaction to be mined...",
+status?.data?.confirmed,
+status
+);
+await sleep(5000);
+status = await arweaveTxStatus(hash);
+}
+if (DEBUG) console.log("Arweave transaction mined", status);
+if (
+!status.success ||
+!status.data?.confirmed ||
+!status.data?.confirmed?.number_of_confirmations ||
+Number(status.data?.confirmed?.number_of_confirmations) < 1 ||
+isError
+) {
+updateLogItem(id, {
+status: "error",
+title: failedTitle,
+description: isError ? "Cancelled" : "Failed to pin data to Arweave",
+date: new Date(),
+});
+setWaitingItem(undefined);
+setIsError(true);
+setIssuing(false);
+return;
+}
+updateLogItem(id, {
+status: "success",
+title: successTitle,
+// TODO: continue to monitor the number of confirmations
+description: (
+<>
+Successfully mined the arweave transaction with{" "}
+{status.data?.confirmed?.number_of_confirmations} confirmations. View
+the permanently stored {type} at{" "}
+<a
             href={status.url}
             className="text-blue-500 hover:underline"
             target="_blank"
             rel="noopener noreferrer"
           >
-            {status.url}
-          </a>
-          .
-        </>
-      ),
-      date: new Date(),
-    });
-    if (DEBUG) console.log("Arweave URL for", type, status.url);
-    return status.url;
-  }
+{status.url}
+</a>
+.
+</>
+),
+date: new Date(),
+});
+if (DEBUG) console.log("Arweave URL for", type, status.url);
+return status.url;
+}
 
-  async function waitForMinaTx(params: {
-    hash: string;
-    id: string;
-    waitingTitle: string;
-    successTitle: string;
-    failedTitle: string;
-    type: "deploy" | "mint";
-  }): Promise<void> {
-    const { hash, id, waitingTitle, successTitle, failedTitle, type } = params;
-    logItem({
-      id,
-      title: waitingTitle,
-      description: (
-        <>
-          It can take a few minutes for the transaction with hash{" "}
-          <a
-            href={`https://minascan.io/devnet/tx/${hash}?type=zk-tx`}
-            className="text-blue-500 hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {hash}
-          </a>{" "}
-          to be included into the block.
-        </>
-      ),
-      date: new Date(),
-      status: "waiting",
-    });
-    let ok = await getTxStatusFast({ hash });
-    let count = 0;
-    if (DEBUG)
-      console.log("Waiting for Mina transaction to be mined...", status, ok);
-    while (!ok && !isError && count < 100) {
-      if (DEBUG)
-        console.log("Waiting for Mina transaction to be mined...", ok, hash);
-      await sleep(10000);
-      ok = await getTxStatusFast({ hash });
-      count++;
-    }
-    if (DEBUG) console.log("Final tx status", { ok, count });
-    if (!ok || isError) {
-      updateLogItem(id, {
-        status: "error",
-        title: failedTitle,
-        description: isError ? "Cancelled" : "Failed to deploy token contract",
-        date: new Date(),
-      });
-      setWaitingItem(undefined);
-      setIsError(true);
-      return;
-    }
-    updateLogItem(id, {
-      status: "success",
-      title: successTitle,
-      description: (
-        <>
-          Successfully deployed the token contract with transaction hash{" "}
-          <a
-            href={`https://minascan.io/devnet/tx/${hash}?type=zk-tx`}
-            className="text-blue-500 hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {hash}
-          </a>
-          .
-        </>
-      ),
-      date: new Date(),
-    });
-  }
+async function waitForMinaTx(params: {
+hash: string;
+id: string;
+waitingTitle: string;
+successTitle: string;
+failedTitle: string;
+type: "deploy" | "mint";
+}): Promise<void> {
+const { hash, id, waitingTitle, successTitle, failedTitle, type } = params;
+logItem({
+id,
+title: waitingTitle,
+description: (
+<>
+It can take a few minutes for the transaction with hash{" "}
+<a
+href={`https://minascan.io/devnet/tx/${hash}?type=zk-tx`}
+className="text-blue-500 hover:underline"
+target="\_blank"
+rel="noopener noreferrer" >
+{hash}
+</a>{" "}
+to be included into the block.
+</>
+),
+date: new Date(),
+status: "waiting",
+});
+let ok = await getTxStatusFast({ hash });
+let count = 0;
+if (DEBUG)
+console.log("Waiting for Mina transaction to be mined...", status, ok);
+while (!ok && !isError && count < 100) {
+if (DEBUG)
+console.log("Waiting for Mina transaction to be mined...", ok, hash);
+await sleep(10000);
+ok = await getTxStatusFast({ hash });
+count++;
+}
+if (DEBUG) console.log("Final tx status", { ok, count });
+if (!ok || isError) {
+updateLogItem(id, {
+status: "error",
+title: failedTitle,
+description: isError ? "Cancelled" : "Failed to deploy token contract",
+date: new Date(),
+});
+setWaitingItem(undefined);
+setIsError(true);
+return;
+}
+updateLogItem(id, {
+status: "success",
+title: successTitle,
+description: (
+<>
+Successfully deployed the token contract with transaction hash{" "}
+<a
+href={`https://minascan.io/devnet/tx/${hash}?type=zk-tx`}
+className="text-blue-500 hover:underline"
+target="\_blank"
+rel="noopener noreferrer" >
+{hash}
+</a>
+.
+</>
+),
+date: new Date(),
+});
+}
 
-  async function waitForContractVerification(params: {
-    tokenContractAddress: string;
-    adminContractAddress: string;
-    adminAddress: string;
-    id: string;
-    waitingTitle: string;
-    successTitle: string;
-    failedTitle: string;
-    info: TokenInfo;
-  }): Promise<void> {
-    const {
-      id,
-      waitingTitle,
-      successTitle,
-      failedTitle,
-      tokenContractAddress,
-      adminContractAddress,
-      adminAddress,
-      info,
-    } = params;
-    logItem({
-      id,
-      title: waitingTitle,
-      description: "Verifying the token contract state...",
-      date: new Date(),
-      status: "waiting",
-    });
-    let count = 0;
-    const timestamp = Date.now();
-    let verified = await verifyFungibleTokenState({
-      tokenContractAddress,
-      adminContractAddress,
-      adminAddress,
-      info,
-      created: timestamp,
-      updated: timestamp,
-    });
-    if (DEBUG)
-      console.log("Waiting for contract state to be verified...", verified);
-    while (!verified && !isError && count++ < 100) {
-      if (DEBUG)
-        console.log("Waiting for contract state to be verified...", verified);
-      await sleep(5000);
-      verified = await verifyFungibleTokenState({
-        tokenContractAddress,
-        adminContractAddress,
-        adminAddress,
-        info,
-        created: timestamp,
-        updated: timestamp,
-      });
-    }
-    if (DEBUG) console.log("Final status", { verified, count });
-    if (!verified || isError) {
-      updateLogItem(id, {
-        status: "error",
-        title: failedTitle,
-        description: "Failed to verify token contract state",
-        date: new Date(),
-      });
-      setWaitingItem(undefined);
-      setIsError(true);
-      return;
-    }
-    updateLogItem(id, {
-      status: "success",
-      title: successTitle,
-      description: "Token contract state is verified",
-      date: new Date(),
-    });
-  }
+async function waitForContractVerification(params: {
+tokenContractAddress: string;
+adminContractAddress: string;
+adminAddress: string;
+id: string;
+waitingTitle: string;
+successTitle: string;
+failedTitle: string;
+info: TokenInfo;
+}): Promise<void> {
+const {
+id,
+waitingTitle,
+successTitle,
+failedTitle,
+tokenContractAddress,
+adminContractAddress,
+adminAddress,
+info,
+} = params;
+logItem({
+id,
+title: waitingTitle,
+description: "Verifying the token contract state...",
+date: new Date(),
+status: "waiting",
+});
+let count = 0;
+const timestamp = Date.now();
+let verified = await verifyFungibleTokenState({
+tokenContractAddress,
+adminContractAddress,
+adminAddress,
+info,
+created: timestamp,
+updated: timestamp,
+});
+if (DEBUG)
+console.log("Waiting for contract state to be verified...", verified);
+while (!verified && !isError && count++ < 100) {
+if (DEBUG)
+console.log("Waiting for contract state to be verified...", verified);
+await sleep(5000);
+verified = await verifyFungibleTokenState({
+tokenContractAddress,
+adminContractAddress,
+adminAddress,
+info,
+created: timestamp,
+updated: timestamp,
+});
+}
+if (DEBUG) console.log("Final status", { verified, count });
+if (!verified || isError) {
+updateLogItem(id, {
+status: "error",
+title: failedTitle,
+description: "Failed to verify token contract state",
+date: new Date(),
+});
+setWaitingItem(undefined);
+setIsError(true);
+return;
+}
+updateLogItem(id, {
+status: "success",
+title: successTitle,
+description: "Token contract state is verified",
+date: new Date(),
+});
+}
 
-  async function waitForProveJob(params: {
-    jobId: string;
-    id: string;
-    waitingTitle: string;
-    successTitle: string;
-    failedTitle: string;
-  }): Promise<string | undefined> {
-    const { jobId, id, waitingTitle, successTitle, failedTitle } = params;
-    updateLogItem(id, {
-      status: "waiting",
-      title: waitingTitle,
-      description: (
-        <>
-          It can take about a minute to prove the transaction with jobId{" "}
-          <a
-            href={`https://zkcloudworker.com/job/${jobId}`}
-            className="text-blue-500 hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {jobId}
-          </a>
-          .
-        </>
-      ),
-      date: new Date(),
-    });
-    await sleep(10000);
-    let result = await getResult(jobId);
-    while (!result) {
-      await sleep(10000); // TODO: use setInterval
-      result = await getResult(jobId);
-    }
+async function waitForProveJob(params: {
+jobId: string;
+id: string;
+waitingTitle: string;
+successTitle: string;
+failedTitle: string;
+}): Promise<string | undefined> {
+const { jobId, id, waitingTitle, successTitle, failedTitle } = params;
+updateLogItem(id, {
+status: "waiting",
+title: waitingTitle,
+description: (
+<>
+It can take about a minute to prove the transaction with jobId{" "}
+<a
+href={`https://zkcloudworker.com/job/${jobId}`}
+className="text-blue-500 hover:underline"
+target="\_blank"
+rel="noopener noreferrer" >
+{jobId}
+</a>
+.
+</>
+),
+date: new Date(),
+});
+await sleep(10000);
+let result = await getResult(jobId);
+while (!result) {
+await sleep(10000); // TODO: use setInterval
+result = await getResult(jobId);
+}
 
     if (!result || result.toLowerCase().startsWith("error") || isError) {
       updateLogItem(id, {
@@ -408,37 +406,37 @@ export default function LaunchToken() {
       date: new Date(),
     });
     return transaction;
-  }
 
-  async function waitForMintJob(params: {
-    jobId: string;
-    id: string;
-    sequence: number;
-  }): Promise<string | undefined> {
-    const { jobId, id, sequence } = params;
-    updateLogItem(id, {
-      description: (
-        <>
-          It can take about a minute to prove the transaction with jobId{" "}
-          <a
-            href={`https://zkcloudworker.com/job/${jobId}`}
-            className="text-blue-500 hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {jobId}
-          </a>
-          .
-        </>
-      ),
-      date: new Date(),
-    });
-    await sleep(10000);
-    let result = await getResult(jobId);
-    while (!result) {
-      await sleep(10000); // TODO: use setInterval
-      result = await getResult(jobId);
-    }
+}
+
+async function waitForMintJob(params: {
+jobId: string;
+id: string;
+sequence: number;
+}): Promise<string | undefined> {
+const { jobId, id, sequence } = params;
+updateLogItem(id, {
+description: (
+<>
+It can take about a minute to prove the transaction with jobId{" "}
+<a
+href={`https://zkcloudworker.com/job/${jobId}`}
+className="text-blue-500 hover:underline"
+target="\_blank"
+rel="noopener noreferrer" >
+{jobId}
+</a>
+.
+</>
+),
+date: new Date(),
+});
+await sleep(10000);
+let result = await getResult(jobId);
+while (!result) {
+await sleep(10000); // TODO: use setInterval
+result = await getResult(jobId);
+}
 
     if (!result || result.toLowerCase().startsWith("error") || isError) {
       updateLogItem(id, {
@@ -598,49 +596,50 @@ export default function LaunchToken() {
       ),
       date: new Date(),
     });
-  }
 
-  function logWaitingItem(params: {
-    title: string;
-    description: React.ReactNode;
-  }) {
-    setWaitingItem({
-      id: "waiting",
-      status: "waiting",
-      title: params.title,
-      description: params.description,
-      date: new Date(),
-    });
-  }
+}
 
-  async function handleIssueToken() {
-    // const tokenState = await getTokenState({
-    //   tokenAddress: "B62qpizYLJFJTtCUQyrocxDyBX8wSs68P14BkHVqyK8DuxVjkp39MZz",
-    // });
-    // console.log("Token state:", tokenState);
-    // return;
-    // const tokenList = await algoliaGetTokenList({
-    //   query: "bhjbjh",
-    //   hitsPerPage: 100,
-    //   page: 0,
-    // });
-    // console.log("Token list:", tokenList);
-    // return;
-    if (chainId === undefined) {
-      console.error("Chain ID is not set");
-      return;
-    }
-    const walletInfo = await getWalletInfo();
-    if (DEBUG) console.log("Wallet Info:", walletInfo);
-    const systemInfo = await getSystemInfo();
-    if (DEBUG) console.log("System Info:", systemInfo);
-    if (DEBUG) console.log("Navigator:", navigator);
-    if (AURO_TEST) {
-      if (ADMIN_ADDRESS === undefined) {
-        console.error("ADMIN_ADDRESS is not set");
-        return;
-      }
-    }
+function logWaitingItem(params: {
+title: string;
+description: React.ReactNode;
+}) {
+setWaitingItem({
+id: "waiting",
+status: "waiting",
+title: params.title,
+description: params.description,
+date: new Date(),
+});
+}
+
+async function handleIssueToken() {
+// const tokenState = await getTokenState({
+// tokenAddress: "B62qpizYLJFJTtCUQyrocxDyBX8wSs68P14BkHVqyK8DuxVjkp39MZz",
+// });
+// console.log("Token state:", tokenState);
+// return;
+// const tokenList = await algoliaGetTokenList({
+// query: "bhjbjh",
+// hitsPerPage: 100,
+// page: 0,
+// });
+// console.log("Token list:", tokenList);
+// return;
+if (chainId === undefined) {
+console.error("Chain ID is not set");
+return;
+}
+const walletInfo = await getWalletInfo();
+if (DEBUG) console.log("Wallet Info:", walletInfo);
+const systemInfo = await getSystemInfo();
+if (DEBUG) console.log("System Info:", systemInfo);
+if (DEBUG) console.log("Navigator:", navigator);
+if (AURO_TEST) {
+if (ADMIN_ADDRESS === undefined) {
+console.error("ADMIN_ADDRESS is not set");
+return;
+}
+}
 
     setIssuing(true);
     setTimeLineItems([]);
@@ -1066,13 +1065,15 @@ export default function LaunchToken() {
     setWaitingItem(undefined);
     setIssuing(false);
     setIssued(true);
-  }
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-8">
-      <h1 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-[#F15B22] to-[#F9ECDE] text-transparent bg-clip-text">
-        zkCloudWorker Custom Token Launchpad
-      </h1>
+}
+
+return (
+
+<div className="min-h-screen bg-gray-900 text-gray-100 p-8">
+<h1 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-[#F15B22] to-[#F9ECDE] text-transparent bg-clip-text">
+zkCloudWorker Custom Token Launchpad
+</h1>
 
       <div className="flex justify-center space-x-8 mb-8">
         <div className="flex flex-col items-center">
@@ -1324,69 +1325,67 @@ export default function LaunchToken() {
         </div>
       </div>
     </div>
-  );
+
+);
 }
 
 function CameraIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-      <circle cx="12" cy="13" r="3" />
-    </svg>
-  );
+return (
+<svg
+{...props}
+xmlns="http://www.w3.org/2000/svg"
+width="24"
+height="24"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+strokeWidth="2"
+strokeLinecap="round"
+strokeLinejoin="round" >
+<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+<circle cx="12" cy="13" r="3" />
+</svg>
+);
 }
 
 function CloudLightningIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973" />
-      <path d="m13 12-3 5h4l-3 5" />
-    </svg>
-  );
+return (
+<svg
+{...props}
+xmlns="http://www.w3.org/2000/svg"
+width="24"
+height="24"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+strokeWidth="2"
+strokeLinecap="round"
+strokeLinejoin="round" >
+<path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973" />
+<path d="m13 12-3 5h4l-3 5" />
+</svg>
+);
 }
 
 function PlusIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
-  );
+return (
+<svg
+{...props}
+xmlns="http://www.w3.org/2000/svg"
+width="24"
+height="24"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+strokeWidth="2"
+strokeLinecap="round"
+strokeLinejoin="round" >
+<path d="M5 12h14" />
+<path d="M12 5v14" />
+</svg>
+);
 }
 
 async function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+return new Promise((resolve) => setTimeout(resolve, ms));
 }

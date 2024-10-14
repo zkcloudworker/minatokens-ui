@@ -9,26 +9,9 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { checkAddress } from "@/lib/address";
 import { shortenString } from "@/lib/short";
-import { MintAddressesModal, MintAddress } from "../modals/MintAddressesModal";
+import { LaunchTokenData, MintAddress, TokenLinks } from "@/lib/token";
+import { MintAddressesModal } from "../modals/MintAddressesModal";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
-
-export interface TokenLinks {
-  twitter: string;
-  discord: string;
-  telegram: string;
-  instagram: string;
-  website: string;
-}
-
-export interface LaunchTokenData {
-  symbol: string;
-  name: string;
-  description: string;
-  links: TokenLinks;
-  image: File | undefined;
-  address: string;
-  mintAddresses: MintAddress[];
-}
 
 export function LaunchForm({
   onLaunch,
@@ -36,6 +19,7 @@ export function LaunchForm({
   onLaunch: (data: LaunchTokenData) => void;
 }) {
   const [image, setImage] = useState<File | undefined>(undefined);
+  const [imageURL, setImageURL] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
   const [symbol, setSymbol] = useState<string | undefined>(undefined);
   const [description, setDescription] = useState<string | undefined>(undefined);
@@ -138,7 +122,8 @@ export function LaunchForm({
       description: description ?? "",
       links,
       image,
-      address: adminAddress,
+      imageURL,
+      adminAddress,
       mintAddresses,
     });
   };
@@ -542,7 +527,7 @@ export function LaunchForm({
           </div>
           <div className="mb-12 md:w-1/2 md:pr-8">
             <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
-              <FileUpload setImage={setImage} />
+              <FileUpload setImage={setImage} setImageURL={setImageURL} />
             </div>
           </div>
         </div>

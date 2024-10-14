@@ -16,3 +16,9 @@ export function getChainId(): "mina:mainnet" | "mina:testnet" {
     );
   return chainId;
 }
+
+export function getWallet(): string {
+  const wallet = process.env.NEXT_PUBLIC_WALLET;
+  if (wallet === undefined) throw new Error("NEXT_PUBLIC_WALLET is undefined");
+  return wallet;
+}

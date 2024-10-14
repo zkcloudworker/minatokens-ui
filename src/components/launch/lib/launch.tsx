@@ -1,51 +1,67 @@
-import { LaunchTokenData } from "../LaunchForm";
+import { LaunchTokenData, MintAddressVerified } from "@/lib/token";
+import { checkMintData } from "@/lib/address";
 import { getChain, getChainId } from "@/lib/chain";
-import { getWalletInfo, connectWallet } from "@/lib/wallet";
+import { getWalletInfo } from "@/lib/wallet";
 import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
-import { TimelineItem } from "../TimeLine";
+import { deployToken } from "./deploy";
+import { mintToken } from "@/lib/mint";
+import { TimelineItem, LogListItem, TimelineStatus } from "../TimeLine";
+import { pinImageToArweave, pinStringToArweave } from "@/lib/arweave";
+import { arweaveHashToUrl } from "@/lib/arweave";
+import { TokenInfo } from "@/lib/token";
+import { sendTransaction } from "@/lib/send";
+import { messages, LogItemId, MessageId } from "./messages";
+import { loadLib } from "./libraries";
+import { waitForArweaveTx } from "./arweave-tx";
+import { getAccountNonce } from "@/lib/nonce";
+import {
+  waitForProveJob,
+  waitForContractVerification,
+  waitForMinaDeployTx,
+} from "./mina-tx";
+import { deployTokenParams } from "@/lib/keys";
+import { ReactNode } from "react";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
 const chainId = getChainId();
 const chain = getChain();
 const DEBUG = debug();
 
-/*
-const a: React.ReactNode = (
-      <>
-        Check the{" "}
-        <a href="#" className="text-accent hover:underline">
-          design feedback
-        </a>
-        .
-      </>
-    );
-    const b: React.ReactNode = (
-      <>
-        Item 3{" "}
-        <a href="#" className="text-accent hover:underline">
-          link
-        </a>
-        .
-      </>
-    );
-    addLog({ id: "a", status: "waiting", title: "Item A", details: a });
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    updateLog("a", { details: logList([a, "Item 2"]) });
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    updateLog("a", { details: logList([a, "Item 2", b]) });
-*/
+export async function launchToken(params: {
+  data: LaunchTokenData;
+  addLog: (item: TimelineItem) => void;
+  updateLogList: (params: {
+    id: string;
+    detailId: string;
+    update: ReactNode;
+    status?: TimelineStatus;
+  }) => void;
+  setTotalSupply: (totalSupply: number) => void;
+  setTokenAddress: (tokenAddress: string) => void;
+  setLikes: (likes: number) => void;
+}) {
+  const {
+    data,
+    addLog,
+    updateLogList: updateLogListInternal,
+    setTotalSupply,
+    setTokenAddress,
+    setLikes,
+  } = params;
+  const {
+    symbol,
+    name,
+    description,
+    links,
+    image,
+    imageURL,
+    adminAddress,
+    mintAddresses,
+  } = data;
+  const { twitter, telegram, website, discord, instagram } = links;
+  let likes = 10;
 
-export async function launchToken(
-  data: LaunchTokenData,
-  addLog: (item: TimelineItem) => void,
-  updateLog: (id: string, update: Partial<TimelineItem>) => void
-) {
-  const walletInfo = await getWalletInfo();
-  if (DEBUG) console.log("Wallet Info:", walletInfo);
-  const systemInfo = await getSystemInfo();
-  if (DEBUG) console.log("System Info:", systemInfo);
-  if (DEBUG) console.log("Navigator:", navigator);
   if (AURO_TEST) {
     if (ADMIN_ADDRESS === undefined) {
       console.error("ADMIN_ADDRESS is not set");
@@ -53,424 +69,508 @@ export async function launchToken(
     }
   }
 
-  logWaitingItem({
-    title: "Issuing token",
-    description: "Checking data...",
-  });
-  const mintItems: MintVerified[] = [];
-  if (DEBUG) console.log("Mint items:", mint);
-  for (const item of mint) {
-    if (
-      item.amount !== "" &&
-      item.to !== "" &&
-      item.amount !== undefined &&
-      item.to !== undefined
-    ) {
+  function updateLogList(params: {
+    id: LogItemId;
+    itemToUpdate: MessageId;
+    updatedItem: ReactNode;
+    status?: TimelineStatus;
+  }): void {
+    const { id, itemToUpdate, updatedItem, status } = params;
+    updateLogListInternal({
+      id: id,
+      detailId: itemToUpdate,
+      update: updatedItem,
+      status,
+    });
+  }
+
+  function updateMintLogList(params: {
+    id: LogItemId;
+    itemToUpdate: string;
+    updatedItem: ReactNode;
+    status?: TimelineStatus;
+  }): void {
+    const { id, itemToUpdate, updatedItem, status } = params;
+    updateLogListInternal({
+      id: id,
+      detailId: itemToUpdate,
+      update: updatedItem,
+      status,
+    });
+  }
+
+  try {
+    addLog({
+      id: "deploy",
+      status: "waiting",
+      title: `Launching token ${data.symbol}`,
+      details: [messages.verifyData, messages.o1js],
+    });
+
+    const libPromise = loadLib(updateLogList);
+
+    if (DEBUG) console.log("launchToken: launching token:", data);
+    const walletInfo = await getWalletInfo();
+    if (DEBUG) console.log("launchToken: Wallet Info:", walletInfo);
+    const systemInfo = await getSystemInfo();
+    if (DEBUG) console.log("launchToken: System Info:", systemInfo);
+    const adminPublicKey = AURO_TEST ? ADMIN_ADDRESS : adminAddress;
+    if (!adminPublicKey) {
+      updateLogList({
+        id: "deploy",
+        status: "error",
+        itemToUpdate: "adminRequired",
+        updatedItem: messages.adminRequired.content,
+      });
+      updateLogList({
+        id: "deploy",
+        status: "error",
+        itemToUpdate: "verifyData",
+        updatedItem: "Data verification failed",
+      });
+      return;
+    }
+    if (adminPublicKey !== walletInfo.address) {
+      updateLogList({
+        id: "deploy",
+        status: "error",
+        itemToUpdate: "adminRequired",
+        updatedItem: messages.adminAddressDoNotMatch.content,
+      });
+      updateLogList({
+        id: "deploy",
+        status: "error",
+        itemToUpdate: "verifyData",
+        updatedItem: "Data verification failed",
+      });
+      return;
+    }
+    const mina = (window as any).mina;
+    if (mina === undefined || mina?.isAuro !== true) {
+      updateLogList({
+        id: "deploy",
+        itemToUpdate: "noAuroWallet",
+        updatedItem: messages.noAuroWallet.content,
+      });
+      updateLogList({
+        id: "deploy",
+        itemToUpdate: "verifyData",
+        updatedItem: "Data verification failed",
+      });
+      return;
+    }
+
+    const mintItems: MintAddressVerified[] = [];
+    if (DEBUG) console.log("Mint addresses:", mintAddresses);
+    for (const item of mintAddresses) {
       const verified = await checkMintData(item);
       if (verified !== undefined) {
         if (DEBUG) console.log("Mint item verified:", verified, item);
         mintItems.push(verified);
       } else {
         if (DEBUG) console.log("Mint item skipped:", item);
-        setIsError(true);
-        logItem({
-          id: "mint",
+        updateLogList({
+          id: "deploy",
           status: "error",
-          title: "Wrong mint data",
-          description: `Cannot mint ${item.amount} ${tokenSymbol} tokens to ${item.to} because of wrong amount or address`,
-          date: new Date(),
+          itemToUpdate: "mintDataError",
+          updatedItem: `Cannot mint ${item.amount} ${symbol} tokens to ${item.address} because of wrong amount or address`,
         });
-        setWaitingItem(undefined);
+        updateLogList({
+          id: "deploy",
+          status: "error",
+          itemToUpdate: "verifyData",
+          updatedItem: "Data verification failed",
+        });
         return;
       }
     }
-  }
-  if (DEBUG) console.log("Mint items filtered:", mintItems);
+    if (DEBUG) console.log("Mint items filtered:", mintItems);
 
-  setIssued(false);
-  setIsError(false);
-
-  bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  if (DEBUG) {
-    console.log("Token Name:", tokenName);
-    console.log("Token Symbol:", tokenSymbol);
-    console.log("Token Description:", tokenDescription);
-    console.log("Website:", website);
-    console.log("Telegram:", telegram);
-    console.log("Twitter:", twitter);
-    console.log("Discord:", discord);
-    console.log("Image:", image);
-  }
-
-  //TODO: Pin token image to Arweave
-  // TODO: add issuer
-  if (!libraries) setLibraries(loadLibraries());
-
-  const { address, network, error, success } = await connectWallet({});
-  console.log("Connected wallet", { address, network, error, success });
-  if (!success || !address) {
-    logItem({
-      id: "metadata",
-      status: "error",
-      title: "Failed to connect to wallet",
-      description: "Connect to wallet to continue",
-      date: new Date(),
+    updateLogList({
+      id: "deploy",
+      itemToUpdate: "verifyData",
+      updatedItem: "Token data is verified",
     });
-    setWaitingItem(undefined);
-    return;
-  }
-  const adminPublicKey = AURO_TEST ? ADMIN_ADDRESS : address;
-  if (!adminPublicKey) {
-    console.error("adminPublicKey is not set");
-    return;
-  }
+    setLikes((likes += 10));
 
-  const imageHash = image ? await pinImageToArweave(image) : undefined;
-  if (image !== undefined && imageHash === undefined) {
-    logItem({
-      id: "metadata",
-      status: "error",
-      title: "Token image pinning failed",
-      description: "Failed to pin token image to Arweave permanent storage",
-      date: new Date(),
+    let imageHash: string | undefined = undefined;
+    if (image) {
+      updateLogList({
+        id: "deploy",
+        itemToUpdate: "pinningImage",
+        updatedItem: messages.pinningImage.content,
+      });
+
+      imageHash = await pinImageToArweave(image);
+      if (imageHash) {
+        const imageTxMessage = (
+          <>
+            <a
+              href={`https://arscan.io/tx/${imageHash}`}
+              className="text-accent hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Pinning
+            </a>{" "}
+            token image to Arweave permanent storage...
+          </>
+        );
+        updateLogList({
+          id: "deploy",
+          itemToUpdate: "pinningImage",
+          updatedItem: imageTxMessage,
+        });
+      } else {
+        updateLogList({
+          id: "deploy",
+          status: "error",
+          itemToUpdate: "pinningImage",
+          updatedItem: "Failed to pin token image to Arweave permanent storage",
+        });
+        return;
+      }
+    }
+    setLikes((likes += 10));
+
+    const imageURL = imageHash ? await arweaveHashToUrl(imageHash) : undefined;
+    const info: TokenInfo = {
+      symbol,
+      name,
+      description,
+      image: imageURL,
+      twitter,
+      discord,
+      telegram,
+      instagram,
+      website,
+      tokenContractCode:
+        "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleToken.ts",
+      adminContractsCode: [
+        "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleTokenAdmin.ts",
+      ],
+      data: undefined,
+      isMDA: undefined,
+    };
+
+    updateLogList({
+      id: "deploy",
+      itemToUpdate: "pinningMetadata",
+      updatedItem: messages.pinningMetadata.content,
     });
-    return;
-  }
 
-  const info: TokenInfo = {
-    symbol: tokenSymbol,
-    name: tokenName,
-    description: tokenDescription,
-    image: imageHash ? await arweaveHashToUrl(imageHash) : undefined,
-    website,
-    telegram,
-    twitter,
-    discord,
-    tokenContractCode:
-      "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleToken.ts",
-    adminContractsCode: [
-      "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleTokenAdmin.ts",
-    ],
-    data: undefined,
-    isMDA: undefined,
-  };
+    const metadataHash = await pinStringToArweave(
+      JSON.stringify(info, null, 2)
+    );
 
-  const metadataHash = await pinStringToArweave(JSON.stringify(info, null, 2));
+    if (!metadataHash) {
+      updateLogList({
+        id: "deploy",
+        status: "error",
+        itemToUpdate: "pinningMetadata",
+        updatedItem:
+          "Failed to pin token metadata to Arweave permanent storage",
+      });
+      return;
+    } else {
+      const metadataTxMessage = (
+        <>
+          <a
+            href={`https://arscan.io/tx/${metadataHash}`}
+            className="text-accent hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Pinning
+          </a>{" "}
+          token metadata to Arweave permanent storage...
+        </>
+      );
+      updateLogList({
+        id: "deploy",
+        itemToUpdate: "pinningMetadata",
+        updatedItem: metadataTxMessage,
+      });
+    }
+    setLikes((likes += 10));
 
-  if (!metadataHash) {
-    logItem({
-      id: "metadata",
-      status: "error",
-      title: "Token metadata pinning failed",
-      description: "Failed to pin data to Arweave permanent storage",
-      date: new Date(),
+    let waitForArweaveImageTxPromise = undefined;
+    if (imageHash) {
+      waitForArweaveImageTxPromise = waitForArweaveTx({
+        hash: imageHash,
+        id: "deploy",
+        itemToUpdate: "pinningImage",
+        updateLogList,
+        type: "image",
+      });
+    }
+
+    const waitForArweaveMetadataTxPromise = waitForArweaveTx({
+      hash: metadataHash,
+      id: "deploy",
+      itemToUpdate: "pinningMetadata",
+      updateLogList,
+      type: "metadata",
     });
-    setWaitingItem(undefined);
-    return;
-  }
 
-  let waitForArweaveImageTxPromise = undefined;
-  if (imageHash) {
-    waitForArweaveImageTxPromise = waitForArweaveTx({
-      hash: imageHash,
-      id: "image",
-      type: "image",
-      waitingTitle: "Pinning token image to Arweave permanent storage",
-      successTitle: "Token image is included into Arweave permanent storage",
-      failedTitle: "Failed to pin token image to Arweave permanent storage",
+    const uri = await arweaveHashToUrl(metadataHash);
+    const lib = await libPromise;
+
+    updateLogList({
+      id: "deploy",
+      itemToUpdate: "saveDeployParams",
+      updatedItem: messages.saveDeployParams.content,
     });
-  }
 
-  const waitForArweaveMetadataTxPromise = waitForArweaveTx({
-    hash: metadataHash,
-    id: "metadata",
-    type: "metadata",
-    waitingTitle: "Pinning token metadata to Arweave permanent storage",
-    successTitle: "Token metadata is included into Arweave permanent storage",
-    failedTitle: "Failed to pin token metadata to Arweave permanent storage",
-  });
-  setWaitingItem(undefined);
+    const {
+      tokenPrivateKey,
+      adminContractPrivateKey,
+      tokenPublicKey,
+      adminContractPublicKey,
+    } = await deployTokenParams(lib);
+    if (DEBUG) console.log("Deploy Params received");
 
-  const deployParamsPromise = deployTokenParams();
-  const uri = await arweaveHashToUrl(metadataHash);
-
-  if (isError || !uri) {
-    return;
-  }
-  const {
-    tokenPrivateKey,
-    adminContractPrivateKey,
-    tokenPublicKey,
-    adminContractPublicKey,
-  } = await deployParamsPromise;
-  if (DEBUG) console.log("Deploy Params received");
-
-  // Save the result to a JSON file
-  const deployParams = {
-    symbol: tokenSymbol,
-    name: tokenName,
-    description: tokenDescription,
-    image: "", // TODO: imageUrl
-    website,
-    telegram,
-    twitter,
-    discord,
-    tokenPrivateKey,
-    adminContractPrivateKey,
-    tokenPublicKey,
-    adminContractPublicKey,
-    adminPublicKey,
-    metadata: uri,
-  };
-  // TODO: save with password encryption
-  const deployParamsJson = JSON.stringify(deployParams, null, 2);
-  const blob = new Blob([deployParamsJson], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  const name = `${tokenSymbol}-${tokenPublicKey}.json`;
-  a.download = name;
-  a.click();
-  logItem({
-    id: "saveDeployParams",
-    status: "success",
-    title: "Token deploy parameters saved to a JSON file",
-    description: (
+    // Save the result to a JSON file
+    const deployParams = {
+      symbol,
+      name,
+      description,
+      image: imageURL,
+      website,
+      telegram,
+      twitter,
+      discord,
+      tokenPrivateKey,
+      adminContractPrivateKey,
+      tokenPublicKey,
+      adminContractPublicKey,
+      adminPublicKey,
+      metadata: uri,
+    };
+    // TODO: save with password encryption
+    const deployParamsJson = JSON.stringify(deployParams, null, 2);
+    const blob = new Blob([deployParamsJson], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const fileName = `${symbol}-${tokenPublicKey}.json`;
+    a.download = fileName;
+    a.click();
+    const saveDeployParamsSuccessMsg = (
       <>
+        Token private keys have been saved to a{" "}
         <a
           href={url}
-          download={name}
-          className="text-blue-500 hover:underline"
+          download={fileName}
+          className="text-accent hover:underline"
           target="_blank"
           rel="noopener noreferrer"
         >
-          {name}
-        </a>{" "}
-        has been saved to your device.
+          JSON file
+        </a>
       </>
-    ),
-    date: new Date(),
-  });
-  const deployResult = await deployToken({
-    tokenPrivateKey,
-    adminContractPrivateKey,
-    adminPublicKey,
-    symbol: tokenSymbol,
-    uri,
-    libraries: libraries ?? loadLibraries(),
-    logItem,
-    updateLogItem,
-  });
-  if (DEBUG) console.log("Deploy result:", deployResult);
-  if (
-    deployResult.success === false ||
-    deployResult.jobId === undefined ||
-    isError
-  ) {
-    updateLogItem("cloud-proving-job", {
-      status: "error",
-      title: "Deploying token contract failed",
-      description: "Failed to deploy token contract",
-      date: new Date(),
+    );
+    updateLogList({
+      id: "deploy",
+      itemToUpdate: "saveDeployParams",
+      updatedItem: saveDeployParamsSuccessMsg,
     });
-    setWaitingItem(undefined);
-    return;
-  }
-  const deployJobId = deployResult.jobId;
+    setLikes((likes += 10));
 
-  const waitForProveJobPromise = waitForProveJob({
-    jobId: deployJobId,
-    id: "cloud-proving-job",
-    waitingTitle: "Proving deploy transaction",
-    successTitle: "Deploy transaction is proved",
-    failedTitle: "Failed to prove deploy transaction",
-  });
-
-  const transaction = await waitForProveJobPromise;
-  if (DEBUG) console.log("Transaction proved:", transaction?.slice(0, 50));
-  if (isError || !transaction) {
-    return;
-  }
-
-  const sendResult = await sendTransaction(transaction);
-  if (DEBUG) console.log("Transaction sent:", sendResult);
-  if (
-    isError ||
-    sendResult.success === false ||
-    sendResult.hash === undefined
-  ) {
-    logItem({
-      id: "deploySend",
-      status: "error",
-      title: "Failed to send transaction to Mina blockchain",
-      description: `Failed to send transaction to Mina blockchain: ${
-        sendResult.status ? "status: " + sendResult.status + ", " : ""
-      } ${String(sendResult.error ?? "error D437")}`,
-      date: new Date(),
+    const deployResult = await deployToken({
+      tokenPrivateKey,
+      adminContractPrivateKey,
+      adminPublicKey,
+      symbol,
+      uri,
+      libraries: lib,
+      updateLogList,
+      id: "deploy",
     });
-    return;
-  }
+    if (DEBUG) console.log("Deploy result:", deployResult);
+    if (deployResult.success === false || deployResult.jobId === undefined) {
+      updateLogList({
+        id: "deploy",
+        status: "error",
+        itemToUpdate: "deployTransactionError",
+        updatedItem:
+          deployResult.error ?? messages.deployTransactionError.content,
+      });
+      return;
+    }
+    setLikes((likes += 10));
+    const deployJobId = deployResult.jobId;
 
-  const waitForMinaTxPromise = waitForMinaTx({
-    hash: sendResult.hash,
-    id: "deploySend",
-    waitingTitle: "Waiting for token contract to be deployed",
-    successTitle: "Token contract is deployed",
-    failedTitle: "Failed to deploy token contract",
-    type: "deploy",
-  });
-
-  await waitForMinaTxPromise;
-
-  if (isError) {
-    return;
-  }
-
-  await waitForContractVerification({
-    tokenContractAddress: tokenPublicKey,
-    adminContractAddress: adminContractPublicKey,
-    adminAddress: adminPublicKey,
-    id: "contractVerification",
-    waitingTitle: "Verifying token contract state",
-    successTitle: "Token contract state is verified",
-    failedTitle: "Failed to verify token contract state",
-    info,
-  });
-  if (isError) {
-    return;
-  }
-
-  if (DEBUG) {
-    console.log("Minting tokens", mintItems);
-  }
-
-  let minted = 0;
-  if (mintItems.length > 0) {
-    logWaitingItem({
-      title: "Minting tokens",
-      description: createElement(
-        "span",
-        null,
-        "Loading ",
-        createElement(
-          "a",
-          {
-            href: "https://docs.minaprotocol.com/zkapps/o1js",
-            target: "_blank",
-            rel: "noopener noreferrer",
-          },
-          "o1js"
-        ),
-        " library..."
-      ),
+    const transaction = await waitForProveJob({
+      jobId: deployJobId,
+      id: "deploy",
+      itemToUpdate: "transaction",
+      updateLogList,
     });
-    const lib = await (libraries ?? loadLibraries());
-    logWaitingItem({
-      title: "Minting tokens",
-      description: `Preparing data to mint ${tokenSymbol} tokens to ${mintItems.length} addresses`,
+    if (DEBUG) console.log("Transaction proved:", transaction?.slice(0, 50));
+    if (!transaction) {
+      return;
+    }
+
+    const sendResult = await sendTransaction(transaction);
+    if (DEBUG) console.log("Transaction sent:", sendResult);
+    if (sendResult.success === false || sendResult.hash === undefined) {
+      updateLogList({
+        id: "deploy",
+        itemToUpdate: "transaction",
+        updatedItem: `Failed to send transaction to Mina blockchain: ${
+          sendResult.status ? "status: " + sendResult.status + ", " : ""
+        } ${String(sendResult.error ?? "error D437")}`,
+      });
+      return;
+    }
+
+    const txIncluded = await waitForMinaDeployTx({
+      hash: sendResult.hash,
+      jobId: deployJobId,
+      id: "deploy",
+      itemToUpdate: "transaction",
+      updateLogList,
     });
-    let nonce = await getAccountNonce(adminPublicKey);
-    let mintPromises: Promise<string | undefined>[] = [];
-    for (let i = 0; i < mintItems.length; i++) {
-      const item = mintItems[i];
-      const id = `mint-${i}`;
-      logItem({
-        id,
+
+    if (!txIncluded) {
+      return;
+    }
+
+    const contractVerified = await waitForContractVerification({
+      tokenContractAddress: tokenPublicKey,
+      adminContractAddress: adminContractPublicKey,
+      adminAddress: adminPublicKey,
+      id: "deploy",
+      itemToUpdate: "contractVerification",
+      updateLogList,
+      info,
+    });
+    if (!contractVerified) {
+      return;
+    }
+
+    if (DEBUG) {
+      console.log("Minting tokens", mintItems);
+    }
+    /*
+    let minted = 0;
+    if (mintItems.length > 0) {
+      addLog({
+        id: "mint",
         status: "waiting",
-        title: `Minting ${item.amount} ${tokenSymbol} to ${item.to}`,
-        description: `Building transaction...`,
-        date: new Date(),
+        title: "Minting tokens",
+        details: [
+          {
+            id: "mintingTokens",
+            content: `Minting ${symbol} tokens to ${mintItems.length} addresses...`,
+          },
+        ],
       });
-      if (i === mintItems.length - 1)
-        logWaitingItem({
-          title: "Minting tokens",
-          description: `Waiting for mint transactions to be created and proved`,
+
+      let nonce = await getAccountNonce(adminPublicKey);
+      let mintPromises: Promise<string | undefined>[] = [];
+      for (let i = 0; i < mintItems.length; i++) {
+        const item = mintItems[i];
+        const itemId = `mint-${symbol}-${i}`;
+        updateMintLogList({
+          id: "mint",
+          itemToUpdate: itemId,
+          updatedItem: `Minting ${item.amount} ${symbol} tokens to ${item.address}`,
         });
-      else
-        logWaitingItem({
-          title: "Minting tokens",
-          description: `Preparing data to mint ${tokenSymbol} tokens to ${
-            mintItems.length - (i + 1)
-          } addresses`,
-        });
-      const mintResult = await mintToken({
-        tokenPublicKey,
-        adminContractPublicKey,
-        adminPublicKey,
-        to: item.to,
-        amount: item.amount,
-        nonce: nonce++,
-        id,
-        updateLogItem,
-        symbol: tokenSymbol,
-        lib,
-      });
-      if (
-        mintResult.success === false ||
-        mintResult.jobId === undefined ||
-        isError
-      ) {
-        logItem({
+
+        const mintResult = await mintToken({
+          tokenPublicKey,
+          adminContractPublicKey,
+          adminPublicKey,
+          to: item.address,
+          amount: item.amount,
+          nonce: nonce++,
           id,
+          updateLogItem,
+          symbol: tokenSymbol,
+          lib,
+        });
+        if (
+          mintResult.success === false ||
+          mintResult.jobId === undefined ||
+          isError
+        ) {
+          logItem({
+            id,
+            status: "error",
+            title: "Failed to mint tokens",
+            description: mintResult.error ?? "Mint error",
+            date: new Date(),
+          });
+          setWaitingItem(undefined);
+          setIsError(true);
+          return;
+        }
+        const mintJobId = mintResult.jobId;
+        await sleep(1000);
+
+        const waitForMintJobPromise = waitForMintJob({
+          jobId: mintJobId,
+          id: `mint-${i}`,
+          sequence: i,
+        });
+        mintPromises.push(waitForMintJobPromise);
+      }
+      if (isError) {
+        logItem({
+          id: "mint",
           status: "error",
           title: "Failed to mint tokens",
-          description: mintResult.error ?? "Mint error",
+          description: "Failed to mint tokens",
           date: new Date(),
         });
         setWaitingItem(undefined);
         setIsError(true);
         return;
       }
-      const mintJobId = mintResult.jobId;
-      await sleep(1000);
-
-      const waitForMintJobPromise = waitForMintJob({
-        jobId: mintJobId,
-        id: `mint-${i}`,
-        sequence: i,
+      logWaitingItem({
+        title: "Minting tokens",
+        description: `Waiting for mint transactions to be included into a block`,
       });
-      mintPromises.push(waitForMintJobPromise);
-    }
-    if (isError) {
+      await Promise.all(mintPromises);
+      if (isError) {
+        logItem({
+          id: "mint",
+          status: "error",
+          title: "Failed to mint tokens",
+          description: "Failed to mint tokens",
+          date: new Date(),
+        });
+        setWaitingItem(undefined);
+        setIsError(true);
+        return;
+      }
       logItem({
         id: "mint",
-        status: "error",
-        title: "Failed to mint tokens",
-        description: "Failed to mint tokens",
+        status: "success",
+        title: `Tokens are minted to ${mintItems.length} addresses`,
+        description: `All mint transactions are included into a block`,
         date: new Date(),
       });
-      setWaitingItem(undefined);
-      setIsError(true);
-      return;
     }
-    logWaitingItem({
-      title: "Minting tokens",
-      description: `Waiting for mint transactions to be included into a block`,
-    });
-    await Promise.all(mintPromises);
-    if (isError) {
-      logItem({
-        id: "mint",
-        status: "error",
-        title: "Failed to mint tokens",
-        description: "Failed to mint tokens",
-        date: new Date(),
-      });
-      setWaitingItem(undefined);
-      setIsError(true);
-      return;
-    }
-    logItem({
-      id: "mint",
-      status: "success",
-      title: `Tokens are minted to ${mintItems.length} addresses`,
-      description: `All mint transactions are included into a block`,
-      date: new Date(),
+    */
+    if (waitForArweaveImageTxPromise) await waitForArweaveImageTxPromise;
+    setLikes((likes += 10));
+    await waitForArweaveMetadataTxPromise;
+    setLikes((likes += 10));
+  } catch (error) {
+    console.error("launchToken catch:", error);
+    addLog({
+      id: "error",
+      status: "error",
+      title: "Error launching token",
+      details: [
+        {
+          id: "error",
+          content: String(error),
+        },
+      ],
     });
   }
-  if (waitForArweaveImageTxPromise) await waitForArweaveImageTxPromise;
-  await waitForArweaveMetadataTxPromise;
-  setWaitingItem(undefined);
-  setIssuing(false);
-  setIssued(true);
 }
