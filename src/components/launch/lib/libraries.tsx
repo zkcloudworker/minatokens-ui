@@ -16,7 +16,7 @@ export async function loadLib(
       >
         o1js
       </a>{" "}
-      library.
+      library
     </>
   );
 

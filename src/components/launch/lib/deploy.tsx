@@ -218,10 +218,7 @@ export async function deployToken(params: {
     };
     console.timeEnd("prepared tx");
     console.timeEnd("ready to sign");
-    updateTimelineItem({
-      groupId,
-      update: messages.txSigned,
-    });
+
     updateTimelineItem({
       groupId,
       update: {
@@ -230,7 +227,10 @@ export async function deployToken(params: {
         status: "success",
       },
     });
-
+    updateTimelineItem({
+      groupId,
+      update: messages.txSigned,
+    });
     console.time("sent transaction");
     if (DEBUG) console.log("txJSON", txJSON);
     let signedData = JSON.stringify({ zkappCommand: txJSON });
@@ -259,15 +259,15 @@ export async function deployToken(params: {
 
     updateTimelineItem({
       groupId,
-      update: messages.txProved,
-    });
-    updateTimelineItem({
-      groupId,
       update: {
         lineId: "txSigned",
         content: "Transaction is signed",
         status: "success",
       },
+    });
+    updateTimelineItem({
+      groupId,
+      update: messages.txProved,
     });
 
     const jobId = await sendDeployTransaction({

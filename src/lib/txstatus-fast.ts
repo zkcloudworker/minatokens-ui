@@ -5,7 +5,7 @@ const chain = process.env.NEXT_PUBLIC_CHAIN;
 
 export async function getTxStatusFast(params: {
   hash: string;
-}): Promise<boolean> {
+}): Promise<{ success: boolean; result?: boolean; error?: string }> {
   const { hash } = params;
   if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
   if (chain !== "devnet" && chain !== "mainnet")
@@ -14,13 +14,16 @@ export async function getTxStatusFast(params: {
 
   try {
     const txStatus = await checkZkappTransaction(hash);
-    return txStatus?.success ?? false;
-  } catch (err) {
+    return {
+      success: true,
+      result: txStatus?.success ?? false,
+    };
+  } catch (error: any) {
     console.error(
       "getTxStatusFast error while getting tx status - catch",
       hash,
-      err
+      error
     );
-    return false;
+    return { success: false, error: error?.message ?? "Cannot get tx status" };
   }
 }

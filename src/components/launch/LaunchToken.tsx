@@ -1,7 +1,13 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useEffect, useState, useContext, ReactNode } from "react";
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  useRef,
+  ReactNode,
+} from "react";
 
 import { TokenProgress } from "./TokenProgress";
 import { LaunchForm } from "./LaunchForm";
@@ -15,6 +21,24 @@ import {
   TimelineItemStatus,
 } from "./TimeLine";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
+
+type MintStatistics = { [key in TimelineItemStatus]: number };
+let statistics: MintStatistics = {
+  success: 0,
+  error: 0,
+  waiting: 0,
+};
+
+export function getMintStatistics(): MintStatistics {
+  if (DEBUG) console.log("mintStatistics called", statistics);
+  return statistics;
+}
+
+let isErrorNow = false;
+export function isError(): boolean {
+  if (DEBUG) console.log("isErrorNow called", isErrorNow);
+  return isErrorNow;
+}
 
 const LaunchToken: React.FC = () => {
   const { state, dispatch } = useLaunchToken();
@@ -58,30 +82,32 @@ const LaunchToken: React.FC = () => {
     });
   }
 
-  function isError() {
-    return state.timelineItems.some((item) => item.status === "error");
-  }
-
-  function getMintStatistics(): { [key in TimelineItemStatus]: number } {
+  useEffect(() => {
+    if (DEBUG) console.log("state", state);
+    isErrorNow = state.timelineItems.some((item) => item.status === "error");
+    if (DEBUG) console.log("isErrorNow", isErrorNow);
     const mintItems = state.timelineItems.filter((item) =>
-      item.groupId.startsWith("mint")
+      item.groupId.startsWith("minting")
     );
-    const statistics = {
+    if (DEBUG) console.log("mintItems", mintItems);
+    const newStatistics = {
       success: 0,
       error: 0,
       waiting: 0,
     };
     mintItems.forEach((item) => {
       if (item.status === "success") {
-        statistics.success++;
+        newStatistics.success++;
       } else if (item.status === "error") {
-        statistics.error++;
+        newStatistics.error++;
       } else if (item.status === "waiting") {
-        statistics.waiting++;
+        newStatistics.waiting++;
       }
     });
-    return statistics;
-  }
+
+    statistics = newStatistics;
+    if (DEBUG) console.log("Updated statistics:", statistics);
+  }, [state]);
 
   const handleLaunchButtonClick = async (data: LaunchTokenData) => {
     if (DEBUG) console.log("Launching token:", data);
