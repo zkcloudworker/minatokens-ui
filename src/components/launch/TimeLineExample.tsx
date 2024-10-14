@@ -1,13 +1,13 @@
-import { TimelineItem } from "./TimeLine";
+import { TimelineGroup } from "./TimeLine";
 
-export const exampleItems: TimelineItem[] = [
+export const exampleItems: TimelineGroup[] = [
   {
-    id: "1",
+    groupId: "1",
     status: "completed",
     title: "Project Kickoff",
-    details: [
+    lines: [
       {
-        id: "1-1",
+        lineId: "1-1",
         content: (
           <>
             Successfully launched the project. View the{" "}
@@ -17,16 +17,17 @@ export const exampleItems: TimelineItem[] = [
             .
           </>
         ),
+        status: "success",
       },
     ],
   },
   {
-    id: "2",
+    groupId: "2",
     status: "warning",
     title: "Design Review",
-    details: [
+    lines: [
       {
-        id: "2-1",
+        lineId: "2-1",
         content: (
           <>
             <ul className="list-disc pl-5">
@@ -41,16 +42,17 @@ export const exampleItems: TimelineItem[] = [
             </ul>
           </>
         ),
+        status: "warning",
       },
     ],
   },
   {
-    id: "3",
+    groupId: "3",
     status: "error",
     title: "Backend Integration",
-    details: [
+    lines: [
       {
-        id: "3-1",
+        lineId: "3-1",
         content: (
           <>
             Critical error in API integration. See the{" "}
@@ -60,16 +62,17 @@ export const exampleItems: TimelineItem[] = [
             .
           </>
         ),
+        status: "error",
       },
     ],
   },
   {
-    id: "4",
+    groupId: "4",
     status: "waiting",
     title: "User Testing",
-    details: [
+    lines: [
       {
-        id: "4-1",
+        lineId: "4-1",
         content: (
           <>
             Awaiting user feedback. Check the{" "}
@@ -79,16 +82,17 @@ export const exampleItems: TimelineItem[] = [
             .
           </>
         ),
+        status: "waiting",
       },
     ],
   },
   {
-    id: "5",
+    groupId: "5",
     status: "success",
     title: "Final Deployment",
-    details: [
+    lines: [
       {
-        id: "5-1",
+        lineId: "5-1",
         content: (
           <>
             Successfully deployed to production. View the{" "}
@@ -98,16 +102,17 @@ export const exampleItems: TimelineItem[] = [
             .
           </>
         ),
+        status: "success",
       },
     ],
   },
   {
-    id: "6",
+    groupId: "6",
     status: "waiting",
     title: "Waiting for tx",
-    details: [
+    lines: [
       {
-        id: "6-1",
+        lineId: "6-1",
         content: (
           <>
             Awaiting the tx to be mined. Check the{" "}
@@ -117,6 +122,7 @@ export const exampleItems: TimelineItem[] = [
             .
           </>
         ),
+        status: "waiting",
       },
     ],
   },

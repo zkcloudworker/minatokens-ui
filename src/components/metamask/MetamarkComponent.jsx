@@ -1,5 +1,5 @@
 "use client";
-
+/*
 import { useMetaMask } from "metamask-react";
 
 export default function MetamarkComponent({ children }) {
@@ -46,3 +46,4 @@ export default function MetamarkComponent({ children }) {
 
   return null;
 }
+  */
