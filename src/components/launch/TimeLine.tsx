@@ -32,6 +32,7 @@ export interface TimelineGroup {
   errorTitle?: string;
   successTitle?: string;
   requiredForSuccess?: string[];
+  keepOnTop?: boolean;
   lines: TimeLineItem[];
 }
 
@@ -81,12 +82,12 @@ export function updateTimelineItem(params: {
       } else {
         item.lines[index] = update;
       }
-      item.status = item.lines.some((line) => line.status === "error")
+      const newStatus = item.lines.some((line) => line.status === "error")
         ? "error"
         : item.lines.some((line) => line.status === "waiting")
         ? "waiting"
         : "success";
-      if (item.status === "success" && item.requiredForSuccess) {
+      if (newStatus === "success" && item.requiredForSuccess) {
         const allRequiredSuccess = item.requiredForSuccess.every(
           (requiredLineId) => {
             const line = item.lines.find(
@@ -98,8 +99,10 @@ export function updateTimelineItem(params: {
 
         if (!allRequiredSuccess) {
           item.status = "waiting";
+        } else {
+          item.status = "success";
         }
-      }
+      } else item.status = newStatus;
       if (DEBUG && item.status === "success") {
         console.log("success:", item);
       }
@@ -137,6 +140,12 @@ export function TimeLine({ items }: TimeLineProps) {
       return;
     }
     const sorted = items.reverse().sort((a, b) => {
+      if (a.keepOnTop && !b.keepOnTop) {
+        return -1;
+      }
+      if (!a.keepOnTop && b.keepOnTop) {
+        return 1;
+      }
       if (a.status === "waiting" && b.status !== "waiting") {
         return -1;
       }

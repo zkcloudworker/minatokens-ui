@@ -217,16 +217,21 @@ export async function mintToken(params: {
     await sleep(1000);
     updateTimelineItem({
       groupId,
-      update: messages.txSigned,
-    });
-    updateTimelineItem({
-      groupId,
       update: {
-        lineId: "txPrepared",
+        lineId: "txMint",
         content: "Mint transaction is built",
         status: "success",
       },
     });
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: "txSigned",
+        content: `Please sign the transaction, setting the nonce to ${nonce} in Auro Wallet advanced settings`,
+        status: "waiting",
+      },
+    });
+
     console.time("sent transaction");
     if (DEBUG) console.log("txJSON", txJSON);
     let signedData = JSON.stringify({ zkappCommand: txJSON });
@@ -254,15 +259,15 @@ export async function mintToken(params: {
 
     updateTimelineItem({
       groupId,
-      update: messages.txProved,
-    });
-    updateTimelineItem({
-      groupId,
       update: {
         lineId: "txSigned",
         content: "Transaction is signed",
         status: "success",
       },
+    });
+    updateTimelineItem({
+      groupId,
+      update: messages.txProved,
     });
     const jobId = await sendMintTransaction({
       serializedTransaction,

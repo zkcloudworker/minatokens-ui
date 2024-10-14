@@ -29,16 +29,42 @@ import {
 import { loadLib } from "./libraries";
 import { waitForArweaveTx } from "./arweave-tx";
 import { getAccountNonce } from "@/lib/nonce";
-import {
-  waitForProveJob,
-  waitForContractVerification,
-  waitForMinaDeployTx,
-} from "./mina-tx";
+import { waitForProveJob, waitForContractVerification } from "./mina-tx";
 import { deployTokenParams } from "@/lib/keys";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
 const chain = getChain();
 const DEBUG = debug();
+
+interface UpdateRequest {
+  groupId: string;
+  update: TimeLineItem;
+}
+let updateRequests: UpdateRequest[] = [];
+let processRequests = false;
+
+async function startProcessUpdateRequests(
+  updateTimeLineItemInternal: UpdateTimelineItemFunction
+) {
+  updateRequests = [];
+  processRequests = true;
+  while (processRequests) {
+    if (updateRequests.length > 0) {
+      const request = updateRequests.shift();
+      if (request) {
+        updateTimeLineItemInternal(request);
+      }
+    }
+    await sleep(1000);
+  }
+}
+
+async function stopProcessUpdateRequests() {
+  while (updateRequests.length > 0) {
+    await sleep(1000);
+  }
+  processRequests = false;
+}
 
 export async function launchToken(params: {
   data: LaunchTokenData;
@@ -80,46 +106,73 @@ export async function launchToken(params: {
     }
   }
 
+  startProcessUpdateRequests(updateTimeLineItemInternal);
+
   function updateTimelineItem(params: {
     groupId: string;
     update: TimeLineItem;
   }): void {
     const { groupId, update } = params;
-    updateTimeLineItemInternal({
-      groupId,
-      update: update,
-    });
+    if (
+      ["privateKeysSaved", "privateKeysGenerated", "o1js"].includes(
+        update.lineId
+      )
+    )
+      updateTimeLineItemInternal({ groupId, update });
+    else updateRequests.push({ groupId, update });
   }
+
+  let isMintedShown = false;
+  let isWaitingShown = false;
+  let isErrorShown = false;
 
   function showMintStatistics(tokensToMint: number): boolean {
     const statistics = getMintStatistics();
-    if (statistics.success > 0)
+    if (DEBUG) console.log("Mint statistics:", statistics);
+    if (statistics.success > 0 || isMintedShown) {
       updateTimelineItem({
         groupId: "mint",
         update: {
           lineId: "minted",
-          content: `${statistics.success} tokens minted`,
+          content: `Minted tokens to ${statistics.success} addresses`,
           status: statistics.success === tokensToMint ? "success" : "waiting",
         },
       });
-    if (statistics.error > 0)
+      isMintedShown = true;
+    }
+    if (statistics.error > 0 || isErrorShown) {
       updateTimelineItem({
         groupId: "mint",
         update: {
           lineId: "notMinted",
-          content: `${statistics.error} tokens failed to be minted`,
+          content: `Mint failed for ${statistics.error} addresses`,
           status: "error",
         },
       });
-    if (statistics.waiting > 0)
+      updateTimelineItem({
+        groupId: "mint",
+        update: {
+          lineId: "error",
+          content: `Please make sure that you put right nonce in Auro wallet`,
+          status: "error",
+        },
+      });
+      isErrorShown = true;
+    }
+    if (statistics.waiting > 0 || isWaitingShown) {
       updateTimelineItem({
         groupId: "mint",
         update: {
           lineId: "waitToMint",
-          content: `${statistics.waiting} tokens are waiting to be minted`,
+          content:
+            statistics.waiting === 0
+              ? `Processed all mint transactions`
+              : `Processing mint transactions for ${statistics.waiting} addresses`,
           status: statistics.waiting === 0 ? "success" : "waiting",
         },
       });
+      isWaitingShown = true;
+    }
     return statistics.success === tokensToMint;
   }
 
@@ -236,15 +289,15 @@ export async function launchToken(params: {
 
     updateTimelineItem({
       groupId: "verify",
-      update: messages.o1js,
-    });
-    updateTimelineItem({
-      groupId: "verify",
       update: {
         lineId: "verifyData",
         content: "Token data is verified",
         status: "success",
       },
+    });
+    updateTimelineItem({
+      groupId: "verify",
+      update: messages.o1js,
     });
     setLikes((likes += 10));
     const libPromise = loadLib(updateTimelineItem);
@@ -277,7 +330,7 @@ export async function launchToken(params: {
             >
               Transaction
             </a>{" "}
-            is sent to Arweave.
+            is sent to Arweave
           </>
         );
         updateTimelineItem({
@@ -288,10 +341,7 @@ export async function launchToken(params: {
             status: "success",
           },
         });
-        updateTimelineItem({
-          groupId: "image",
-          update: messages.arweaveIncluded,
-        });
+
         updateTimelineItem({
           groupId: "image",
           update: {
@@ -299,6 +349,10 @@ export async function launchToken(params: {
             content: "Token image is uploaded to Arweave",
             status: "success",
           },
+        });
+        updateTimelineItem({
+          groupId: "image",
+          update: messages.arweaveIncluded,
         });
       } else {
         updateTimelineItem({
@@ -371,7 +425,7 @@ export async function launchToken(params: {
           >
             Transaction
           </a>{" "}
-          is sent to Arweave.
+          is sent to Arweave
         </>
       );
       updateTimelineItem({
@@ -384,15 +438,15 @@ export async function launchToken(params: {
       });
       updateTimelineItem({
         groupId: "metadata",
-        update: messages.arweaveIncluded,
-      });
-      updateTimelineItem({
-        groupId: "metadata",
         update: {
           lineId: "pinningMetadata",
           content: "Token metadata is uploaded to Arweave",
           status: "success",
         },
+      });
+      updateTimelineItem({
+        groupId: "metadata",
+        update: messages.arweaveIncluded,
       });
     }
     if (isError()) return;
@@ -568,7 +622,7 @@ export async function launchToken(params: {
     if (!txIncluded) {
       return;
     }
-
+    setLikes((likes += 10));
     const contractVerified = await waitForContractVerification({
       tokenContractAddress: tokenPublicKey,
       adminContractAddress: adminContractPublicKey,
@@ -612,8 +666,8 @@ export async function launchToken(params: {
         groupId: "mint",
         status: "waiting",
         title: `Minting ${data.symbol} tokens`,
-        successTitle: `${mintItems.length} ${data.symbol} tokens minted`,
-        errorTitle: `Failed to mint ${mintItems.length} ${data.symbol} tokens`,
+        successTitle: `${data.symbol} tokens minted`,
+        errorTitle: `Failed to mint ${data.symbol} tokens`,
         lines: [
           {
             lineId: "mintingTokens",
@@ -622,14 +676,16 @@ export async function launchToken(params: {
           },
         ],
         requiredForSuccess: ["mintingTokens", "minted"],
+        keepOnTop: true,
       });
 
       let nonce = await getAccountNonce(adminPublicKey);
       let mintPromises: Promise<boolean>[] = [];
+      let supply = 0;
 
       for (let i = 0; i < mintItems.length; i++) {
         const item = mintItems[i];
-        const groupId = `mint-${symbol}-${i}`;
+        const groupId = `minting-${symbol}-${i}`;
         const amountMsg = (
           <>
             Amount: {item.amount}{" "}
@@ -703,6 +759,8 @@ export async function launchToken(params: {
           return;
         }
         const mintJobId = mintResult.jobId;
+        supply += item.amount;
+        setTotalSupply(supply);
         await sleep(1000);
         showMintStatistics(tokensToMint);
         await sleep(1000);
@@ -719,7 +777,7 @@ export async function launchToken(params: {
         if (isError()) return;
       }
       while (!showMintStatistics(tokensToMint) && !isError()) {
-        await sleep(5000);
+        await sleep(10000);
       }
       setLikes((likes += 10));
 
@@ -727,7 +785,7 @@ export async function launchToken(params: {
       const statistics = getMintStatistics();
       const mintedTokensMsg = (
         <>
-          Minted{" "}
+          Successfully minted{" "}
           <a
             href={`https://minascan.io/${chain}/token/${tokenId}/zk-txs`}
             className="text-accent hover:underline"
@@ -750,9 +808,9 @@ export async function launchToken(params: {
     }
 
     if (waitForArweaveImageTxPromise) await waitForArweaveImageTxPromise;
-    setLikes((likes += 10));
     await waitForArweaveMetadataTxPromise;
     setLikes((likes += 10));
+    await stopProcessUpdateRequests();
   } catch (error) {
     console.error("launchToken catch:", error);
     addLog({
@@ -767,5 +825,6 @@ export async function launchToken(params: {
         },
       ],
     });
+    await stopProcessUpdateRequests();
   }
 }

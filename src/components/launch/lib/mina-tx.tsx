@@ -63,11 +63,6 @@ export async function waitForProveJob(params: {
     return false;
   }
 
-  updateTimelineItem({
-    groupId,
-    update: messages.txSent,
-  });
-
   const txSuccessMsg = (
     <>
       Transaction is{" "}
@@ -89,6 +84,10 @@ export async function waitForProveJob(params: {
       content: txSuccessMsg,
       status: "success",
     },
+  });
+  updateTimelineItem({
+    groupId,
+    update: messages.txSent,
   });
 
   const transaction = result.tx;
@@ -116,11 +115,12 @@ export async function waitForProveJob(params: {
   }
   if (isError()) return false;
 
-  const txIncluded = await waitForMinaDeployTx({
+  const txIncluded = await waitForMinaTx({
     hash: sendResult.hash,
     groupId,
     updateTimelineItem,
     isError,
+    type,
   });
 
   if (!txIncluded) {
@@ -155,7 +155,7 @@ export async function waitForProveJob(params: {
       groupId,
       update: {
         lineId: "mintBalance",
-        content: `Token balance of ${address}: ${
+        content: `Token balance of ${address} is ${
           balanceResult.balance / 1_000_000_000
         }`,
         status: "success",
@@ -165,13 +165,14 @@ export async function waitForProveJob(params: {
   }
 }
 
-export async function waitForMinaDeployTx(params: {
+export async function waitForMinaTx(params: {
   hash: string;
   groupId: string;
   updateTimelineItem: UpdateTimelineItemFunction;
   isError: IsErrorFunction;
+  type: "deploy" | "mint";
 }): Promise<boolean> {
-  const { hash, groupId, updateTimelineItem, isError } = params;
+  const { hash, groupId, updateTimelineItem, isError, type } = params;
   const txSentMsg = (
     <>
       Transaction is{" "}
@@ -185,10 +186,6 @@ export async function waitForMinaDeployTx(params: {
       </a>
     </>
   );
-  updateTimelineItem({
-    groupId,
-    update: messages.txIncluded,
-  });
 
   updateTimelineItem({
     groupId,
@@ -198,15 +195,27 @@ export async function waitForMinaDeployTx(params: {
       status: "success",
     },
   });
+  updateTimelineItem({
+    groupId,
+    update: messages.txIncluded,
+  });
 
-  let ok = await getTxStatusFast({ hash });
+  let delay = 10000;
+  let status = await getTxStatusFast({ hash });
+  let ok = status?.result ?? false;
   let count = 0;
   if (DEBUG)
     console.log("Waiting for Mina transaction to be mined...", { hash, ok });
   while (!ok && count < 100 && !isError()) {
-    await sleep(10000);
-    ok = await getTxStatusFast({ hash });
+    await sleep(delay);
+    status = await getTxStatusFast({ hash });
+    ok = status?.result ?? false;
     count++;
+    if (status.error) {
+      delay += 5000;
+      console.error("Mina tx status error", status.error);
+      console.log(`Retrying in ${delay / 1000} seconds...`);
+    }
   }
   if (DEBUG) console.log("Final tx status", { ok, hash, count });
   if (!ok) {
@@ -237,15 +246,16 @@ export async function waitForMinaDeployTx(params: {
 
   updateTimelineItem({
     groupId,
-    update: messages.contractStateVerified,
-  });
-  updateTimelineItem({
-    groupId,
     update: {
       lineId: "txIncluded",
       content: successSentMsg,
       status: "success",
     },
+  });
+  updateTimelineItem({
+    groupId,
+    update:
+      type === "deploy" ? messages.contractStateVerified : messages.mintBalance,
   });
   return true;
 }

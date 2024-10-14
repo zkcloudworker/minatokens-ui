@@ -75,7 +75,17 @@ const initialCategories: Category[] = [
   },
 ];
 
-export default function TokenList() {
+export type TokenListProps = {
+  title: string;
+  showIcon: boolean;
+  numberOfItems: number;
+};
+
+export default function TokenList({
+  title,
+  showIcon,
+  numberOfItems,
+}: TokenListProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [items, setItems] = useState<DeployedTokenInfo[]>([]);
   const [tokensFetched, setTokensFetched] = useState<string[]>([]);
@@ -163,7 +173,7 @@ export default function TokenList() {
           await algoliaGetTokenList({
             query: search,
             page: 0,
-            hitsPerPage: 8, // TODO: decide how many to fetch
+            hitsPerPage: numberOfItems,
             favoritesOfAddress: onlyFavorites ? userAddress : undefined,
             ownedByAddress: onlyOwned ? userAddress : undefined,
             issuedByAddress: onlyIssued ? userAddress : undefined,
@@ -249,14 +259,16 @@ export default function TokenList() {
     <section className="py-32">
       <div className="container">
         <h2 className="mb-8 text-center font-display text-5xl text-jacarta-700 dark:text-white">
-          <span
-            className="mr-3 inline-block h-8 w-8 bg-contain bg-center text-xl"
-            style={{
-              backgroundImage:
-                "url(https://cdn.jsdelivr.net/npm/emoji-datasource-apple@7.0.2/img/apple/64/26a1.png)",
-            }}
-          ></span>
-          Trending
+          {showIcon && (
+            <span
+              className="mr-3 inline-block h-8 w-8 bg-contain bg-center text-xl"
+              style={{
+                backgroundImage:
+                  "url(https://cdn.jsdelivr.net/npm/emoji-datasource-apple@7.0.2/img/apple/64/26a1.png)",
+              }}
+            ></span>
+          )}
+          {title}
         </h2>
         <div className="mb-8 flex flex-wrap items-center justify-between">
           <ul className="flex flex-wrap items-center">

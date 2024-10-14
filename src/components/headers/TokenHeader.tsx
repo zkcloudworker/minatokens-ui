@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useEffect, useState, useContext } from "react";
+import { shortenString } from "@/lib/short";
 import Nav from "./component/Nav";
 import {
   addMobileMenuToggle,
@@ -14,6 +15,8 @@ import Link from "next/link";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
+import { getChain } from "@/lib/chain";
+const chain = getChain();
 // TODO: handle wallet connection with connectWallet
 
 const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
@@ -51,6 +54,11 @@ const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
 
     fetchWalletInfo();
   }, []);
+
+  async function connect() {
+    const address = (await connectWallet()).address;
+    setAddress(address);
+  }
 
   return (
     <>
@@ -91,7 +99,7 @@ const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
           {showSearch && (
             <form
               onSubmit={(e) => e.preventDefault()}
-              className="relative ml-12 mr-8 hidden basis-3/12 lg:block xl:ml-[8%] --border"
+              className="relative ml-12 hidden basis-3/12 lg:block xl:ml-[8%] --border"
             >
               <input
                 type="search"
@@ -290,10 +298,28 @@ const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
                   </svg>
                 </div>
               </MetamarkComponent> */}
-
-              {/* Profile */}
-              <Profile />
-
+              {/* Wallet */}
+              <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2 mr-6 flex items-center justify-center  transition-colors">
+                {address && (
+                  <a
+                    href={`https://minascan.io/${chain}/account/${address}`}
+                    className="dark:hover:text-accent hover:text-accent"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {shortenString(address)}
+                  </a>
+                )}
+                {!address && (
+                  <button
+                    onClick={connect}
+                    className="rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                  >
+                    Connect
+                  </button>
+                )}
+              </div>
+              {/* <Profile /> */}
               {/* Dark Mode */}
               <div
                 onClick={() => handleDarkMode()}
@@ -309,6 +335,7 @@ const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
                   <path fill="none" d="M0 0h24v24H0z" />
                   <path d="M11.38 2.019a7.5 7.5 0 1 0 10.6 10.6C21.662 17.854 17.316 22 12.001 22 6.477 22 2 17.523 2 12c0-5.315 4.146-9.661 9.38-9.981z" />
                 </svg>
+
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -326,7 +353,7 @@ const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
           {/* Mobile Menu Actions */}
           <div className="ml-auto flex lg:hidden rtl:ml-0 rtl:mr-auto ">
             {/* Profile */}
-            <Link
+            {/* <Link
               href="/edit-profile"
               className="group ml-2 flex h-10 w-10 items-center justify-center rounded-full border border-jacarta-100 bg-white transition-colors hover:border-transparent hover:bg-accent focus:border-transparent focus:bg-accent dark:border-transparent dark:bg-white/[.15] dark:hover:bg-accent"
               aria-label="profile"
@@ -341,7 +368,29 @@ const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
                 <path fill="none" d="M0 0h24v24H0z" />
                 <path d="M11 14.062V20h2v-5.938c3.946.492 7 3.858 7 7.938H4a8.001 8.001 0 0 1 7-7.938zM12 13c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6z" />
               </svg>
-            </Link>
+            </Link> */}
+
+            {/* Wallet */}
+            <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2  flex items-center justify-center  transition-colors">
+              {address && (
+                <a
+                  href={`https://minascan.io/${chain}/account/${address}`}
+                  className="dark:hover:text-accent hover:text-accent"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {shortenString(address)}
+                </a>
+              )}
+              {!address && (
+                <button
+                  onClick={connect}
+                  className="rounded-full bg-accent py-2 px-5 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                >
+                  Connect
+                </button>
+              )}
+            </div>
 
             {/* Dark Mode */}
             <div
@@ -358,6 +407,7 @@ const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
                 <path fill="none" d="M0 0h24v24H0z" />
                 <path d="M11.38 2.019a7.5 7.5 0 1 0 10.6 10.6C21.662 17.854 17.316 22 12.001 22 6.477 22 2 17.523 2 12c0-5.315 4.146-9.661 9.38-9.981z" />
               </svg>
+
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
