@@ -3,110 +3,121 @@
 import { useEffect, useState, ReactNode } from "react";
 import { CheckCircle, AlertCircle, XCircle, CheckSquare } from "lucide-react";
 import { motion } from "framer-motion";
+import { debug } from "@/lib/debug";
+const DEBUG = debug();
 
-export interface LogListItem {
-  id: string;
-  content: ReactNode;
-}
+export type TimelineItemStatus = "success" | "error" | "waiting";
 
-export type TimelineStatus =
-  | "success"
+export type TimelineGroupStatus =
+  | TimelineItemStatus
   | "warning"
-  | "error"
   | "waiting"
   | "completed";
-export interface TimelineItem {
-  id: string;
-  status: TimelineStatus;
-  title: string;
-  details: LogListItem[];
+
+export interface TimeLineItem {
+  lineId: string;
+  content: ReactNode;
+  status: TimelineItemStatus;
 }
 
-export interface TimelineDatedItem extends TimelineItem {
+export interface TimelineGroup {
+  groupId: string;
+  status: TimelineGroupStatus;
+  title: string;
+  errorTitle?: string;
+  successTitle?: string;
+  requiredForSuccess?: string[];
+  lines: TimeLineItem[];
+}
+
+export interface TimelineGroupDated extends TimelineGroup {
   time: number;
 }
 
-export interface TimeLineProps {
-  items: TimelineDatedItem[];
-}
-
-export function logItem(params: {
-  item: TimelineItem;
-  items: TimelineDatedItem[];
-}): TimelineDatedItem[] {
+export function addTimelineGroup(params: {
+  item: TimelineGroup;
+  items: TimelineGroupDated[];
+}): TimelineGroupDated[] {
   const { item, items } = params;
   return [...items, { ...item, time: Date.now() }];
 }
 
-export function updateLogItem(params: {
-  items: TimelineDatedItem[];
-  id: string;
-  update: Partial<TimelineItem>;
+export function updateTimelineGroup(params: {
+  items: TimelineGroupDated[];
+  groupId: string;
+  update: Partial<TimelineGroup>;
 }) {
-  const { items, id, update } = params;
+  const { items, groupId, update } = params;
   return items.map((item) =>
-    item.id === id
+    item.groupId === groupId
       ? {
           ...item,
           ...update,
-          time:
-            (update.status ?? item.status) === "waiting"
-              ? item.time
-              : Date.now(),
         }
       : item
   );
 }
 
-export function updateLogItemDetails(params: {
-  items: TimelineDatedItem[];
-  id: string;
-  detailId: string;
-  update: ReactNode;
-  status?: TimelineStatus;
+export function updateTimelineItem(params: {
+  items: TimelineGroupDated[];
+  groupId: string;
+  update: TimeLineItem;
 }) {
-  const { items, id, detailId, update, status } = params;
+  const { items, groupId, update } = params;
   return items.map((item) => {
-    if (item.id !== id) {
+    if (item.groupId !== groupId) {
       return item;
     } else {
-      const index = item.details.findIndex((detail) => detail.id === detailId);
+      const index = item.lines.findIndex(
+        (line) => line.lineId === update.lineId
+      );
       if (index === -1) {
-        item.details.push({ id: detailId, content: update });
+        item.lines.push(update);
       } else {
-        item.details[index].content = update;
+        item.lines[index] = update;
       }
-      return {
-        ...item,
-        time: (status ?? item.status) === "waiting" ? item.time : Date.now(),
-      };
+      item.status = item.lines.some((line) => line.status === "error")
+        ? "error"
+        : item.lines.some((line) => line.status === "waiting")
+        ? "waiting"
+        : "success";
+      if (item.status === "success" && item.requiredForSuccess) {
+        const allRequiredSuccess = item.requiredForSuccess.every(
+          (requiredLineId) => {
+            const line = item.lines.find(
+              (line) => line.lineId === requiredLineId
+            );
+            return line && line.status === "success";
+          }
+        );
+
+        if (!allRequiredSuccess) {
+          item.status = "waiting";
+        }
+      }
+      if (DEBUG && item.status === "success") {
+        console.log("success:", item);
+      }
+      return item;
     }
   });
 }
 
-export function deleteLogItem(params: {
-  items: TimelineDatedItem[];
-  id: string;
+export function deleteTimelineGroup(params: {
+  items: TimelineGroupDated[];
+  groupId: string;
 }) {
-  const { items, id } = params;
-  return items.filter((item) => item.id !== id);
+  const { items, groupId } = params;
+  return items.filter((item) => item.groupId !== groupId);
 }
 
-function logList(items: LogListItem[]): ReactNode {
-  if (items.length === 0) return "";
-  if (items.length === 1) return items[0].content;
-  return (
-    <ul className="list-disc pl-5" id={`logList-${Date.now()}`}>
-      {items.map((item, i) => (
-        <li key={`logList-${i}-${item.id}`}>{item.content}</li>
-      ))}
-    </ul>
-  );
+export interface TimeLineProps {
+  items: TimelineGroupDated[];
 }
 
 export function TimeLine({ items }: TimeLineProps) {
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const [sortedItems, setSortedItems] = useState<TimelineDatedItem[]>([]);
+  const [sortedItems, setSortedItems] = useState<TimelineGroupDated[]>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -132,6 +143,28 @@ export function TimeLine({ items }: TimeLineProps) {
     setSortedItems(sorted);
   }, [items]);
 
+  function timelineItemsList(items: TimeLineItem[]): ReactNode {
+    if (items.length === 0) return "";
+    if (items.length === 1) return items[0].content;
+    return (
+      <ul className="list-disc pl-5" id={`logList-${Date.now()}`}>
+        {items.map((item, i) => (
+          <li key={`logList-${i}-${item.lineId}`}>{item.content}</li>
+        ))}
+      </ul>
+    );
+  }
+
+  function groupTitle(group: TimelineGroup): ReactNode {
+    if (group.status === "error") {
+      return group.errorTitle ?? group.title;
+    }
+    if (group.status === "success") {
+      return group.successTitle ?? group.title;
+    }
+    return group.title;
+  }
+
   return (
     <div className="mb-10 shrink-0 basis-8/12 space-y-5 lg:mb-0 lg:pr-10">
       {sortedItems.map((elm, i) => (
@@ -141,10 +174,10 @@ export function TimeLine({ items }: TimeLineProps) {
         >
           <div>
             <h3 className="mb-1 font-display font-semibold text-jacarta-700 dark:text-white">
-              {elm.title}
+              {groupTitle(elm)}
             </h3>
             <span className="mb-1 block text-sm text-jacarta-500 dark:text-white">
-              {logList(elm.details)}
+              {timelineItemsList(elm.lines)}
             </span>
           </div>
 

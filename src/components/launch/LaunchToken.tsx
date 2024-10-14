@@ -8,29 +8,27 @@ import { LaunchForm } from "./LaunchForm";
 import { LaunchTokenData } from "@/lib/token";
 import { launchToken } from "./lib/launch";
 import { useLaunchToken } from "@/context/launch";
-import { TimelineItem, LogListItem, TimelineStatus } from "./TimeLine";
+import { TimeLineItem, TimelineGroup, TimelineGroupStatus } from "./TimeLine";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 const LaunchToken: React.FC = () => {
   const { state, dispatch } = useLaunchToken();
 
-  function addLog(item: TimelineItem) {
+  function addLog(item: TimelineGroup) {
     dispatch({
-      type: "ADD_TIMELINE_ITEM",
+      type: "ADD_TIMELINE_GROUP",
       payload: item,
     });
   }
 
-  function updateLogList(params: {
-    id: string;
-    detailId: string;
-    update: ReactNode;
-    status?: TimelineStatus;
+  function updateTimelineItem(params: {
+    groupId: string;
+    update: TimeLineItem;
   }) {
-    const { id, detailId, update, status } = params;
+    const { groupId, update } = params;
     dispatch({
-      type: "UPDATE_TIMELINE_ITEM_DETAIL",
-      payload: { id, detailId, update, status },
+      type: "UPDATE_TIMELINE_ITEM",
+      payload: { groupId, update },
     });
   }
 
@@ -59,7 +57,7 @@ const LaunchToken: React.FC = () => {
     if (DEBUG) console.log("Launching token:", data);
 
     dispatch({ type: "SET_TOKEN_DATA", payload: data });
-    dispatch({ type: "SET_TIMELINE_ITEMS", payload: [] });
+    dispatch({ type: "SET_TIMELINE_GROUPS", payload: [] });
     dispatch({ type: "SET_TOTAL_SUPPLY", payload: 0 });
     dispatch({ type: "SET_TOKEN_ADDRESS", payload: "launching" });
     dispatch({ type: "SET_LIKES", payload: 10 });
@@ -69,7 +67,7 @@ const LaunchToken: React.FC = () => {
     launchToken({
       data,
       addLog,
-      updateLogList,
+      updateTimelineItem,
       setTotalSupply,
       setTokenAddress,
       setLikes,

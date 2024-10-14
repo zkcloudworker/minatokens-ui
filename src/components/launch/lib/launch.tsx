@@ -6,12 +6,12 @@ import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
 import { deployToken } from "./deploy";
 import { mintToken } from "@/lib/mint";
-import { TimelineItem, LogListItem, TimelineStatus } from "../TimeLine";
+import { TimeLineItem, TimelineGroup, TimelineGroupStatus } from "../TimeLine";
 import { pinImageToArweave, pinStringToArweave } from "@/lib/arweave";
 import { arweaveHashToUrl } from "@/lib/arweave";
 import { TokenInfo } from "@/lib/token";
 import { sendTransaction } from "@/lib/send";
-import { messages, LogItemId, MessageId } from "./messages";
+import { messages, LineId, GroupId } from "./messages";
 import { loadLib } from "./libraries";
 import { waitForArweaveTx } from "./arweave-tx";
 import { getAccountNonce } from "@/lib/nonce";
@@ -30,12 +30,10 @@ const DEBUG = debug();
 
 export async function launchToken(params: {
   data: LaunchTokenData;
-  addLog: (item: TimelineItem) => void;
-  updateLogList: (params: {
-    id: string;
-    detailId: string;
-    update: ReactNode;
-    status?: TimelineStatus;
+  addLog: (item: TimelineGroup) => void;
+  updateTimelineItem: (params: {
+    groupId: string;
+    update: TimeLineItem;
   }) => void;
   setTotalSupply: (totalSupply: number) => void;
   setTokenAddress: (tokenAddress: string) => void;
@@ -44,7 +42,7 @@ export async function launchToken(params: {
   const {
     data,
     addLog,
-    updateLogList: updateLogListInternal,
+    updateTimelineItem: updateTimeLineItemInternal,
     setTotalSupply,
     setTokenAddress,
     setLikes,
@@ -69,45 +67,38 @@ export async function launchToken(params: {
     }
   }
 
-  function updateLogList(params: {
-    id: LogItemId;
-    itemToUpdate: MessageId;
-    updatedItem: ReactNode;
-    status?: TimelineStatus;
+  function updateTimelineItem(params: {
+    groupId: GroupId;
+    update: TimeLineItem;
   }): void {
-    const { id, itemToUpdate, updatedItem, status } = params;
-    updateLogListInternal({
-      id: id,
-      detailId: itemToUpdate,
-      update: updatedItem,
-      status,
+    const { groupId, update } = params;
+    updateTimeLineItemInternal({
+      groupId,
+      update: update,
     });
   }
 
-  function updateMintLogList(params: {
-    id: LogItemId;
-    itemToUpdate: string;
-    updatedItem: ReactNode;
-    status?: TimelineStatus;
+  function updateMintTimelineItem(params: {
+    groupId: GroupId;
+    update: TimeLineItem;
   }): void {
-    const { id, itemToUpdate, updatedItem, status } = params;
-    updateLogListInternal({
-      id: id,
-      detailId: itemToUpdate,
-      update: updatedItem,
-      status,
+    const { groupId, update } = params;
+    updateTimeLineItemInternal({
+      groupId,
+      update,
     });
   }
 
   try {
     addLog({
-      id: "deploy",
+      groupId: "pin",
       status: "waiting",
-      title: `Launching token ${data.symbol}`,
-      details: [messages.verifyData, messages.o1js],
+      title: `Pinning token metadata for ${data.symbol}`,
+      successTitle: `Token metadata for ${data.symbol} pinned`,
+      errorTitle: `Failed to pin token metadata for ${data.symbol}`,
+      lines: [messages.verifyData],
+      requiredForSuccess: ["pinningMetadata", "verifyData"],
     });
-
-    const libPromise = loadLib(updateLogList);
 
     if (DEBUG) console.log("launchToken: launching token:", data);
     const walletInfo = await getWalletInfo();
@@ -116,46 +107,56 @@ export async function launchToken(params: {
     if (DEBUG) console.log("launchToken: System Info:", systemInfo);
     const adminPublicKey = AURO_TEST ? ADMIN_ADDRESS : adminAddress;
     if (!adminPublicKey) {
-      updateLogList({
-        id: "deploy",
-        status: "error",
-        itemToUpdate: "adminRequired",
-        updatedItem: messages.adminRequired.content,
+      updateTimelineItem({
+        groupId: "pin",
+        update: messages.adminRequired,
       });
-      updateLogList({
-        id: "deploy",
-        status: "error",
-        itemToUpdate: "verifyData",
-        updatedItem: "Data verification failed",
+      updateTimelineItem({
+        groupId: "pin",
+        update: {
+          lineId: "verifyData",
+          content: "Data verification failed",
+          status: "error",
+        },
       });
       return;
     }
     if (adminPublicKey !== walletInfo.address) {
-      updateLogList({
-        id: "deploy",
-        status: "error",
-        itemToUpdate: "adminRequired",
-        updatedItem: messages.adminAddressDoNotMatch.content,
+      updateTimelineItem({
+        groupId: "pin",
+        update: {
+          lineId: "adminRequired",
+          content: messages.adminAddressDoNotMatch.content,
+          status: "error",
+        },
       });
-      updateLogList({
-        id: "deploy",
-        status: "error",
-        itemToUpdate: "verifyData",
-        updatedItem: "Data verification failed",
+      updateTimelineItem({
+        groupId: "pin",
+        update: {
+          lineId: "verifyData",
+          content: "Data verification failed",
+          status: "error",
+        },
       });
       return;
     }
     const mina = (window as any).mina;
     if (mina === undefined || mina?.isAuro !== true) {
-      updateLogList({
-        id: "deploy",
-        itemToUpdate: "noAuroWallet",
-        updatedItem: messages.noAuroWallet.content,
+      updateTimelineItem({
+        groupId: "pin",
+        update: {
+          lineId: "noAuroWallet",
+          content: messages.noAuroWallet.content,
+          status: "error",
+        },
       });
-      updateLogList({
-        id: "deploy",
-        itemToUpdate: "verifyData",
-        updatedItem: "Data verification failed",
+      updateTimelineItem({
+        groupId: "pin",
+        update: {
+          lineId: "verifyData",
+          content: "Data verification failed",
+          status: "error",
+        },
       });
       return;
     }
@@ -169,36 +170,59 @@ export async function launchToken(params: {
         mintItems.push(verified);
       } else {
         if (DEBUG) console.log("Mint item skipped:", item);
-        updateLogList({
-          id: "deploy",
-          status: "error",
-          itemToUpdate: "mintDataError",
-          updatedItem: `Cannot mint ${item.amount} ${symbol} tokens to ${item.address} because of wrong amount or address`,
+        updateTimelineItem({
+          groupId: "pin",
+          update: {
+            lineId: "mintDataError",
+            content: `Cannot mint ${item.amount} ${symbol} tokens to ${item.address} because of wrong amount or address`,
+            status: "error",
+          },
         });
-        updateLogList({
-          id: "deploy",
-          status: "error",
-          itemToUpdate: "verifyData",
-          updatedItem: "Data verification failed",
+        updateTimelineItem({
+          groupId: "pin",
+          update: {
+            lineId: "verifyData",
+            content: "Data verification failed",
+            status: "error",
+          },
         });
         return;
       }
     }
     if (DEBUG) console.log("Mint items filtered:", mintItems);
 
-    updateLogList({
-      id: "deploy",
-      itemToUpdate: "verifyData",
-      updatedItem: "Token data is verified",
+    updateTimelineItem({
+      groupId: "pin",
+      update: {
+        lineId: "verifyData",
+        content: "Token data is verified",
+        status: "success",
+      },
     });
     setLikes((likes += 10));
 
+    addLog({
+      groupId: "deploy",
+      status: "waiting",
+      title: `Launching token ${data.symbol}`,
+      successTitle: `Token ${data.symbol} launched`,
+      errorTitle: `Failed to launch token ${data.symbol}`,
+      lines: [messages.o1js, messages.saveDeployParams, messages.transaction],
+      requiredForSuccess: [
+        "o1js",
+        "saveDeployParams",
+        "transaction",
+        "contractVerification",
+      ],
+    });
+
+    const libPromise = loadLib(updateTimelineItem);
+
     let imageHash: string | undefined = undefined;
     if (image) {
-      updateLogList({
-        id: "deploy",
-        itemToUpdate: "pinningImage",
-        updatedItem: messages.pinningImage.content,
+      updateTimelineItem({
+        groupId: "pin",
+        update: messages.pinningImage,
       });
 
       imageHash = await pinImageToArweave(image);
@@ -216,17 +240,22 @@ export async function launchToken(params: {
             token image to Arweave permanent storage...
           </>
         );
-        updateLogList({
-          id: "deploy",
-          itemToUpdate: "pinningImage",
-          updatedItem: imageTxMessage,
+        updateTimelineItem({
+          groupId: "pin",
+          update: {
+            lineId: "pinningImage",
+            content: imageTxMessage,
+            status: "waiting",
+          },
         });
       } else {
-        updateLogList({
-          id: "deploy",
-          status: "error",
-          itemToUpdate: "pinningImage",
-          updatedItem: "Failed to pin token image to Arweave permanent storage",
+        updateTimelineItem({
+          groupId: "pin",
+          update: {
+            lineId: "pinningImage",
+            content: "Failed to pin token image to Arweave permanent storage",
+            status: "error",
+          },
         });
         return;
       }
@@ -253,10 +282,9 @@ export async function launchToken(params: {
       isMDA: undefined,
     };
 
-    updateLogList({
-      id: "deploy",
-      itemToUpdate: "pinningMetadata",
-      updatedItem: messages.pinningMetadata.content,
+    updateTimelineItem({
+      groupId: "pin",
+      update: messages.pinningMetadata,
     });
 
     const metadataHash = await pinStringToArweave(
@@ -264,12 +292,13 @@ export async function launchToken(params: {
     );
 
     if (!metadataHash) {
-      updateLogList({
-        id: "deploy",
-        status: "error",
-        itemToUpdate: "pinningMetadata",
-        updatedItem:
-          "Failed to pin token metadata to Arweave permanent storage",
+      updateTimelineItem({
+        groupId: "pin",
+        update: {
+          lineId: "pinningMetadata",
+          content: "Failed to pin token metadata to Arweave permanent storage",
+          status: "error",
+        },
       });
       return;
     } else {
@@ -286,10 +315,13 @@ export async function launchToken(params: {
           token metadata to Arweave permanent storage...
         </>
       );
-      updateLogList({
-        id: "deploy",
-        itemToUpdate: "pinningMetadata",
-        updatedItem: metadataTxMessage,
+      updateTimelineItem({
+        groupId: "pin",
+        update: {
+          lineId: "pinningMetadata",
+          content: metadataTxMessage,
+          status: "waiting",
+        },
       });
     }
     setLikes((likes += 10));
@@ -298,29 +330,23 @@ export async function launchToken(params: {
     if (imageHash) {
       waitForArweaveImageTxPromise = waitForArweaveTx({
         hash: imageHash,
-        id: "deploy",
-        itemToUpdate: "pinningImage",
-        updateLogList,
+        groupId: "pin",
+        lineId: "pinningImage",
+        updateTimelineItem,
         type: "image",
       });
     }
 
     const waitForArweaveMetadataTxPromise = waitForArweaveTx({
       hash: metadataHash,
-      id: "deploy",
-      itemToUpdate: "pinningMetadata",
-      updateLogList,
+      groupId: "pin",
+      lineId: "pinningMetadata",
+      updateTimelineItem,
       type: "metadata",
     });
 
     const uri = await arweaveHashToUrl(metadataHash);
     const lib = await libPromise;
-
-    updateLogList({
-      id: "deploy",
-      itemToUpdate: "saveDeployParams",
-      updatedItem: messages.saveDeployParams.content,
-    });
 
     const {
       tokenPrivateKey,
@@ -329,6 +355,7 @@ export async function launchToken(params: {
       adminContractPublicKey,
     } = await deployTokenParams(lib);
     if (DEBUG) console.log("Deploy Params received");
+    setTokenAddress(tokenPublicKey);
 
     // Save the result to a JSON file
     const deployParams = {
@@ -370,10 +397,13 @@ export async function launchToken(params: {
         </a>
       </>
     );
-    updateLogList({
-      id: "deploy",
-      itemToUpdate: "saveDeployParams",
-      updatedItem: saveDeployParamsSuccessMsg,
+    updateTimelineItem({
+      groupId: "deploy",
+      update: {
+        lineId: "saveDeployParams",
+        content: saveDeployParamsSuccessMsg,
+        status: "success",
+      },
     });
     setLikes((likes += 10));
 
@@ -384,17 +414,19 @@ export async function launchToken(params: {
       symbol,
       uri,
       libraries: lib,
-      updateLogList,
-      id: "deploy",
+      updateTimelineItem,
+      groupId: "deploy",
     });
     if (DEBUG) console.log("Deploy result:", deployResult);
     if (deployResult.success === false || deployResult.jobId === undefined) {
-      updateLogList({
-        id: "deploy",
-        status: "error",
-        itemToUpdate: "deployTransactionError",
-        updatedItem:
-          deployResult.error ?? messages.deployTransactionError.content,
+      updateTimelineItem({
+        groupId: "deploy",
+        update: {
+          lineId: "deployTransactionError",
+          content:
+            deployResult.error ?? messages.deployTransactionError.content,
+          status: "error",
+        },
       });
       return;
     }
@@ -403,9 +435,9 @@ export async function launchToken(params: {
 
     const transaction = await waitForProveJob({
       jobId: deployJobId,
-      id: "deploy",
-      itemToUpdate: "transaction",
-      updateLogList,
+      groupId: "deploy",
+      lineId: "transaction",
+      updateTimelineItem,
     });
     if (DEBUG) console.log("Transaction proved:", transaction?.slice(0, 50));
     if (!transaction) {
@@ -415,12 +447,15 @@ export async function launchToken(params: {
     const sendResult = await sendTransaction(transaction);
     if (DEBUG) console.log("Transaction sent:", sendResult);
     if (sendResult.success === false || sendResult.hash === undefined) {
-      updateLogList({
-        id: "deploy",
-        itemToUpdate: "transaction",
-        updatedItem: `Failed to send transaction to Mina blockchain: ${
-          sendResult.status ? "status: " + sendResult.status + ", " : ""
-        } ${String(sendResult.error ?? "error D437")}`,
+      updateTimelineItem({
+        groupId: "deploy",
+        update: {
+          lineId: "transaction",
+          content: `Failed to send transaction to Mina blockchain: ${
+            sendResult.status ? "status: " + sendResult.status + ", " : ""
+          } ${String(sendResult.error ?? "error D437")}`,
+          status: "error",
+        },
       });
       return;
     }
@@ -428,9 +463,9 @@ export async function launchToken(params: {
     const txIncluded = await waitForMinaDeployTx({
       hash: sendResult.hash,
       jobId: deployJobId,
-      id: "deploy",
-      itemToUpdate: "transaction",
-      updateLogList,
+      groupId: "deploy",
+      lineId: "transaction",
+      updateTimelineItem,
     });
 
     if (!txIncluded) {
@@ -441,9 +476,9 @@ export async function launchToken(params: {
       tokenContractAddress: tokenPublicKey,
       adminContractAddress: adminContractPublicKey,
       adminAddress: adminPublicKey,
-      id: "deploy",
-      itemToUpdate: "contractVerification",
-      updateLogList,
+      groupId: "deploy",
+      lineId: "contractVerification",
+      updateTimelineItem,
       info,
     });
     if (!contractVerified) {
@@ -473,7 +508,7 @@ export async function launchToken(params: {
       for (let i = 0; i < mintItems.length; i++) {
         const item = mintItems[i];
         const itemId = `mint-${symbol}-${i}`;
-        updateMintLogList({
+        updateMintTimelineItem({
           id: "mint",
           itemToUpdate: itemId,
           updatedItem: `Minting ${item.amount} ${symbol} tokens to ${item.address}`,
@@ -562,13 +597,14 @@ export async function launchToken(params: {
   } catch (error) {
     console.error("launchToken catch:", error);
     addLog({
-      id: "error",
+      groupId: "error",
       status: "error",
       title: "Error launching token",
-      details: [
+      lines: [
         {
-          id: "error",
+          lineId: "error",
           content: String(error),
+          status: "error",
         },
       ],
     });

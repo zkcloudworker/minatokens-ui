@@ -1,20 +1,19 @@
-import { UpdateLogListFunction, MessageId, LogItemId } from "./messages";
+import { UpdateTimelineItemFunction, GroupId, LineId } from "./messages";
 import { getResult } from "@/lib/token-api";
 import { TokenInfo } from "@/lib/token";
 import { getTxStatusFast } from "@/lib/txstatus-fast";
 import { verifyFungibleTokenState } from "@/lib/verify";
 import { sleep } from "@/lib/sleep";
 import { debug } from "@/lib/debug";
-import { updateLogItem } from "../TimeLine";
 const DEBUG = debug();
 
 export async function waitForProveJob(params: {
   jobId: string;
-  id: LogItemId;
-  itemToUpdate: MessageId;
-  updateLogList: UpdateLogListFunction;
+  groupId: GroupId;
+  lineId: LineId;
+  updateTimelineItem: UpdateTimelineItemFunction;
 }): Promise<string | undefined> {
-  const { jobId, id, itemToUpdate, updateLogList } = params;
+  const { jobId, groupId, lineId, updateTimelineItem } = params;
 
   await sleep(10000);
   let result = await getResult(jobId);
@@ -24,11 +23,13 @@ export async function waitForProveJob(params: {
   }
 
   if (result?.error || result?.tx === undefined) {
-    updateLogList({
-      id,
-      itemToUpdate,
-      updatedItem: result.error ?? "Failed to prove transaction",
-      status: "error",
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId,
+        content: result.error ?? "Failed to prove transaction",
+        status: "error",
+      },
     });
     return undefined;
   }
@@ -48,10 +49,13 @@ export async function waitForProveJob(params: {
     </>
   );
 
-  updateLogList({
-    id,
-    itemToUpdate,
-    updatedItem: txSuccessMsg,
+  updateTimelineItem({
+    groupId,
+    update: {
+      lineId,
+      content: txSuccessMsg,
+      status: "waiting",
+    },
   });
 
   return result.tx;
@@ -60,16 +64,48 @@ export async function waitForProveJob(params: {
 export async function waitForMinaDeployTx(params: {
   hash: string;
   jobId: string;
-  id: LogItemId;
-  itemToUpdate: MessageId;
-  updateLogList: UpdateLogListFunction;
+  groupId: GroupId;
+  lineId: LineId;
+  updateTimelineItem: UpdateTimelineItemFunction;
 }): Promise<boolean> {
-  const { hash, id, itemToUpdate, updateLogList, jobId } = params;
+  const { hash, jobId, groupId, lineId, updateTimelineItem } = params;
+  const txSentMsg = (
+    <>
+      Deployment transaction successfully signed,{" "}
+      <a
+        href={`https://zkcloudworker.com/job/${jobId}`}
+        className="text-accent hover:underline"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        proved
+      </a>{" "}
+      , and{" "}
+      <a
+        href={`https://minascan.io/devnet/tx/${hash}?type=zk-tx`}
+        className="text-accent hover:underline"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        sent
+      </a>
+      , waiting for it to be included in the block
+    </>
+  );
+
+  updateTimelineItem({
+    groupId,
+    update: {
+      lineId,
+      content: txSentMsg,
+      status: "waiting",
+    },
+  });
 
   let ok = await getTxStatusFast({ hash });
   let count = 0;
   if (DEBUG)
-    console.log("Waiting for Mina transaction to be mined...", status, ok);
+    console.log("Waiting for Mina transaction to be mined...", { hash, ok });
   while (!ok && count < 100) {
     await sleep(10000);
     ok = await getTxStatusFast({ hash });
@@ -77,11 +113,13 @@ export async function waitForMinaDeployTx(params: {
   }
   if (DEBUG) console.log("Final tx status", { ok, count });
   if (!ok) {
-    updateLogList({
-      id,
-      itemToUpdate,
-      updatedItem: "Failed to deploy token contract",
-      status: "error",
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId,
+        content: "Failed to deploy token contract",
+        status: "error",
+      },
     });
     return false;
   }
@@ -109,10 +147,21 @@ export async function waitForMinaDeployTx(params: {
     </>
   );
 
-  updateLogList({
-    id,
-    itemToUpdate,
-    updatedItem: successSentMsg,
+  updateTimelineItem({
+    groupId,
+    update: {
+      lineId,
+      content: "Verifying the token contract state...",
+      status: "waiting",
+    },
+  });
+  updateTimelineItem({
+    groupId,
+    update: {
+      lineId,
+      content: successSentMsg,
+      status: "success",
+    },
   });
   return true;
 }
@@ -121,25 +170,21 @@ export async function waitForContractVerification(params: {
   tokenContractAddress: string;
   adminContractAddress: string;
   adminAddress: string;
-  id: LogItemId;
-  itemToUpdate: MessageId;
-  updateLogList: UpdateLogListFunction;
+  groupId: GroupId;
+  lineId: LineId;
+  updateTimelineItem: UpdateTimelineItemFunction;
   info: TokenInfo;
 }): Promise<boolean> {
   const {
-    id,
-    itemToUpdate,
-    updateLogList,
+    groupId,
+    lineId,
+    updateTimelineItem,
     tokenContractAddress,
     adminContractAddress,
     adminAddress,
     info,
   } = params;
-  updateLogList({
-    id,
-    itemToUpdate,
-    updatedItem: "Verifying the token contract state...",
-  });
+
   let count = 0;
   const timestamp = Date.now();
   let verified = await verifyFungibleTokenState({
@@ -167,19 +212,23 @@ export async function waitForContractVerification(params: {
   }
   if (DEBUG) console.log("Final status", { verified, count });
   if (!verified) {
-    updateLogList({
-      id,
-      itemToUpdate,
-      updatedItem: "Failed to verify token contract state",
-      status: "error",
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId,
+        content: "Failed to verify token contract state",
+        status: "error",
+      },
     });
     return false;
   }
-  updateLogList({
-    id,
-    itemToUpdate,
-    updatedItem: "Token contract state is verified",
-    status: "success",
+  updateTimelineItem({
+    groupId,
+    update: {
+      lineId,
+      content: "Token contract state is verified",
+      status: "success",
+    },
   });
   return true;
 }

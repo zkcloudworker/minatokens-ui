@@ -12,7 +12,7 @@ export default function Footer1() {
         <div className="grid grid-cols-3 gap-x-7 gap-y-14 pt-24 pb-12 md:grid-cols-12">
           <div className="col-span-full sm:col-span-3 md:col-span-8 pe-96">
             <Link href="/" className="mb-6 block flex items-center">
-              <span class="inline-block">
+              <span className="inline-block">
                 <Image
                   width={32}
                   height={32}
@@ -28,14 +28,27 @@ export default function Footer1() {
                   alt="Xhibiter | NFT Marketplace"
                 />
               </span>
-              <span class="ms-4 text-white text-lg inline-block">Minatokens.com</span>
+              <span className="ms-4 text-white text-lg inline-block">
+                Minatokens.com
+              </span>
             </Link>
             <p className="mb-12 dark:text-jacarta-300">
-              Launch, buy and sell MINA custom tokens. Powered by 
-              &nbsp;
-              <a class="text-accent font-bold" target="_blank" href="https://minaprotocol.com">MINA Protocol</a>
+              Launch, buy and sell MINA custom tokens. Powered by &nbsp;
+              <a
+                className="text-accent font-bold"
+                target="_blank"
+                href="https://minaprotocol.com"
+              >
+                MINA Protocol
+              </a>
               &nbsp; and &nbsp;
-              <a class="text-accent font-bold" target="_blank" href="https://zkcloudworker.com">zkCloudWorker</a>
+              <a
+                className="text-accent font-bold"
+                target="_blank"
+                href="https://zkcloudworker.com"
+              >
+                zkCloudWorker
+              </a>
               .
             </p>
 
@@ -75,10 +88,7 @@ export default function Footer1() {
         <div className="flex flex-col items-center justify-between space-y-2 py-8 sm:flex-row sm:space-y-0">
           <span className="text-sm dark:text-jacarta-400">
             &copy; {new Date().getFullYear()} Minatokens — Made by{" "}
-            <a
-              href="https://zkcloudworker.com"
-              className="hover:text-accent"
-            >
+            <a href="https://zkcloudworker.com" className="hover:text-accent">
               zkCloudWorker Team
             </a>
           </span>

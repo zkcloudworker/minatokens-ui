@@ -12,7 +12,7 @@ export default function TokenFooter() {
         <div className="grid grid-cols-3 gap-x-7 gap-y-14 pt-24 pb-12 md:grid-cols-12">
           <div className="col-span-full sm:col-span-3 md:col-span-8 pe-96">
             <Link href="/" className="mb-6 block flex items-center">
-              <span class="inline-block">
+              <span className="inline-block">
                 <Image
                   width={32}
                   height={32}
@@ -28,14 +28,14 @@ export default function TokenFooter() {
                   alt="Xhibiter | NFT Marketplace"
                 />
               </span>
-              <span class="ms-4 text-white text-lg inline-block">
+              <span className="ms-4 text-white text-lg inline-block">
                 Minatokens.com
               </span>
             </Link>
             <p className="mb-12 dark:text-jacarta-300">
               Launch, buy and sell MINA custom tokens. Powered by &nbsp;
               <a
-                class="text-accent font-bold"
+                className="text-accent font-bold"
                 target="_blank"
                 href="https://minaprotocol.com"
               >
@@ -43,7 +43,7 @@ export default function TokenFooter() {
               </a>
               &nbsp; and &nbsp;
               <a
-                class="text-accent font-bold"
+                className="text-accent font-bold"
                 target="_blank"
                 href="https://zkcloudworker.com"
               >

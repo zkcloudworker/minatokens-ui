@@ -1,4 +1,4 @@
-import { UpdateLogListFunction, MessageId, LogItemId } from "./messages";
+import { UpdateTimelineItemFunction, LineId, GroupId } from "./messages";
 import { arweaveTxStatus } from "@/lib/arweave";
 import { sleep } from "@/lib/sleep";
 import { debug } from "@/lib/debug";
@@ -6,12 +6,12 @@ const DEBUG = debug();
 
 export async function waitForArweaveTx(params: {
   hash: string;
-  id: LogItemId;
-  itemToUpdate: MessageId;
-  updateLogList: UpdateLogListFunction;
+  groupId: GroupId;
+  lineId: LineId;
+  updateTimelineItem: UpdateTimelineItemFunction;
   type: "image" | "metadata";
 }): Promise<boolean> {
-  const { hash, id, itemToUpdate, type, updateLogList } = params;
+  const { hash, groupId, lineId, updateTimelineItem, type } = params;
 
   let status = await arweaveTxStatus(hash);
   while (status.success && !status.data?.confirmed) {
@@ -38,18 +38,25 @@ export async function waitForArweaveTx(params: {
         token {type} to Arweave permanent storage failed
       </>
     );
-    updateLogList({
-      id,
-      itemToUpdate,
-      status: "error",
-      updatedItem: txFailedMessage,
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId,
+        content: txFailedMessage,
+        status: "error",
+      },
     });
     return false;
   }
   const txSuccessMessage = (
     <>
       Token{" "}
-      <a href={status.url} className="text-accent hover:underline">
+      <a
+        href={status.url}
+        className="text-accent hover:underline"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         {type}
       </a>{" "}
       successfully{" "}
@@ -64,10 +71,13 @@ export async function waitForArweaveTx(params: {
       to Arweave permanent storage
     </>
   );
-  updateLogList({
-    id,
-    itemToUpdate,
-    updatedItem: txSuccessMessage,
+  updateTimelineItem({
+    groupId,
+    update: {
+      lineId,
+      content: txSuccessMessage,
+      status: "success",
+    },
   });
   if (DEBUG) console.log("Arweave URL for", type, status.url);
   return true;

@@ -6,26 +6,22 @@ import TokenList from "@/components/homes/common/TokenList";
 import Hero from "@/components/homes/home-1/Hero";
 //import Hotbids from "@/components/homes/home-1/Hotbids";
 import Process from "@/components/homes/common/Process";
-import { SearchProvider } from "@/context/search";
-import { AddressProvider } from "@/context/address";
 import { FC } from "react";
 
 const HomeToken: FC = () => {
   return (
-    <SearchProvider>
-      <AddressProvider>
-        <TokenHeader showSearch={true} />
-        <main>
-          <Hero />
+    <>
+      <TokenHeader showSearch={true} />
+      <main>
+        <Hero />
 
-          {/* <Hotbids />
+        {/* <Hotbids />
         <Collections /> */}
-          <TokenList />
-          <Process />
-        </main>
-        <TokenFooter />
-      </AddressProvider>
-    </SearchProvider>
+        <TokenList />
+        <Process />
+      </main>
+      <TokenFooter />
+    </>
   );
 };
 
