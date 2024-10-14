@@ -1,6 +1,6 @@
-import Footer1 from "@/components/footer/Footer1";
-import Header1 from "@/components/headers/Header1";
-import ItemDetails from "@/components/pages/item/ItemDetails";
+import TokenHeader from "@/components/headers/TokenHeader";
+import TokenFooter from "@/components/footer/TokenFooter";
+import TokenDetails from "@/components/pages/item/TokenDetails";
 
 export const metadata = {
   title: "Token Details",
@@ -9,11 +9,11 @@ export const metadata = {
 export default function TokenDetailsPage({ params }) {
   return (
     <>
-      <Header1 />
+      <TokenHeader />
       <main className="mt-24">
-        <ItemDetails id={params.id} />
+        <TokenDetails tokenAddress={params.id} />
       </main>
-      <Footer1 />
+      <TokenFooter />
     </>
   );
 }

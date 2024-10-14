@@ -1,11 +1,139 @@
-import Tabs from "./Tabs";
-import { allItems } from "@/data/item";
+"use client";
+import { TokenStats } from "./TokenStats";
 import Image from "next/image";
 import Link from "next/link";
 import Timer from "./Timer";
+import { algoliaGetToken } from "@/lib/algolia";
+import { DeployedTokenInfo } from "@/lib/token";
+import React, { useEffect, useState, useContext } from "react";
+import { SearchContext } from "@/context/search";
+import { AddressContext } from "@/context/address";
+import { algoliaWriteLike, algoliaGetLike } from "@/lib/likes";
+import tippy from "tippy.js";
+import { getWalletInfo, connectWallet } from "@/lib/wallet";
+import { getTokenState } from "@/lib/state";
+import { socials } from "@/data/socials";
+import {
+  BlockberryTokenHolder,
+  getTokenHoldersByTokenId,
+  BlockberryTokenTransaction,
+  getTransactionsByToken,
+} from "@/lib/blockberry-tokens";
+const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
-export default function ItemDetails({ id }) {
-  const item = allItems.filter((elm) => elm.id == id)[0] || allItems[0];
+export function Socials({ i }: { i: number }) {
+  const elm = socials[i];
+  return (
+    <div key={i} className="group rtl:ml-4 rtl:mr-0">
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        data-prefix="fab"
+        data-icon={elm.icon}
+        className="h-12 w-12 fill-jacarta-300 group-hover:fill-accent dark:group-hover:fill-white"
+        role="img"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox={elm.icon == "discord" ? "0 0 640 512" : "0 0 512 512"}
+      >
+        <path d={elm.svgPath}></path>
+      </svg>
+    </div>
+  );
+}
+
+interface Item {
+  id: number;
+  title?: string;
+}
+
+interface ItemDetailsProps {
+  tokenAddress: string;
+}
+
+export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
+  const [item, setItem] = useState<DeployedTokenInfo | undefined>(undefined);
+  const [like, setLike] = useState(false);
+  const [holders, setHolders] = useState<BlockberryTokenHolder[]>([]);
+  const [transactions, setTransactions] = useState<
+    BlockberryTokenTransaction[]
+  >([]);
+  const { search } = useContext(SearchContext);
+  const { address, setAddress } = useContext(AddressContext);
+
+  useEffect(() => {
+    if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
+    const fetchItem = async () => {
+      if (tokenAddress) {
+        const item = await algoliaGetToken({ tokenAddress });
+        let userAddress = address;
+        if (!userAddress) {
+          userAddress = (await getWalletInfo()).address;
+          if (userAddress) setAddress(userAddress);
+        }
+        if (DEBUG) console.log("userAddress", userAddress);
+        if (userAddress) {
+          const like = await algoliaGetLike({
+            tokenAddress,
+            userAddress,
+          });
+          setLike(like);
+          if (DEBUG) console.log("like", like);
+        }
+        if (DEBUG) console.log("item", item);
+        setItem(item);
+      }
+    };
+    fetchItem();
+  }, [tokenAddress]);
+
+  useEffect(() => {
+    const fetchHolders = async () => {
+      if (item?.tokenId) {
+        const holders = await getTokenHoldersByTokenId({
+          tokenId: item.tokenId,
+        });
+        const filteredHolders = holders?.data.filter(
+          (holder) => holder.holderAddress !== tokenAddress
+        );
+        setHolders(filteredHolders ?? []);
+        console.log("holders", filteredHolders);
+      }
+    };
+    fetchHolders();
+  }, [item]);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (item?.tokenId) {
+        const transactions = await getTransactionsByToken({
+          tokenId: item.tokenId,
+        });
+        setTransactions(transactions?.data ?? []);
+        if (DEBUG) console.log("transactions", transactions);
+      }
+    };
+    fetchTransactions();
+  }, [item]);
+
+  const addLike = async () => {
+    if (!like)
+      setItem((prev) =>
+        prev ? { ...prev, likes: (prev.likes ?? 0) + 1 } : prev
+      );
+    setLike(true);
+    let userAddress = address;
+    if (!userAddress) {
+      userAddress = (await getWalletInfo()).address;
+      if (userAddress) setAddress(userAddress);
+    }
+    if (DEBUG) console.log("userAddress", userAddress);
+    if (tokenAddress && userAddress) {
+      const written = await algoliaWriteLike({ tokenAddress, userAddress });
+      if (DEBUG)
+        console.log("written like", { written, tokenAddress, userAddress });
+    }
+  };
+
   return (
     <>
       <section className="relative pt-12 pb-24 lg:py-24">
@@ -26,26 +154,29 @@ export default function ItemDetails({ id }) {
               <Image
                 width={540}
                 height={670}
-                src={"/img/products/item_single_large.jpg"}
+                src={item?.image ?? "/img/gradient_light.jpg"}
                 alt="item"
                 className="cursor-pointer rounded-2.5xl w-[100%]"
                 data-bs-toggle="modal"
                 data-bs-target="#imageModal"
+                crossOrigin="anonymous"
+                priority
               />
 
               {/* Modal */}
               <div
                 className="modal fade"
                 id="imageModal"
-                tabIndex="-1"
+                tabIndex={-1}
                 aria-hidden="true"
               >
                 <div className="modal-dialog !my-0 flex h-full items-center justify-center p-4">
                   <Image
                     width={787}
                     height={984}
-                    src="/img/products/item_single_full.jpg"
+                    src={item?.image ?? ""}
                     alt="item"
+                    crossOrigin="anonymous"
                   />
                 </div>
 
@@ -80,7 +211,7 @@ export default function ItemDetails({ id }) {
                     href={`/collections`}
                     className="mr-2 text-sm font-bold text-accent"
                   >
-                    {"CryptoGuysNFT1"}
+                    {"zkCloudWorker"}
                   </Link>
                   <span
                     className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
@@ -103,8 +234,11 @@ export default function ItemDetails({ id }) {
                 <div className="ml-auto flex space-x-2">
                   <div className="flex items-center space-x-1 rounded-xl border border-jacarta-100 bg-white py-2 px-4 dark:border-jacarta-600 dark:bg-jacarta-700">
                     <span
-                      className="js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0"
+                      className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
+                        like ? "js-likes--active" : ""
+                      }`}
                       data-tippy-content="Favorite"
+                      onClick={() => addLike()}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -117,7 +251,9 @@ export default function ItemDetails({ id }) {
                         <path d="M12.001 4.529c2.349-2.109 5.979-2.039 8.242.228 2.262 2.268 2.34 5.88.236 8.236l-8.48 8.492-8.478-8.492c-2.104-2.356-2.025-5.974.236-8.236 2.265-2.264 5.888-2.34 8.244-.228zm6.826 1.641c-1.5-1.502-3.92-1.563-5.49-.153l-1.335 1.198-1.336-1.197c-1.575-1.412-3.99-1.35-5.494.154-1.49 1.49-1.565 3.875-.192 5.451L12 18.654l7.02-7.03c1.374-1.577 1.299-3.959-.193-5.454z"></path>
                       </svg>
                     </span>
-                    <span className="text-sm dark:text-jacarta-200">188</span>
+                    <span className="text-sm dark:text-jacarta-200">
+                      {item?.likes ?? 0}
+                    </span>
                   </div>
 
                   {/* Actions */}
@@ -166,12 +302,12 @@ export default function ItemDetails({ id }) {
               </div>
 
               <h1 className="mb-4 font-display text-4xl font-semibold text-jacarta-700 dark:text-white">
-                {item.title ? item.title : "CryptoGuysNFT"}
+                {item?.name ? item.name : ""}
               </h1>
 
               <div className="mb-8 flex items-center space-x-4 whitespace-nowrap">
                 <div className="flex items-center">
-                  <span className="-ml-1" data-tippy-content="ETH">
+                  {/* <span className="-ml-1" data-tippy-content="ETH">
                     <svg
                       version="1.1"
                       xmlns="http://www.w3.org/2000/svg"
@@ -202,49 +338,44 @@ export default function ItemDetails({ id }) {
                         d="M959.8 1397.6v441.7l540.1-760.6z"
                       ></path>
                     </svg>
-                  </span>
+                  </span> */}
                   <span className="text-sm font-medium tracking-tight text-green">
-                    4.7 ETH
+                    100 MINA
                   </span>
                 </div>
                 <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
-                  Highest bid
+                  {item?.symbol ?? ""}
                 </span>
                 <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
-                  1/1 available
+                  Supply:{" "}
+                  {item?.totalSupply ? item?.totalSupply / 1_000_000_000 : ""}
                 </span>
               </div>
 
               <p className="mb-10 dark:text-jacarta-300">
-                Neque aut veniam consectetur magnam libero, natus eius numquam
-                reprehenderit hic at, excepturi repudiandae magni optio odio
-                doloribus? Facilisi lobortisal morbi fringilla urna amet sed
-                ipsum.
+                {item?.description ?? ""}
               </p>
 
               {/* Creator / Owner */}
               <div className="mb-8 flex flex-wrap">
                 <div className="mr-8 mb-4 flex">
                   <figure className="mr-4 shrink-0">
-                    <Link href={`/user/1`} className="relative block">
-                      <Image
-                        width={48}
-                        height={48}
-                        src="/img/avatars/avatar_7.jpg"
-                        alt="avatar 7"
-                        className="rounded-2lg"
-                        loading="lazy"
-                      />
+                    <Link
+                      href={`https://twitter.com/${item?.twitter}`}
+                      className="relative block"
+                    >
+                      <Socials i={1} />
+
                       <div
                         className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                        data-tippy-content="Verified Collection"
+                        data-tippy-content="Twitter"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
                           width="24"
                           height="24"
-                          className="h-[.875rem] w-[.875rem] fill-white"
+                          className="fill-white"
                         >
                           <path fill="none" d="M0 0h24v24H0z"></path>
                           <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
@@ -254,10 +385,12 @@ export default function ItemDetails({ id }) {
                   </figure>
                   <div className="flex flex-col justify-center">
                     <span className="block text-sm text-jacarta-400 dark:text-white">
-                      Creator <strong>10% royalties</strong>
+                      <strong>Twitter:</strong>
                     </span>
                     <Link href={`/user/2`} className="block text-accent">
-                      <span className="text-sm font-bold">@creative_world</span>
+                      <span className="text-sm font-bold">
+                        @{item?.twitter ?? ""}
+                      </span>
                     </Link>
                   </div>
                 </div>
@@ -265,14 +398,7 @@ export default function ItemDetails({ id }) {
                 <div className="mb-4 flex">
                   <figure className="mr-4 shrink-0">
                     <Link href={`/user/4`} className="relative block">
-                      <Image
-                        width={48}
-                        height={48}
-                        src="/img/avatars/avatar_1.jpg"
-                        alt="avatar 1"
-                        className="rounded-2lg"
-                        loading="lazy"
-                      />
+                      <Socials i={2} />
                       <div
                         className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
                         data-tippy-content="Verified Collection"
@@ -292,19 +418,92 @@ export default function ItemDetails({ id }) {
                   </figure>
                   <div className="flex flex-col justify-center">
                     <span className="block text-sm text-jacarta-400 dark:text-white">
-                      Owned by
+                      Discord:
                     </span>
                     <Link href={`/user/6`} className="block text-accent">
-                      <span className="text-sm font-bold">@051_Hart</span>
+                      <span className="text-sm font-bold">
+                        {item?.discord ?? ""}
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+              <div className="mb-8 flex flex-wrap">
+                <div className="mr-8 mb-4 flex">
+                  <figure className="mr-4 shrink-0">
+                    <Link
+                      href={`https://twitter.com/${item?.twitter}`}
+                      className="relative block"
+                    >
+                      <Socials i={3} />
+
+                      <div
+                        className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
+                        data-tippy-content="Twitter"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          width="24"
+                          height="24"
+                          className="fill-white"
+                        >
+                          <path fill="none" d="M0 0h24v24H0z"></path>
+                          <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                        </svg>
+                      </div>
+                    </Link>
+                  </figure>
+                  <div className="flex flex-col justify-center">
+                    <span className="block text-sm text-jacarta-400 dark:text-white">
+                      <strong>Instagram:</strong>
+                    </span>
+                    <Link href={`/user/2`} className="block text-accent">
+                      <span className="text-sm font-bold">
+                        @{item?.instagram ?? ""}
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="mb-4 flex">
+                  <figure className="mr-4 shrink-0">
+                    <Link href={`/user/4`} className="relative block">
+                      <Socials i={0} />
+                      <div
+                        className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
+                        data-tippy-content="Verified Collection"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          width="24"
+                          height="24"
+                          className="h-[.875rem] w-[.875rem] fill-white"
+                        >
+                          <path fill="none" d="M0 0h24v24H0z"></path>
+                          <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                        </svg>
+                      </div>
+                    </Link>
+                  </figure>
+                  <div className="flex flex-col justify-center">
+                    <span className="block text-sm text-jacarta-400 dark:text-white">
+                      Facebook:
+                    </span>
+                    <Link href={`/user/6`} className="block text-accent">
+                      <span className="text-sm font-bold">
+                        {item?.discord ?? ""}
+                      </span>
                     </Link>
                   </div>
                 </div>
               </div>
 
               {/* Bid */}
-              <div className="rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
+              {/* <div className="rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
                 <div className="mb-8 sm:flex sm:flex-wrap">
-                  {/* Highest bid */}
+                  
                   <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
                     <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
                       <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
@@ -375,7 +574,7 @@ export default function ItemDetails({ id }) {
                     </div>
                   </div>
 
-                  {/* Countdown */}
+                 
                   <div className="mt-4 dark:border-jacarta-600 sm:mt-0 sm:w-1/2 sm:border-l sm:border-jacarta-100 sm:pl-4 lg:pl-8">
                     <span className="js-countdown-ends-label text-sm text-jacarta-400 dark:text-jacarta-300">
                       Auction ends in
@@ -392,14 +591,14 @@ export default function ItemDetails({ id }) {
                 >
                   Place Bid
                 </a>
-              </div>
+              </div> */}
               {/* end bid */}
             </div>
             {/* end details */}
           </div>
 
           {/* Tabs */}
-          <Tabs />
+          <TokenStats holders={holders} transactions={transactions} />
           {/* end tabs */}
         </div>
       </section>
