@@ -86,7 +86,7 @@ export function Transactions({ transactions }: TransactionsProps) {
     } else {
       setFilteredItems(transactions);
     }
-  }, [filterAction]);
+  }, [filterAction, transactions]);
 
   return (
     <>
