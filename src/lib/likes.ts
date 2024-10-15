@@ -2,10 +2,12 @@
 import { algoliasearch } from "algoliasearch";
 import { searchClient } from "@algolia/client-search";
 import { algoliaGetToken, algoliaWriteToken } from "./algolia";
-const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
+import { getChain } from "./chain";
+const chain = getChain();
+import { debug } from "./debug";
+const DEBUG = debug();
 
-const chain = process.env.NEXT_PUBLIC_CHAIN;
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
+const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 
 export interface Like {
   tokenAddress: string;
@@ -14,9 +16,6 @@ export interface Like {
 
 export async function algoliaWriteLike(params: Like): Promise<boolean> {
   const { tokenAddress, userAddress } = params;
-  if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-  if (chain !== "devnet" && chain !== "mainnet")
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
     throw new Error("ALGOLIA_PROJECT is undefined");
@@ -65,19 +64,18 @@ export async function algoliaWriteLike(params: Like): Promise<boolean> {
 }
 
 export async function algoliaGetLike(params: Like): Promise<boolean> {
-  if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-  if (chain !== "devnet" && chain !== "mainnet")
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
     throw new Error("ALGOLIA_PROJECT is undefined");
   try {
+    const { tokenAddress, userAddress } = params;
     const client = algoliasearch(ALGOLIA_PROJECT, ALGOLIA_KEY);
     const indexName = `token-likes-${chain}`;
+    const objectID = tokenAddress + "." + userAddress;
     //if (DEBUG) console.log("algoliaGetLike", params, indexName);
     const result = await client.getObject({
       indexName,
-      objectID: params.tokenAddress,
+      objectID,
     });
     //if (DEBUG) console.log("algoliaGetLike result:", result);
     return true;
