@@ -10,6 +10,7 @@ import Profile from "./component/Profile";
 import { handleDarkMode } from "../../utils/handleDarkMode";
 import Image from "next/image";
 import Link from "next/link";
+import { getSiteName } from "@/lib/chain";
 //import MetamarkComponent from "../metamask/MetamarkComponent";
 
 export default function Header1() {
