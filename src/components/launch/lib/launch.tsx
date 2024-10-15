@@ -121,7 +121,7 @@ export async function launchToken(params: {
   }): void {
     const { groupId, update } = params;
     if (
-      ["privateKeysSaved", "privateKeysGenerated", "o1js"].includes(
+      ["privateKeysSaved", "privateKeysGenerated", "o1js", "txSigned"].includes(
         update.lineId
       )
     )
@@ -596,6 +596,7 @@ export async function launchToken(params: {
         "txIncluded",
         "contractStateVerified",
       ],
+      keepOnTop: true,
     });
     const deployResult = await deployToken({
       tokenPrivateKey,
