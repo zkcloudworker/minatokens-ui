@@ -5,6 +5,7 @@ import MyAccountKink from "./MyAccountLink";
 import Image from "next/image";
 import Link from "next/link";
 import { getSiteName } from "@/lib/chain";
+
 export default function TokenFooter() {
   return (
     <footer className="page-footer bg-white dark:bg-jacarta-900">
@@ -87,7 +88,7 @@ export default function TokenFooter() {
 
         <div className="flex flex-col items-center justify-between space-y-2 py-8 sm:flex-row sm:space-y-0">
           <span className="text-sm dark:text-jacarta-400">
-            &copy; {new Date().getFullYear()} Minatokens — Made by{" "}
+            &copy; {new Date().getFullYear()} {getSiteName()} — Made by{" "}
             <a href="https://zkcloudworker.com" className="hover:text-accent">
               zkCloudWorker Team
             </a>
