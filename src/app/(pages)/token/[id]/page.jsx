@@ -9,7 +9,7 @@ export const metadata = {
 export default function TokenDetailsPage({ params }) {
   return (
     <>
-      <TokenHeader />
+      <TokenHeader showSearch={false} />
       <main className="mt-24">
         <TokenDetails tokenAddress={params.id} />
       </main>

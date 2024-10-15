@@ -19,9 +19,13 @@ import { getChain } from "@/lib/chain";
 const chain = getChain();
 // TODO: handle wallet connection with connectWallet
 
-const TokenHeader: React.FC<{ showSearch?: boolean }> = ({
+type TokenHeaderProps = {
+  showSearch?: boolean;
+};
+
+const TokenHeader: React.FC<TokenHeaderProps> = ({
   showSearch = true,
-}) => {
+}: TokenHeaderProps) => {
   const { setSearch } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
   useEffect(() => {
