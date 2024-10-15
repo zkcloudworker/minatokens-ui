@@ -1,16 +1,22 @@
 "use client";
 
-import { sendDeployTransaction } from "./zkcloudworker";
-import { getAccountNonce } from "./nonce";
-import { TimelineItem } from "@/components/ui/timeline";
-import React from "react";
-import { verificationKeys } from "./vk";
+import { getAccountNonce } from "@/lib/nonce";
+import {
+  UpdateTimelineItemFunction,
+  LineId,
+  GroupId,
+  messages,
+} from "./messages";
+import { verificationKeys } from "@/lib/vk";
+import type { Libraries } from "@/lib/libraries";
+import { debug } from "@/lib/debug";
+import { getChain, getWallet } from "@/lib/chain";
+import { sendDeployTransaction } from "@/lib/token-api";
+const DEBUG = debug();
+const chain = getChain();
 
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
-const chain = process.env.NEXT_PUBLIC_CHAIN;
-const WALLET = process.env.NEXT_PUBLIC_WALLET;
+const WALLET = getWallet();
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
-const MINT_FEE = 1e8;
 const ISSUE_FEE = 1e9;
 
 export async function deployToken(params: {
@@ -19,71 +25,30 @@ export async function deployToken(params: {
   adminPublicKey: string;
   symbol: string;
   uri: string;
-  libraries: Promise<{
-    o1js: typeof import("o1js");
-    zkcloudworker: typeof import("zkcloudworker");
-  }>;
-  logItem: (item: TimelineItem) => void;
-  updateLogItem: (id: string, update: Partial<TimelineItem>) => void;
+  libraries: Libraries;
+  updateTimelineItem: UpdateTimelineItemFunction;
+  groupId: GroupId;
 }): Promise<{
   success: boolean;
   error?: string;
   jobId?: string;
 }> {
-  if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-  if (chain !== "devnet" && chain !== "mainnet")
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
-  if (WALLET === undefined) throw new Error("NEXT_PUBLIC_WALLET is undefined");
   console.time("ready to sign");
-  if (DEBUG) console.log("deploy token", params);
   const {
     tokenPrivateKey,
     adminPublicKey,
     symbol,
     uri,
     libraries,
-    logItem,
-    updateLogItem,
+    updateTimelineItem,
+    groupId,
   } = params;
 
   try {
     const mina = (window as any).mina;
     if (mina === undefined || mina?.isAuro !== true) {
-      console.error("No Auro Wallet found", mina);
-      logItem({
-        id: "no-mina",
-        status: "error",
-        title: "No Auro Wallet found",
-        description: "Please install Auro Wallet",
-        date: new Date(),
-      });
-      return {
-        success: false,
-        error: "No Auro Wallet found",
-      };
+      throw new Error("No Auro Wallet found");
     }
-
-    logItem({
-      id: "o1js-loading",
-      status: "waiting",
-      title: "Loading o1js library",
-      description: React.createElement(
-        "span",
-        null,
-        "Loading ",
-        React.createElement(
-          "a",
-          {
-            href: "https://docs.minaprotocol.com/zkapps/o1js",
-            target: "_blank",
-            rel: "noopener noreferrer",
-          },
-          "o1js"
-        ),
-        " library..."
-      ),
-      date: new Date(),
-    });
 
     const {
       o1js: {
@@ -105,7 +70,7 @@ export async function deployToken(params: {
         fee: getFee,
         fetchMinaAccount,
       },
-    } = await libraries;
+    } = libraries;
 
     let adminPrivateKey = PrivateKey.empty();
     if (AURO_TEST) {
@@ -122,43 +87,12 @@ export async function deployToken(params: {
       ? adminPrivateKey.toPublicKey()
       : PublicKey.fromBase58(adminPublicKey);
 
-    updateLogItem("o1js-loading", {
-      status: "success",
-      title: "Loaded o1js library",
-      description: React.createElement(
-        "span",
-        null,
-        "Loaded ",
-        React.createElement(
-          "a",
-          {
-            href: "https://docs.minaprotocol.com/zkapps/o1js",
-            target: "_blank",
-            rel: "noopener noreferrer",
-          },
-          "o1js"
-        ),
-        " library"
-      ),
-      date: new Date(),
-    });
-
-    logItem({
-      id: "transaction",
-      status: "waiting",
-      title: "Preparing transaction",
-      description: "Preparing the transaction for deployment...",
-      date: new Date(),
-    });
-
     if (DEBUG) console.log("initializing blockchain", chain);
     const net = await initBlockchain(chain);
     if (DEBUG) console.log("blockchain initialized", net);
-
     if (DEBUG) console.log("network id", Mina.getNetworkId());
 
     const balance = await accountBalanceMina(sender);
-
     const fee = Number((await getFee()).toBigInt());
 
     const contractPrivateKey = PrivateKey.fromBase58(tokenPrivateKey);
@@ -173,7 +107,6 @@ export async function deployToken(params: {
     const zkToken = new FungibleToken(contractAddress);
     const zkAdmin = new FungibleTokenAdmin(adminContractPublicKey);
 
-    if (DEBUG) console.log(`Sending tx...`);
     console.time("prepared tx");
     const memo = `deploy token ${symbol}`.substring(0, 30);
 
@@ -188,32 +121,33 @@ export async function deployToken(params: {
 
     if (!Mina.hasAccount(sender)) {
       console.error("Sender does not have account");
-
-      logItem({
-        id: "account-not-found",
-        status: "error",
-        title: "Account Not Found",
-        description: `Account ${sender.toBase58()} not found. Please fund your account or try again later, after all the previous transactions are included in the block.`,
-        date: new Date(),
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "accountNotFound",
+          content: `Account ${sender.toBase58()} not activated. Please send 1 MINA to your account to activate it.`,
+          status: "error",
+        },
       });
 
       return {
         success: false,
-        error: "Sender does not have account",
+        error: "Account of the sender is not activated",
       };
     }
     const requiredBalance = 3 + (ISSUE_FEE + fee) / 1_000_000_000;
     if (requiredBalance > balance) {
-      logItem({
-        id: "insufficient-balance",
-        status: "error",
-        title: "Insufficient Balance",
-        description: `Insufficient balance of the sender: ${balance} MINA. Required: ${requiredBalance} MINA`,
-        date: new Date(),
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "insufficientBalance",
+          content: `Insufficient balance of the sender: ${balance} MINA. Required: ${requiredBalance} MINA`,
+          status: "error",
+        },
       });
       return {
         success: false,
-        error: `Insufficient balance of the sender: ${balance} MINA. Required: ${requiredBalance} MINA`,
+        error: `Insufficient balance of the sender`,
       };
     }
 
@@ -273,7 +207,7 @@ export async function deployToken(params: {
     const serializedTransaction = serializeTransaction(tx);
     const transaction = tx.toJSON();
     const txJSON = JSON.parse(transaction);
-    if (DEBUG) console.log("Transaction", tx.toPretty());
+
     const payload = {
       transaction,
       onlySign: true,
@@ -284,11 +218,18 @@ export async function deployToken(params: {
     };
     console.timeEnd("prepared tx");
     console.timeEnd("ready to sign");
-    updateLogItem("transaction", {
-      status: "waiting",
-      title: "Deploy transaction is prepared",
-      description: "Deploy transaction is prepared, please sign it",
-      date: new Date(),
+
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: "txPrepared",
+        content: "Token deploy transaction is built",
+        status: "success",
+      },
+    });
+    updateTimelineItem({
+      groupId,
+      update: messages.txSigned,
     });
     console.time("sent transaction");
     if (DEBUG) console.log("txJSON", txJSON);
@@ -300,33 +241,35 @@ export async function deployToken(params: {
       signedData = txResult?.signedData;
       if (signedData === undefined) {
         if (DEBUG) console.log("No signed data");
-        updateLogItem("transaction", {
-          status: "error",
-          title: "No user signature received",
-          description:
-            "No user signature received, deploy transaction cancelled",
-          date: new Date(),
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: "noUserSignature",
+            content: messages.noUserSignature.content,
+            status: "error",
+          },
         });
+
         return {
           success: false,
-          error: "No user signature",
+          error: "No user signature received",
         };
       }
     }
 
-    updateLogItem("transaction", {
-      status: "success",
-      title: "User signature received",
-      description: "User signature received, proceeding with deployment",
-      date: new Date(),
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: "txSigned",
+        content: "Transaction is signed",
+        status: "success",
+      },
     });
-    logItem({
-      id: "cloud-proving-job",
-      status: "waiting",
-      title: "Starting cloud proving job",
-      description: "Starting cloud proving job...",
-      date: new Date(),
+    updateTimelineItem({
+      groupId,
+      update: messages.txProved,
     });
+
     const jobId = await sendDeployTransaction({
       serializedTransaction,
       signedData,
@@ -342,18 +285,43 @@ export async function deployToken(params: {
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {
       console.error("JobId is undefined");
-      updateLogItem("cloud-proving-job", {
-        status: "error",
-        title: "Cloud proving job was failed to start",
-        description:
-          "Cloud proving job was failed to start, transaction is cancelled",
-        date: new Date(),
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "deployTransactionProveJobFailed",
+          content: messages.deployTransactionProveJobFailed.content,
+          status: "error",
+        },
       });
+
       return {
         success: false,
-        error: "JobId is undefined",
+        error: "Deploy transaction prove job failed",
       };
     }
+
+    const jobIdMessage = (
+      <>
+        <a
+          href={`https://zkcloudworker.com/job/${jobId}`}
+          className="text-accent hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Proving
+        </a>{" "}
+        the transaction...
+      </>
+    );
+
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: "txProved",
+        content: jobIdMessage,
+        status: "waiting",
+      },
+    });
 
     return {
       success: true,
@@ -361,16 +329,18 @@ export async function deployToken(params: {
     };
   } catch (error) {
     console.error("Error in deployToken", error);
-    logItem({
-      id: "error",
-      status: "error",
-      title: "Error while deploying token",
-      description: String(error) ?? "Error while deploying token",
-      date: new Date(),
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: "error",
+        content: String(error),
+        status: "error",
+      },
     });
+
     return {
       success: false,
-      error: String(error) ?? "Error while deploying token",
+      error: "Error while deploying token",
     };
   }
 }

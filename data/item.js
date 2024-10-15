@@ -1,7 +1,7 @@
 export const items = [
   {
     id: 1,
-    title: "Lazyone Panda",
+    title: "Lazyone Panda 1",
     imageSrc: "/img/avatars/avatar_2.jpg",
     altText: "avatar 2",
     details: "sold for 1.515 ETH",

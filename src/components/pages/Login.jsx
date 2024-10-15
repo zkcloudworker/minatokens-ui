@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import MetaMaskLogin from "../metamask/MetamaskInLogin";
+//import MetaMaskLogin from "../metamask/MetamaskInLogin";
 
 export default function Login() {
   return (
@@ -178,7 +178,7 @@ export default function Login() {
                 role="tabpanel"
                 aria-labelledby="ethereum-tab"
               >
-                <MetaMaskLogin />
+                {/* <MetaMaskLogin /> */}
 
                 <button className="mb-4 flex w-full items-center justify-center rounded-full border-2 border-jacarta-100 bg-white py-4 px-8 text-center font-semibold text-jacarta-700 transition-all hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent">
                   <Image
@@ -226,7 +226,7 @@ export default function Login() {
                   <span>Torus</span>
                 </button>
 
-                <MetaMaskLogin />
+                {/* <MetaMaskLogin /> */}
 
                 <button className="mb-4 flex w-full items-center justify-center rounded-full border-2 border-jacarta-100 bg-white py-4 px-8 text-center font-semibold text-jacarta-700 transition-all hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent">
                   <Image
@@ -274,7 +274,7 @@ export default function Login() {
                   <span>Torus</span>
                 </button>
 
-                <MetaMaskLogin />
+                {/* <MetaMaskLogin /> */}
 
                 <button className="mb-4 flex w-full items-center justify-center rounded-full border-2 border-jacarta-100 bg-white py-4 px-8 text-center font-semibold text-jacarta-700 transition-all hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent">
                   <span>Show more options</span>

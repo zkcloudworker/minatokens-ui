@@ -1,7 +1,10 @@
 "use client";
 
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
-const chain = process.env.NEXT_PUBLIC_CHAIN_ID;
+import { getChainId } from "./chain";
+import { debug } from "./debug";
+import { getSystemInfo } from "./system-info";
+const DEBUG = debug();
+const chainId = getChainId();
 
 export async function connectWallet(
   params: {
@@ -14,14 +17,7 @@ export async function connectWallet(
   success: boolean;
 }> {
   const { openLink } = params;
-  if (!chain) {
-    return {
-      address: undefined,
-      network: undefined,
-      error: "Chain not set",
-      success: false,
-    };
-  }
+
   let address = undefined;
   let network = undefined;
   const logOptions = {
@@ -68,11 +64,11 @@ export async function connectWallet(
         };
       }
       if (DEBUG) console.log("mina login network", network);
-      if (network?.networkID !== chain) {
+      if (network?.networkID !== chainId) {
         let switchNetwork;
         try {
           switchNetwork = await (window as any).mina.switchChain({
-            networkID: process.env.REACT_APP_CHAIN_ID,
+            networkID: chainId,
           });
         } catch (error: any) {
           console.error("mina login switchChain catch", error);
@@ -103,7 +99,7 @@ export async function connectWallet(
       }
       if (DEBUG) console.log("mina login network", network);
 
-      if (account.length > 0 && network?.networkID === chain)
+      if (account.length > 0 && network?.networkID === chainId)
         address = account[0];
       else {
         console.error("mina login account error", { account, network });
@@ -116,9 +112,19 @@ export async function connectWallet(
       }
     } else {
       if (openLink) {
-        const linkURL =
+        const { isAndroid, isIOS } = await getSystemInfo();
+        const auroIOS = "https://apps.apple.com/app/auro-wallet/id6444288288";
+        const auroAndroid =
+          "https://play.google.com/store/apps/details?id=com.aurowallet.www.aurowallet";
+        const auroExtension =
           "https://chrome.google.com/webstore/detail/auro-wallet/cnmamaachppnkjgnildpdmkaakejnhae";
-        window.open(linkURL);
+        if (isAndroid) {
+          window.open(auroAndroid, "_blank");
+        } else if (isIOS) {
+          window.open(auroIOS, "_blank");
+        } else {
+          window.open(auroExtension, "_blank");
+        }
       }
     }
   } catch (error: any) {

@@ -80,7 +80,7 @@ export default function ItemDetails({ id }) {
                     href={`/collections`}
                     className="mr-2 text-sm font-bold text-accent"
                   >
-                    {"CryptoGuysNFT"}
+                    {"CryptoGuysNFT1"}
                   </Link>
                   <span
                     className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"

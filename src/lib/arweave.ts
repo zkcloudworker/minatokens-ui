@@ -1,7 +1,10 @@
-"use server";
+"use client";
+// TODO: move to server
 import Arweave from "arweave";
-const ARWEAVE_KEY_STRING = process.env.ARWEAVE_KEY_STRING;
-const ARWEAVE_TEST = process.env.ARWEAVE_TEST;
+import { debug } from "@/lib/debug";
+const DEBUG = debug();
+const ARWEAVE_KEY_STRING = process.env.NEXT_PUBLIC_ARWEAVE_KEY_STRING;
+const ARWEAVE_TEST = process.env.NEXT_PUBLIC_ARWEAVE_TEST;
 
 export async function arweaveHashToUrl(hash: string): Promise<string> {
   return ArweaveService.hashToUrl(hash);
@@ -62,35 +65,57 @@ export async function pinStringToArweave(
     console.error(`Arweave pin failed`);
     return undefined;
   }
-  console.log("url:", ArweaveService.hashToUrl(hash));
+  if (DEBUG)
+    console.log("pinStringToArweave url:", ArweaveService.hashToUrl(hash));
   return hash;
 }
 
 export async function pinImageToArweave(
-  file: any // TODO: type
+  file: File
 ): Promise<string | undefined> {
   if (ARWEAVE_KEY_STRING === undefined) {
     console.error("ARWEAVE_KEY_STRING is undefined");
     return undefined;
   }
 
-  const arweave = new ArweaveService(ARWEAVE_KEY_STRING);
-  // TODO: upload image to arweave
-  /*
-    const size = (await fs.stat(image)).size;
-    const data = await fs.readFile(image);
+  async function readFileAsync(file: File): Promise<Uint8Array> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        if (reader.result) {
+          resolve(new Uint8Array(reader.result as ArrayBuffer));
+        } else {
+          reject(new Error("File reading failed"));
+        }
+      };
+
+      reader.onerror = () => reject(new Error("File reading error"));
+
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  try {
+    const arweave = new ArweaveService(ARWEAVE_KEY_STRING);
+
+    const binary = await readFileAsync(file);
     const hash = await arweave.pinFile({
-      data,
-      filename: path.basename(image),
-      size,
-      mimeType: "image/jpeg",
+      data: binary,
+      filename: file.name,
+      size: file.size,
+      mimeType: file.type,
       waitForConfirmation: false,
     });
+
     if (hash === undefined) throw new Error(`Arweave pin failed`);
-    console.log("url:", arweave.hashToUrl(hash));
+    if (DEBUG)
+      console.log("pinImageToArweave url:", ArweaveService.hashToUrl(hash));
     return hash;
-    */
-  return undefined;
+  } catch (err) {
+    console.error(err);
+    return undefined;
+  }
 }
 
 class ArweaveService {
@@ -123,7 +148,7 @@ class ArweaveService {
     const { data, waitForConfirmation } = params;
     try {
       if (this.key === undefined) {
-        console.log("no key");
+        console.error("no key");
         return undefined;
       }
       if (this.key?.test === true)
@@ -149,13 +174,14 @@ class ArweaveService {
 
       while (!uploader.isComplete) {
         await uploader.uploadChunk();
-        console.log(
-          `${uploader.pctComplete}% complete, ${uploader.uploadedChunks}/${uploader.totalChunks}`
-        );
+        if (DEBUG)
+          console.log(
+            `Arweave: ${uploader.pctComplete}% complete, ${uploader.uploadedChunks}/${uploader.totalChunks}`
+          );
       }
       //console.log("transaction", transaction);
       const hash = transaction.id;
-      console.log("arweave hash", hash);
+      if (DEBUG) console.log("arweave hash", hash);
       if (waitForConfirmation === true) await this.wait({ hash }); // wait for confirmation, can take a while
 
       return hash;
@@ -166,7 +192,7 @@ class ArweaveService {
   }
 
   public async pinFile(params: {
-    data: Buffer;
+    data: Uint8Array;
     filename: string;
     size: number;
     mimeType: string;
@@ -200,7 +226,7 @@ class ArweaveService {
       }
       //console.log("transaction", transaction);
       const hash = transaction.id;
-      console.log("arweave hash", hash);
+      if (DEBUG) console.log("pinFile: arweave hash:", hash);
       if (waitForConfirmation === true) await this.wait({ hash }); // wait for confirmation, can take a while
       return hash;
     } catch (err) {
