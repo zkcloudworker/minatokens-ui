@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BlockberryTokenTransaction } from "@/lib/blockberry-tokens";
-import { getChain } from "@/lib/chain";
+import { explorerTransactionUrl, getChain } from "@/lib/chain";
 const chain = getChain();
 
 interface TransactionsProps {
@@ -248,7 +248,7 @@ export function Transactions({ transactions }: TransactionsProps) {
               role="cell"
             >
               <Link
-                href={`https://minascan.io/${chain}/tx/${elm.hash}`}
+                href={`${explorerTransactionUrl()}${elm.hash}`}
                 className="text-accent hover:underline"
                 target="_blank"
                 rel="noopener noreferrer"

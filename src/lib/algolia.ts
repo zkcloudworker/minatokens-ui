@@ -2,17 +2,15 @@
 import { algoliasearch } from "algoliasearch";
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 import { DeployedTokenInfo } from "./token";
-
-const chain = process.env.NEXT_PUBLIC_CHAIN;
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
+import { getChain } from "./chain";
+import { debug } from "./debug";
+const chain = getChain();
+const DEBUG = debug();
 
 export async function algoliaWriteToken(params: {
   tokenAddress: string;
   info: DeployedTokenInfo;
 }): Promise<boolean> {
-  if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-  if (chain !== "devnet" && chain !== "mainnet")
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
     throw new Error("ALGOLIA_PROJECT is undefined");
@@ -45,9 +43,6 @@ export async function algoliaWriteToken(params: {
 export async function algoliaGetToken(params: {
   tokenAddress: string;
 }): Promise<DeployedTokenInfo | undefined> {
-  if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-  if (chain !== "devnet" && chain !== "mainnet")
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
     throw new Error("ALGOLIA_PROJECT is undefined");

@@ -15,7 +15,13 @@ import Link from "next/link";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { getChain } from "@/lib/chain";
+import {
+  getChain,
+  explorerAccountUrl,
+  explorerTokenUrl,
+  explorerTransactionUrl,
+} from "@/lib/chain";
+import { getSiteName } from "@/lib/chain";
 const chain = getChain();
 // TODO: handle wallet connection with connectWallet
 
@@ -89,7 +95,7 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
               alt="Minatokens | MINA Launchpad"
             />
             <div className="text-jacarta-900 dark:text-white -ms-3">
-              Minatokens
+              {getSiteName()}
             </div>
           </Link>
 
@@ -306,7 +312,7 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
               <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2 mr-6 flex items-center justify-center  transition-colors">
                 {address && (
                   <a
-                    href={`https://minascan.io/${chain}/account/${address}`}
+                    href={`${explorerAccountUrl()}${address}`}
                     className="dark:hover:text-accent hover:text-accent"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -378,7 +384,7 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
             <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2  flex items-center justify-center  transition-colors">
               {address && (
                 <a
-                  href={`https://minascan.io/${chain}/account/${address}`}
+                  href={`${explorerAccountUrl()}${address}`}
                   className="dark:hover:text-accent hover:text-accent"
                   target="_blank"
                   rel="noopener noreferrer"

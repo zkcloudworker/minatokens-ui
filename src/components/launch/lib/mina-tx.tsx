@@ -11,7 +11,12 @@ import { getTxStatusFast } from "@/lib/txstatus-fast";
 import { verifyFungibleTokenState } from "@/lib/verify";
 import { sleep } from "@/lib/sleep";
 import { debug } from "@/lib/debug";
-import { getChain } from "@/lib/chain";
+import {
+  getChain,
+  explorerTokenUrl,
+  explorerTransactionUrl,
+  explorerAccountUrl,
+} from "@/lib/chain";
 import { IsErrorFunction } from "../TimeLine";
 import { sendTransaction } from "@/lib/send";
 import { getTokenBalance } from "@/lib/verify";
@@ -177,7 +182,7 @@ export async function waitForMinaTx(params: {
     <>
       Transaction is{" "}
       <a
-        href={`https://minascan.io/devnet/tx/${hash}?type=zk-tx`}
+        href={`${explorerTransactionUrl()}${hash}`}
         className="text-accent hover:underline"
         target="_blank"
         rel="noopener noreferrer"
@@ -233,7 +238,7 @@ export async function waitForMinaTx(params: {
     <>
       Transaction is{" "}
       <a
-        href={`https://minascan.io/devnet/tx/${hash}?type=zk-tx`}
+        href={`${explorerTransactionUrl()}${hash}`}
         className="text-accent hover:underline"
         target="_blank"
         rel="noopener noreferrer"
@@ -324,7 +329,7 @@ export async function waitForContractVerification(params: {
   const tokenStateVerifiedMsg = (
     <>
       <a
-        href={`https://minascan.io/${chain}/token/${tokenId}/zk-txs`}
+        href={`${explorerTokenUrl()}${tokenId}`}
         className="text-accent hover:underline"
         target="_blank"
         rel="noopener noreferrer"

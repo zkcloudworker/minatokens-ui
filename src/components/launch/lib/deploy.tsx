@@ -154,22 +154,18 @@ export async function deployToken(params: {
     console.log("Sender balance:", await accountBalanceMina(sender));
     const nonce = await getAccountNonce(sender.toBase58());
 
-    const adminContractVerificationKey = verificationKeys[chain]?.admin;
-    const tokenContractVerificationKey = verificationKeys[chain]?.token;
-    if (
-      adminContractVerificationKey === undefined ||
-      tokenContractVerificationKey === undefined
-    ) {
+    const vk = verificationKeys[chain === "mainnet" ? "mainnet" : "testnet"];
+    if (vk === undefined) {
       throw new Error("Verification keys are undefined");
     }
 
     FungibleTokenAdmin._verificationKey = {
-      hash: Field(adminContractVerificationKey.hash),
-      data: adminContractVerificationKey.data,
+      hash: Field(vk.admin.hash),
+      data: vk.admin.data,
     };
     FungibleToken._verificationKey = {
-      hash: Field(tokenContractVerificationKey.hash),
-      data: tokenContractVerificationKey.data,
+      hash: Field(vk.token.hash),
+      data: vk.token.data,
     };
 
     const tx = await Mina.transaction(

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { BlockberryTokenHolder } from "@/lib/blockberry-tokens";
-import { getChain } from "@/lib/chain";
-const chain = getChain();
+import { explorerAccountUrl } from "@/lib/chain";
 
 interface HoldersProps {
   holders: BlockberryTokenHolder[];
@@ -46,7 +45,7 @@ export function Holders({ holders }: HoldersProps) {
             role="cell"
           >
             <Link
-              href={`https://minascan.io/${chain}/account/${elm.holderAddress}`}
+              href={`${explorerAccountUrl()}${elm.holderAddress}`}
               className="text-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"

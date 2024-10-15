@@ -4,7 +4,7 @@ import CompanyLinks from "./CompanyLinks";
 import MyAccountKink from "./MyAccountLink";
 import Image from "next/image";
 import Link from "next/link";
-
+import { getSiteName } from "@/lib/chain";
 export default function TokenFooter() {
   return (
     <footer className="page-footer bg-white dark:bg-jacarta-900">
@@ -29,7 +29,7 @@ export default function TokenFooter() {
                 />
               </span>
               <span className="ms-4 text-white text-lg inline-block">
-                Minatokens.com
+                {getSiteName()}.com
               </span>
             </Link>
             <p className="mb-12 dark:text-jacarta-300">

@@ -4,6 +4,11 @@ import CompanyLinks from "./CompanyLinks";
 import MyAccountKink from "./MyAccountLink";
 import Image from "next/image";
 import Link from "next/link";
+import { getSiteName } from "@/lib/chain";
+
+export const metadata = {
+  title: `${getSiteName()} | Footer`,
+};
 
 export default function Footer1() {
   return (
@@ -29,7 +34,7 @@ export default function Footer1() {
                 />
               </span>
               <span className="ms-4 text-white text-lg inline-block">
-                Minatokens.com
+                {getSiteName()}.com
               </span>
             </Link>
             <p className="mb-12 dark:text-jacarta-300">
@@ -87,7 +92,7 @@ export default function Footer1() {
 
         <div className="flex flex-col items-center justify-between space-y-2 py-8 sm:flex-row sm:space-y-0">
           <span className="text-sm dark:text-jacarta-400">
-            &copy; {new Date().getFullYear()} Minatokens — Made by{" "}
+            &copy; {new Date().getFullYear()} {getSiteName()} — Made by{" "}
             <a href="https://zkcloudworker.com" className="hover:text-accent">
               zkCloudWorker Team
             </a>

@@ -78,6 +78,7 @@ export interface BlockberryTokens {
 export async function getAllTokensByAddress(params: {
   account: string;
 }): Promise<BlockberryTokenData[]> {
+  if (chain === "zeko") return [];
   const { account } = params;
   let allTokens: BlockberryTokenData[] = [];
   let page = 0;
@@ -103,7 +104,9 @@ export async function getTokensByAddress(params: {
   page?: number;
   size?: number;
 }): Promise<BlockberryTokens | undefined> {
+  if (chain === "zeko") return undefined;
   const { account, page = 0, size = 50 } = params;
+
   if (BLOCKBERRY_API === undefined) {
     throw new Error("BLOCKBERRY_API is undefined");
   }
@@ -184,6 +187,7 @@ export async function getTokenHoldersByTokenId(params: {
   page?: number;
   size?: number;
 }): Promise<BlockberryTokenHolders | undefined> {
+  if (chain === "zeko") return undefined;
   const { tokenId, page = 0, size = 50 } = params;
   if (BLOCKBERRY_API === undefined) {
     throw new Error("BLOCKBERRY_API is undefined");
@@ -304,6 +308,7 @@ export async function getTransactionsByToken(params: {
   page?: number;
   size?: number;
 }): Promise<BlockberryTokenTransactions | undefined> {
+  if (chain === "zeko") return undefined;
   const { tokenId, page = 0, size = 50 } = params;
   if (BLOCKBERRY_API === undefined) {
     throw new Error("BLOCKBERRY_API is undefined");
