@@ -20,6 +20,7 @@ interface LaunchTokenState {
   totalSupply: number;
   tokenAddress: string;
   likes: number;
+  isLaunched: boolean;
 }
 
 type Action =
@@ -40,7 +41,8 @@ type Action =
   | { type: "DELETE_TIMELINE_GROUP"; payload: string }
   | { type: "SET_TOTAL_SUPPLY"; payload: number }
   | { type: "SET_TOKEN_ADDRESS"; payload: string }
-  | { type: "SET_LIKES"; payload: number };
+  | { type: "SET_LIKES"; payload: number }
+  | { type: "SET_IS_LAUNCHED"; payload: boolean };
 
 const initialState: LaunchTokenState = {
   tokenData: null,
@@ -48,6 +50,7 @@ const initialState: LaunchTokenState = {
   totalSupply: 0,
   tokenAddress: "launching",
   likes: 0,
+  isLaunched: false,
 };
 
 const LaunchTokenContext = createContext<{
@@ -110,6 +113,8 @@ const launchTokenReducer = (
       return { ...state, tokenAddress: action.payload };
     case "SET_LIKES":
       return { ...state, likes: action.payload };
+    case "SET_IS_LAUNCHED":
+      return { ...state, isLaunched: action.payload };
     default:
       return state;
   }

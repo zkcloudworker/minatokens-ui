@@ -104,7 +104,7 @@ export async function launchToken(params: {
     mintAddresses,
   } = data;
   const { twitter, telegram, website, discord, instagram } = links;
-  let likes = 10;
+  let likes = 0;
 
   if (AURO_TEST) {
     if (ADMIN_ADDRESS === undefined) {
@@ -266,29 +266,33 @@ export async function launchToken(params: {
     const mintItems: MintAddressVerified[] = [];
     if (DEBUG) console.log("Mint addresses:", mintAddresses);
     for (const item of mintAddresses) {
-      const verified = await checkMintData(item);
-      if (verified !== undefined) {
-        if (DEBUG) console.log("Mint item verified:", verified, item);
-        mintItems.push(verified);
+      if (item.amount === "" || item.address === "") {
+        if (DEBUG) console.log("Empty mint item skipped:", item);
       } else {
-        if (DEBUG) console.log("Mint item skipped:", item);
-        updateTimelineItem({
-          groupId: "verify",
-          update: {
-            lineId: "mintDataError",
-            content: `Cannot mint ${item.amount} ${symbol} tokens to ${item.address} because of wrong amount or address`,
-            status: "error",
-          },
-        });
-        updateTimelineItem({
-          groupId: "verify",
-          update: {
-            lineId: "verifyData",
-            content: "Data verification failed",
-            status: "error",
-          },
-        });
-        return;
+        const verified = await checkMintData(item);
+        if (verified !== undefined) {
+          if (DEBUG) console.log("Mint item verified:", verified, item);
+          mintItems.push(verified);
+        } else {
+          if (DEBUG) console.log("Mint item skipped:", item);
+          updateTimelineItem({
+            groupId: "verify",
+            update: {
+              lineId: "mintDataError",
+              content: `Cannot mint ${item.amount} ${symbol} tokens to ${item.address} because of wrong amount or address`,
+              status: "error",
+            },
+          });
+          updateTimelineItem({
+            groupId: "verify",
+            update: {
+              lineId: "verifyData",
+              content: "Data verification failed",
+              status: "error",
+            },
+          });
+          return;
+        }
       }
     }
     if (DEBUG) console.log("Mint items filtered:", mintItems);
@@ -377,7 +381,6 @@ export async function launchToken(params: {
       }
     }
     if (isError()) return;
-    setLikes((likes += 10));
 
     const imageURL = imageHash
       ? (await arweaveHashToUrl(imageHash)) +
@@ -821,8 +824,9 @@ export async function launchToken(params: {
         },
       });
     }
-
+    setLikes((likes += 10));
     if (waitForArweaveImageTxPromise) await waitForArweaveImageTxPromise;
+    setLikes((likes += 10));
     await waitForArweaveMetadataTxPromise;
     setLikes((likes += 10));
 

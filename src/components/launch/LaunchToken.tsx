@@ -82,6 +82,13 @@ const LaunchToken: React.FC = () => {
     });
   }
 
+  function setIsLaunched(isLaunched: boolean) {
+    dispatch({
+      type: "SET_IS_LAUNCHED",
+      payload: isLaunched,
+    });
+  }
+
   useEffect(() => {
     if (DEBUG) console.log("state", state);
     isErrorNow = state.timelineItems.some((item) => item.status === "error");
@@ -116,8 +123,8 @@ const LaunchToken: React.FC = () => {
     dispatch({ type: "SET_TIMELINE_GROUPS", payload: [] });
     dispatch({ type: "SET_TOTAL_SUPPLY", payload: 0 });
     dispatch({ type: "SET_TOKEN_ADDRESS", payload: "launching" });
-    dispatch({ type: "SET_LIKES", payload: 10 });
-
+    dispatch({ type: "SET_LIKES", payload: 0 });
+    dispatch({ type: "SET_IS_LAUNCHED", payload: false });
     window.scrollTo({ top: 0, behavior: "instant" });
 
     launchToken({
@@ -136,7 +143,7 @@ const LaunchToken: React.FC = () => {
     <>
       {state.tokenData && (
         <TokenProgress
-          caption="Launching Token"
+          caption={state.isLaunched ? "Token Launched" : "Launching Token"}
           items={state.timelineItems}
           tokenAddress={state.tokenAddress}
           image={state.tokenData.imageURL ?? "token.png"}
