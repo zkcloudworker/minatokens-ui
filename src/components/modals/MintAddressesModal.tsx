@@ -15,7 +15,12 @@ const initialMintAddresses: MintAddress[] = MINT_TEST
         address: "B62qiq7iTTP7Z2KEpQ9eF9UVGLiEKAjBpz1yxyd2MwMrxVwpAMLta2h",
       },
     ]
-  : [];
+  : [
+      {
+        amount: "",
+        address: "",
+      },
+    ];
 
 export interface MintAddressesModalProps {
   onSubmit?: (mintAddresses: MintAddress[]) => void;
