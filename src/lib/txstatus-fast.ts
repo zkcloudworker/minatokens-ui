@@ -1,15 +1,14 @@
 "use server";
 import { checkZkappTransaction } from "o1js";
 import { initBlockchain } from "zkcloudworker";
-const chain = process.env.NEXT_PUBLIC_CHAIN;
+import { getChain } from "./chain";
+const chain = getChain();
 
 export async function getTxStatusFast(params: {
   hash: string;
 }): Promise<{ success: boolean; result?: boolean; error?: string }> {
+  if (chain === "zeko") return { success: true, result: true };
   const { hash } = params;
-  if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-  if (chain !== "devnet" && chain !== "mainnet")
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
   await initBlockchain(chain);
 
   try {

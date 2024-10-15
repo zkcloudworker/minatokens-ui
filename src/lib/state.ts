@@ -3,8 +3,11 @@ import { fetchMinaAccount, initBlockchain, FungibleToken } from "zkcloudworker";
 import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo } from "./token";
 import { algoliaGetToken, algoliaWriteToken } from "./algolia";
-const chain = process.env.NEXT_PUBLIC_CHAIN;
-const chainId = process.env.NEXT_PUBLIC_CHAIN_ID;
+import { getChain, getChainId } from "./chain";
+import { debug } from "./debug";
+const DEBUG = debug();
+const chain = getChain();
+const chainId = getChainId();
 export async function getTokenState(params: {
   tokenAddress: string;
   info?: DeployedTokenInfo;
@@ -21,20 +24,16 @@ export async function getTokenState(params: {
 > {
   const { tokenAddress, info } = params;
   try {
-    if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-    if (chain !== "devnet" && chain !== "mainnet")
-      throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
-    if (chainId === undefined)
-      throw new Error("NEXT_PUBLIC_CHAIN_ID is undefined");
     await initBlockchain(chain);
     const tokenContractPublicKey = PublicKey.fromBase58(tokenAddress);
     const tokenContract = new FungibleToken(tokenContractPublicKey);
 
     await fetchMinaAccount({ publicKey: tokenContractPublicKey, force: false });
     if (!Mina.hasAccount(tokenContractPublicKey)) {
-      console.error("getTokenState: Token contract account not found", {
-        tokenAddress,
-      });
+      if (DEBUG)
+        console.error("getTokenState: Token contract account not found", {
+          tokenAddress,
+        });
       return { success: false, error: "Token contract account not found" };
     }
     const tokenId = tokenContract.deriveTokenId();

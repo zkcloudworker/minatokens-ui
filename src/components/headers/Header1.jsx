@@ -60,7 +60,7 @@ export default function Header1() {
               alt="Minatokens | MINA Launchpad"
             />
             <div className="text-jacarta-900 dark:text-white -ms-3">
-              Minatokens
+              {getSiteName()}
             </div>
           </Link>
 
@@ -115,7 +115,7 @@ export default function Header1() {
                   alt="Minatokens | MINA Launchpad"
                 />
                 <div Name="text-jacarta-900 dark:text-white -ms-3">
-                  Minatokens
+                  {getSiteName()}
                 </div>
               </Link>
 

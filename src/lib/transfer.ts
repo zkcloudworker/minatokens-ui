@@ -2,10 +2,12 @@
 
 import { sendTransferTransaction } from "./token-api";
 import { TimelineItem } from "../components/ui/timeline";
+import { getChain, getWallet } from "./chain";
+import { debug } from "./debug";
 
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
-const chain = process.env.NEXT_PUBLIC_CHAIN;
-const WALLET = process.env.NEXT_PUBLIC_WALLET;
+const chain = getChain();
+const DEBUG = debug();
+const WALLET = getWallet();
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const TRANSFER_FEE = 1e8;
 
@@ -27,10 +29,6 @@ export async function transferToken(params: {
   error?: string;
   jobId?: string;
 }> {
-  if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-  if (chain !== "devnet" && chain !== "mainnet")
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
-  if (WALLET === undefined) throw new Error("NEXT_PUBLIC_WALLET is undefined");
   console.time("ready to sign");
   if (DEBUG) console.log("transfer token", params);
   const { tokenPublicKey, symbol, lib, updateLogItem, nonce, id } = params;

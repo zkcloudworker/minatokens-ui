@@ -1,8 +1,15 @@
 "use client";
 
+import confetti from "canvas-confetti";
 import { LaunchTokenData, MintAddressVerified } from "@/lib/token";
 import { checkMintData } from "@/lib/address";
-import { getChain, getChainId } from "@/lib/chain";
+import {
+  explorerAccountUrl,
+  explorerTokenUrl,
+  getChain,
+  getChainId,
+  getLaunchpadUrl,
+} from "@/lib/chain";
 import { getWalletInfo } from "@/lib/wallet";
 import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
@@ -307,6 +314,7 @@ export async function launchToken(params: {
     });
 
     let imageHash: string | undefined = undefined;
+    let imageExtension: string | undefined = undefined;
     if (image) {
       addLog({
         groupId: "image",
@@ -319,6 +327,7 @@ export async function launchToken(params: {
       });
 
       imageHash = await pinImageToArweave(image);
+      imageExtension = image?.name?.split(".")?.pop();
       if (imageHash) {
         const imageTxMessage = (
           <>
@@ -370,7 +379,10 @@ export async function launchToken(params: {
     if (isError()) return;
     setLikes((likes += 10));
 
-    const imageURL = imageHash ? await arweaveHashToUrl(imageHash) : undefined;
+    const imageURL = imageHash
+      ? (await arweaveHashToUrl(imageHash)) +
+        (imageExtension ? `/${symbol}.${imageExtension}` : "")
+      : undefined;
     const info: TokenInfo = {
       symbol,
       name,
@@ -388,7 +400,9 @@ export async function launchToken(params: {
       ],
       data: undefined,
       isMDA: undefined,
+      launchpad: getLaunchpadUrl(),
     };
+    if (DEBUG) console.log("Token info:", info);
 
     addLog({
       groupId: "metadata",
@@ -471,7 +485,7 @@ export async function launchToken(params: {
       type: "metadata",
     });
 
-    const uri = await arweaveHashToUrl(metadataHash);
+    const uri = (await arweaveHashToUrl(metadataHash)) + `/${symbol}.json`;
     const lib = await libPromise;
 
     const {
@@ -496,7 +510,7 @@ export async function launchToken(params: {
       <>
         Token address:{" "}
         <a
-          href={`https://minascan.io/${chain}/account/${tokenPublicKey}`}
+          href={`${explorerAccountUrl()}${tokenPublicKey}`}
           className="text-accent hover:underline"
           target="_blank"
           rel="noopener noreferrer"
@@ -652,7 +666,7 @@ export async function launchToken(params: {
         <>
           Minting{" "}
           <a
-            href={`https://minascan.io/${chain}/token/${tokenId}/zk-txs`}
+            href={`${explorerTokenUrl()}/${tokenId}`}
             className="text-accent hover:underline"
             target="_blank"
             rel="noopener noreferrer"
@@ -690,7 +704,7 @@ export async function launchToken(params: {
           <>
             Amount: {item.amount}{" "}
             <a
-              href={`https://minascan.io/${chain}/token/${tokenId}/zk-txs`}
+              href={`${explorerTokenUrl()}${tokenId}`}
               className="text-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"
@@ -704,7 +718,7 @@ export async function launchToken(params: {
           <>
             Address:{" "}
             <a
-              href={`https://minascan.io/${chain}/account/${item.address}`}
+              href={`${explorerAccountUrl()}${item.address}`}
               className="text-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"
@@ -787,7 +801,7 @@ export async function launchToken(params: {
         <>
           Successfully minted{" "}
           <a
-            href={`https://minascan.io/${chain}/token/${tokenId}/zk-txs`}
+            href={`${explorerTokenUrl()}${tokenId}`}
             className="text-accent hover:underline"
             target="_blank"
             rel="noopener noreferrer"
@@ -810,6 +824,26 @@ export async function launchToken(params: {
     if (waitForArweaveImageTxPromise) await waitForArweaveImageTxPromise;
     await waitForArweaveMetadataTxPromise;
     setLikes((likes += 10));
+
+    const duration = 10 * 1000; // 10 seconds
+    const end = Date.now() + duration;
+
+    const interval = setInterval(() => {
+      if (Date.now() > end) {
+        clearInterval(interval);
+        return;
+      }
+
+      confetti({
+        particleCount: 100,
+        startVelocity: 30,
+        spread: 360,
+        origin: {
+          x: Math.random(), // Random horizontal position
+          y: Math.random() - 0.2, // Random vertical position
+        },
+      });
+    }, 250); // Fire confetti every 250 milliseconds
     await stopProcessUpdateRequests();
   } catch (error) {
     console.error("launchToken catch:", error);

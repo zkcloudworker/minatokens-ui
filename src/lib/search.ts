@@ -6,9 +6,12 @@ import {
   getAllTokensByAddress,
   BlockberryTokenData,
 } from "./blockberry-tokens";
+import { getChain } from "./chain";
+import { debug } from "./debug";
+const chain = getChain();
+const DEBUG = debug();
+
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
-const chain = process.env.NEXT_PUBLIC_CHAIN;
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 export interface TokenList {
   hits: DeployedTokenInfo[];
@@ -33,9 +36,6 @@ export async function algoliaGetTokenList(
   } = {}
 ): Promise<TokenList | undefined> {
   const { favoritesOfAddress, issuedByAddress, ownedByAddress } = params;
-  if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-  if (chain !== "devnet" && chain !== "mainnet")
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet");
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
     throw new Error("ALGOLIA_PROJECT is undefined");

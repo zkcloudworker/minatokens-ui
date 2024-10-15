@@ -1,5 +1,7 @@
 "use server";
+import { getChain } from "./chain";
 
+const chain = getChain();
 const BLOCKBERRY_API = process.env.BLOCKBERRY_API;
 
 export async function getTxStatus(params: { hash: string }): Promise<any> {
@@ -17,7 +19,7 @@ export async function getTxStatus(params: { hash: string }): Promise<any> {
   };
   try {
     const response = await fetch(
-      `https://api.blockberry.one/mina-devnet/v1/zkapps/txs/${hash}`,
+      `https://api.blockberry.one/${chain}/v1/zkapps/txs/${hash}`,
       options
     );
     if (response.ok) {

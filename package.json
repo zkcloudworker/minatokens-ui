@@ -6,6 +6,7 @@
   "private": false,
   "scripts": {
     "dev": "next dev",
+    "dev:development": "cross-env NODE_ENV=development next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -23,6 +24,7 @@
     "algoliasearch": "^5.8.0",
     "arweave": "^1.15.3",
     "bootstrap": "^5.3.3",
+    "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -45,11 +47,14 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^5.2.10",
+    "@types/canvas-confetti": "^1.6.4",
     "@types/node": "^22.7.4",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.1",
     "@typescript-eslint/eslint-plugin": "^8.7.0",
     "autoprefixer": "^10.0.1",
+    "cross-env": "^7.0.3",
+    "dotenv-cli": "^7.4.2",
     "eslint": "^8",
     "eslint-config-next": "^14.2.13",
     "postcss": "^8.4.47",

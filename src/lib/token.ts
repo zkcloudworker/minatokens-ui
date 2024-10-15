@@ -58,6 +58,7 @@ export interface TokenInfo {
   adminContractsCode?: string[];
   data?: object;
   isMDA?: boolean;
+  launchpad?: string;
 }
 
 export interface TokenState {

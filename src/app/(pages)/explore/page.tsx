@@ -2,9 +2,10 @@ import TokenFooter from "@/components/footer/TokenFooter";
 import TokenHeader from "@/components/headers/TokenHeader";
 import TokenList from "@/components/homes/common/TokenList";
 import { FC } from "react";
+import { getSiteName } from "@/lib/chain";
 
 export const metadata = {
-  title: "Minatokens | Launchpad",
+  title: `${getSiteName()} | Explore`,
 };
 
 const ExploreTokens: FC = () => {
