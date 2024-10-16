@@ -39,12 +39,12 @@ export default function Nav() {
       </li>
 
       <li className="js-nav-dropdown group relative">
-        <a
+        <Link
           href="#"
-          className={`dropdown-toggle flex items-center justify-between py-3.5 font-display text-base   ${
+          className={`dropdown-toggle flex items-center justify-between py-3.5 font-display text-base text-black ${
             isActiveParentMenu(resources)
               ? "text-accent dark:text-accent"
-              : "text-jacarta-700 dark:text-white lg:text-white "
+              : "text-jacarta-700 dark:text-white"
           }  hover:text-accent lg:px-5 `}
           id="navDropdown-4"
           aria-expanded="false"
@@ -64,7 +64,7 @@ export default function Nav() {
               <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
             </svg>
           </i>
-        </a>
+        </Link>
         <ul
           className="dropdown-menu group-hover:visible lg:invisible left-0 top-[85%] z-10 hidden min-w-[200px] gap-x-4 whitespace-nowrap rounded-xl bg-white transition-all will-change-transform group-hover:opacity-100 dark:bg-jacarta-800 lg:absolute lg:grid lg:translate-y-4 lg:py-4 lg:px-2 lg:opacity-0 lg:shadow-2xl lg:group-hover:translate-y-2"
           aria-labelledby="navDropdown-4"
