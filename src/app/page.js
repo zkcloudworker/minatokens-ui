@@ -1,13 +1,10 @@
-import HomePage1 from "./(homes)/home-1/page";
+import HomeToken from "./(homes)/home-token/page";
+import { getSiteName } from "@/lib/chain";
 
 export const metadata = {
-  title: "Minatokens | Launchpad",
+  title: `${getSiteName()} | Launchpad`,
 };
 
 export default function Home() {
-  return (
-    <>
-      <HomePage1 />
-    </>
-  );
+  return <HomeToken />;
 }

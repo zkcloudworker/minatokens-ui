@@ -49,6 +49,8 @@ const config: Config = {
         800: "#101436",
         900: "#0D102D",
       },
+      highlightBg: "#FFF59D",
+      highlightText: "#1E293B",
     },
     boxShadow: {
       none: "none",

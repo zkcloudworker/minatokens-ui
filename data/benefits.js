@@ -1,7 +1,7 @@
 export const benefits = [
   {
     id: 1,
-    title: "Ownership Benefits",
+    title: "Ownership ",
     img: "/img/dao/benefit_dao_1.jpg",
     description:
       "DAOs own the smart contracts and digital assets (NFTs) to bring autonomy, removing the concept of CEO and leadership from any NFT platform.",

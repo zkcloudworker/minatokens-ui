@@ -60,22 +60,22 @@ export const servicesData = [
 export const benefits = [
   {
     id: 1,
-    count: "305,000+",
-    text: "NFTs created",
+    count: "2 years",
+    text: "of experience",
     svgPath:
       "M20 3l2 4v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.004L4 3h16zm0 6H4v10h16V9zm-8 1l4 4h-3v4h-2v-4H8l4-4zm6.764-5H5.236l-.999 2h15.527l-1-2z",
   },
   {
     id: 2,
-    count: "Rated the best",
-    text: "NFT Marketplace",
+    count: "Best in class",
+    text: "Mina developers",
     svgPath:
       "M12 17l-5.878 3.59 1.598-6.7-5.23-4.48 6.865-.55L12 2.5l2.645 6.36 6.866.55-5.231 4.48 1.598 6.7L12 17zm0-2.344l2.817 1.72-.766-3.21 2.507-2.147-3.29-.264L12 7.708l-1.268 3.047-3.29.264 2.507 2.147-.766 3.21L12 14.657z",
   },
   {
     id: 3,
-    count: "1.6M+",
-    text: "Happy NFT Users",
+    count: "ZK",
+    text: "contracts",
     svgPath:
       "M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm-5-7h2a3 3 0 0 0 6 0h2a5 5 0 0 1-10 0zm1-2a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm8 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
   },

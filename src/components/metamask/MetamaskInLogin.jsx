@@ -1,7 +1,7 @@
 "use client";
 import { useMetaMask } from "metamask-react";
 import Image from "next/image";
-
+/*
 const MetaMaskLogin = () => {
   const { status, connect, account, chainId, ethereum } = useMetaMask();
 
@@ -80,3 +80,4 @@ const MetaMaskLogin = () => {
 };
 
 export default MetaMaskLogin;
+*/

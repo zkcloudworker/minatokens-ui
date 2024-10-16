@@ -68,7 +68,7 @@ export default function Collections() {
       </picture>
       <div className="container">
         <h1 className="py-16 text-center font-display text-4xl font-medium text-jacarta-700 dark:text-white">
-          Explore Collections
+          Explore 1
         </h1>
 
         <div className="mb-8 flex flex-wrap items-center justify-between">

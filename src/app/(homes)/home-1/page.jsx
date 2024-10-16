@@ -12,6 +12,7 @@ export default function HomePage1() {
       <Header1 />
       <main>
         <Hero />
+
         {/* <Hotbids />
         <Collections /> */}
         <Categories />
