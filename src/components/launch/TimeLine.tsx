@@ -267,9 +267,10 @@ const statusIcons = {
   completed: <CheckSquare color="#a855f7" />,
 };
 
-const formatTime = (time: number, currentTime: number) => {
+function formatTime(time: number, currentTime: number): string {
+  if (time > currentTime) return "";
   const timePassed = Math.floor((currentTime - time) / 1000);
   const minutes = Math.floor(timePassed / 60);
   const seconds = timePassed % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-};
+}

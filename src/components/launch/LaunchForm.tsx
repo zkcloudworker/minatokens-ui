@@ -87,12 +87,6 @@ export function LaunchForm({
     let userAddress = address;
 
     userAddress = (await getWalletInfo()).address;
-    if (userAddress === undefined) {
-      userAddress = (await connectWallet())?.address;
-      if (userAddress === undefined) {
-        console.error("Cannot connect wallet");
-      }
-    }
 
     if (adminAddress !== userAddress) {
       setAdminAddress(userAddress);

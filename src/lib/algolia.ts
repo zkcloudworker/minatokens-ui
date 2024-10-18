@@ -7,6 +7,8 @@ import { debug } from "./debug";
 const chain = getChain();
 const DEBUG = debug();
 
+10_000_000_000_000_000_000
+
 export async function algoliaWriteToken(params: {
   tokenAddress: string;
   info: DeployedTokenInfo;
