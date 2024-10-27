@@ -2,14 +2,14 @@
 import { TokenStats } from "./TokenStats";
 import Image from "next/image";
 import Link from "next/link";
-import Timer from "./Timer";
+//import Timer from "./Timer";
 import { algoliaGetToken } from "@/lib/algolia";
-import { DeployedTokenInfo } from "@/lib/token";
+import { DeployedTokenInfo, TokenState } from "@/lib/token";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { algoliaWriteLike, algoliaGetLike } from "@/lib/likes";
-import tippy from "tippy.js";
+//import tippy from "tippy.js";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
 import { socials } from "@/data/socials";
@@ -19,6 +19,7 @@ import {
   BlockberryTokenTransaction,
   getTransactionsByToken,
 } from "@/lib/blockberry-tokens";
+import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 export function Socials({ i }: { i: number }) {
@@ -52,6 +53,9 @@ interface ItemDetailsProps {
 
 export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   const [item, setItem] = useState<DeployedTokenInfo | undefined>(undefined);
+  const [tokenState, setTokenState] = useState<TokenState | undefined>(
+    undefined
+  );
   const [like, setLike] = useState(false);
   const [holders, setHolders] = useState<BlockberryTokenHolder[]>([]);
   const [transactions, setTransactions] = useState<
@@ -64,7 +68,12 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
     if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
     const fetchItem = async () => {
       if (tokenAddress) {
-        const item = await algoliaGetToken({ tokenAddress });
+        const itemPromise = algoliaGetToken({ tokenAddress });
+        const tokenStatePromise = getTokenState({ tokenAddress });
+        setItem(await itemPromise);
+        const tokenStateResult = await tokenStatePromise;
+        if (tokenStateResult?.success)
+          setTokenState(tokenStateResult.tokenState);
         let userAddress = address;
         if (!userAddress) {
           userAddress = (await getWalletInfo()).address;
@@ -80,7 +89,6 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
           if (DEBUG) console.log("like", like);
         }
         if (DEBUG) console.log("item", item);
-        setItem(item);
       }
     };
     fetchItem();
@@ -205,14 +213,11 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
             <div className="md:w-3/5 md:basis-auto md:pl-8 lg:w-1/2 lg:pl-[3.75rem]">
               {/* Collection / Likes / Actions */}
               <div className="mb-3 flex">
+                <div className="mb-4 font-display text-4xl font-semibold text-jacarta-700 dark:text-white">
+                  {item?.name ? item.name : ""}
+                </div>
                 {/* Collection */}
                 <div className="flex items-center">
-                  <Link
-                    href={`/collections`}
-                    className="mr-2 text-sm font-bold text-accent"
-                  >
-                    {"zkCloudWorker"}
-                  </Link>
                   <span
                     className="inline-flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
                     data-tippy-content="Verified Collection"
@@ -231,32 +236,8 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                 </div>
 
                 {/* Likes / Actions */}
-                <div className="ml-auto flex space-x-2">
-                  <div className="flex items-center space-x-1 rounded-xl border border-jacarta-100 bg-white py-2 px-4 dark:border-jacarta-600 dark:bg-jacarta-700">
-                    <span
-                      className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
-                        like ? "js-likes--active" : ""
-                      }`}
-                      data-tippy-content="Favorite"
-                      onClick={() => addLike()}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                        className="h-4 w-4 fill-jacarta-500 hover:fill-red dark:fill-jacarta-200 dark:hover:fill-red"
-                      >
-                        <path fill="none" d="M0 0H24V24H0z"></path>
-                        <path d="M12.001 4.529c2.349-2.109 5.979-2.039 8.242.228 2.262 2.268 2.34 5.88.236 8.236l-8.48 8.492-8.478-8.492c-2.104-2.356-2.025-5.974.236-8.236 2.265-2.264 5.888-2.34 8.244-.228zm6.826 1.641c-1.5-1.502-3.92-1.563-5.49-.153l-1.335 1.198-1.336-1.197c-1.575-1.412-3.99-1.35-5.494.154-1.49 1.49-1.565 3.875-.192 5.451L12 18.654l7.02-7.03c1.374-1.577 1.299-3.959-.193-5.454z"></path>
-                      </svg>
-                    </span>
-                    <span className="text-sm dark:text-jacarta-200">
-                      {item?.likes ?? 0}
-                    </span>
-                  </div>
-
-                  {/* Actions */}
+                {/* <div className="ml-auto flex space-x-2">
+                  
                   <div className="dropdown rounded-xl border border-jacarta-100 bg-white hover:bg-jacarta-100 dark:border-jacarta-600 dark:bg-jacarta-700 dark:hover:bg-jacarta-600">
                     <a
                       href="#"
@@ -298,12 +279,8 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                       </button>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
-
-              <h1 className="mb-4 font-display text-4xl font-semibold text-jacarta-700 dark:text-white">
-                {item?.name ? item.name : ""}
-              </h1>
 
               <div className="mb-8 flex items-center space-x-4 whitespace-nowrap">
                 <div className="flex items-center">
@@ -350,11 +327,50 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                   Supply:{" "}
                   {item?.totalSupply ? item?.totalSupply / 1_000_000_000 : ""}
                 </span>
+                <div className="flex items-center space-x-1 rounded-xl border border-jacarta-100 bg-white py-2 px-4 dark:border-jacarta-600 dark:bg-jacarta-700">
+                  <span
+                    className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
+                      like ? "js-likes--active" : ""
+                    }`}
+                    data-tippy-content="Favorite"
+                    onClick={() => addLike()}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="h-4 w-4 fill-jacarta-500 hover:fill-red dark:fill-jacarta-200 dark:hover:fill-red"
+                    >
+                      <path fill="none" d="M0 0H24V24H0z"></path>
+                      <path d="M12.001 4.529c2.349-2.109 5.979-2.039 8.242.228 2.262 2.268 2.34 5.88.236 8.236l-8.48 8.492-8.478-8.492c-2.104-2.356-2.025-5.974.236-8.236 2.265-2.264 5.888-2.34 8.244-.228zm6.826 1.641c-1.5-1.502-3.92-1.563-5.49-.153l-1.335 1.198-1.336-1.197c-1.575-1.412-3.99-1.35-5.494.154-1.49 1.49-1.565 3.875-.192 5.451L12 18.654l7.02-7.03c1.374-1.577 1.299-3.959-.193-5.454z"></path>
+                    </svg>
+                  </span>
+                  <span className="text-sm dark:text-jacarta-200">
+                    {item?.likes ?? 0}
+                  </span>
+                </div>
               </div>
 
-              <p className="mb-10 dark:text-jacarta-300">
+              <p className="mb-5 dark:text-jacarta-300">
                 {item?.description ?? ""}
               </p>
+
+              <p className="dark:text-jacarta-300">
+                {item?.tokenId ? "TokenId:" : "Address:"}
+              </p>
+              <Link
+                href={
+                  item?.tokenId
+                    ? `${explorerTokenUrl()}${item.tokenId}`
+                    : `${explorerAccountUrl()}${tokenAddress}`
+                }
+                className="block mb-10 text-sm font-bold text-accent hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {item?.tokenId ?? tokenAddress}
+              </Link>
 
               {/* Creator / Owner */}
               <div className="mb-8 flex flex-wrap">
@@ -598,7 +614,11 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
           </div>
 
           {/* Tabs */}
-          <TokenStats holders={holders} transactions={transactions} />
+          <TokenStats
+            holders={holders}
+            transactions={transactions}
+            tokenState={tokenState}
+          />
           {/* end tabs */}
         </div>
       </section>
