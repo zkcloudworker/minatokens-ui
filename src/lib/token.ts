@@ -69,6 +69,14 @@ export interface TokenState {
   totalSupply: number;
   isPaused: boolean;
   decimals: number;
+  tokenSymbol: string;
+  verificationKeyHash: string;
+  uri: string;
+  version: number;
+  adminTokenSymbol: string;
+  adminUri: string;
+  adminVerificationKeyHash: string;
+  adminVersion: number;
 }
 
 export interface DeployedTokenInfo extends TokenInfo, TokenState {

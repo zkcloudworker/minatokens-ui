@@ -68,12 +68,13 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
     if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
     const fetchItem = async () => {
       if (tokenAddress) {
-        const itemPromise = algoliaGetToken({ tokenAddress });
-        const tokenStatePromise = getTokenState({ tokenAddress });
-        setItem(await itemPromise);
-        const tokenStateResult = await tokenStatePromise;
-        if (tokenStateResult?.success)
-          setTokenState(tokenStateResult.tokenState);
+        const item = await algoliaGetToken({ tokenAddress });
+        setItem(item);
+        const tokenStatePromise = getTokenState({
+          tokenAddress,
+          info: item,
+        });
+
         let userAddress = address;
         if (!userAddress) {
           userAddress = (await getWalletInfo()).address;
@@ -89,6 +90,9 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
           if (DEBUG) console.log("like", like);
         }
         if (DEBUG) console.log("item", item);
+        const tokenStateResult = await tokenStatePromise;
+        if (tokenStateResult?.success)
+          setTokenState(tokenStateResult.tokenState);
       }
     };
     fetchItem();
