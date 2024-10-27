@@ -28,6 +28,7 @@ export function LaunchForm({
     discord: "",
     telegram: "",
     instagram: "",
+    facebook: "",
     website: "",
   });
   const [adminAddress, setAdminAddress] = useState<string | undefined>(
@@ -388,6 +389,52 @@ export function LaunchForm({
                       e.target.style.border = "";
                     } else {
                       e.target.value = links.instagram ?? "";
+                      e.target.style.border = "2px solid red";
+                      setTimeout(() => {
+                        e.target.style.borderColor = "";
+                      }, 1000);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Facebook */}
+              <div className="relative">
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fab"
+                  data-icon="facebook"
+                  className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 fill-jacarta-300 dark:fill-jacarta-400"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                >
+                  <path d="M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S252.43 0 225.36 0c-73.22 0-121.17 44.38-121.17 124.72v70.62H22.89V288h81.3v224h100.2V288z"></path>
+                </svg>
+                <input
+                  type="text"
+                  id="profile-instagram"
+                  className="-mt-px w-full border-jacarta-100 py-3 pl-10 hover:ring-2 hover:ring-accent/10 focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
+                  placeholder="facebook"
+                  autoComplete="off"
+                  value={links.facebook}
+                  onChange={(e) => {
+                    const facebookHandle = e.target.value;
+                    const facebookRegex =
+                      /^([a-zA-Z]+(?:['.-][a-zA-Z]+)*)(?:\s+([a-zA-Z]+(?:['.-][a-zA-Z]+)*))*$/;
+
+                    if (
+                      facebookHandle === "" ||
+                      facebookRegex.test(facebookHandle)
+                    ) {
+                      setLinks((items) => ({
+                        ...items,
+                        facebook: facebookHandle,
+                      }));
+                      e.target.style.border = "";
+                    } else {
+                      e.target.value = links.facebook ?? "";
                       e.target.style.border = "2px solid red";
                       setTimeout(() => {
                         e.target.style.borderColor = "";

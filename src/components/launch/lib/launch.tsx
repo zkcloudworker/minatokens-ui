@@ -103,7 +103,7 @@ export async function launchToken(params: {
     adminAddress,
     mintAddresses,
   } = data;
-  const { twitter, telegram, website, discord, instagram } = links;
+  const { twitter, telegram, website, discord, instagram, facebook } = links;
   let likes = 0;
 
   if (AURO_TEST) {
@@ -395,6 +395,7 @@ export async function launchToken(params: {
       discord,
       telegram,
       instagram,
+      facebook,
       website,
       tokenContractCode:
         "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleToken.ts",

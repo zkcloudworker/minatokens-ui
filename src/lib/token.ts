@@ -30,6 +30,7 @@ export interface TokenLinks {
   discord: string;
   telegram: string;
   instagram: string;
+  facebook: string;
   website: string;
 }
 
