@@ -43,14 +43,14 @@ export function TokenStats({
           {/* State */}
           <li className="nav-item" role="presentation">
             <button
-              className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
+              className="nav-link active relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
               id="state-tab"
               data-bs-toggle="tab"
               data-bs-target="#state"
               type="button"
               role="tab"
               aria-controls="state"
-              aria-selected="false"
+              aria-selected="true"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -95,14 +95,14 @@ export function TokenStats({
           {/* Holders */}
           <li className="nav-item" role="presentation">
             <button
-              className="nav-link active relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
+              className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
               id="holders-tab"
               data-bs-toggle="tab"
               data-bs-target="#holders"
               type="button"
               role="tab"
               aria-controls="holders"
-              aria-selected="true"
+              aria-selected="false"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -209,7 +209,7 @@ export function TokenStats({
         <div className="tab-content">
           {/* Offers */}
           <div
-            className="tab-pane fade show active"
+            className="tab-pane fade"
             id="holders"
             role="tabpanel"
             aria-labelledby="holders-tab"
@@ -230,7 +230,7 @@ export function TokenStats({
           {/* Details */}
 
           <div
-            className="tab-pane fade"
+            className="tab-pane fade show active"
             id="state"
             role="tabpanel"
             aria-labelledby="state-tab"
