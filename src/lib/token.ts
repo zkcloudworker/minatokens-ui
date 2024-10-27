@@ -66,6 +66,7 @@ export interface TokenState {
   tokenId: string;
   adminContractAddress: string;
   adminAddress: string;
+  adminTokenBalance: number;
   totalSupply: number;
   isPaused: boolean;
   decimals: number;

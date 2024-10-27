@@ -2,6 +2,8 @@ import { Holders } from "./Holders";
 import type { TokenState } from "@/lib/token";
 //import Properties from "./Properties";
 import { TokenStateTab } from "./TokenState";
+import { TokenStateTabLoading } from "./TokenStateLoading";
+import { NotImplemented } from "./NotImplemented";
 import { Transactions } from "./Transactions";
 //import History from "./History";
 import {
@@ -94,34 +96,30 @@ export function TokenStats({
           </li> */}
 
           {/* Details */}
-          {tokenState && (
-            <li className="nav-item" role="presentation">
-              <button
-                className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
-                id="state-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#state"
-                type="button"
-                role="tab"
-                aria-controls="state"
-                aria-selected="false"
+          <li className="nav-item" role="presentation">
+            <button
+              className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
+              id="state-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#state"
+              type="button"
+              role="tab"
+              aria-controls="state"
+              aria-selected="false"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                className="mr-1 h-5 w-5 fill-current"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  height="24"
-                  className="mr-1 h-5 w-5 fill-current"
-                >
-                  <path fill="none" d="M0 0h24v24H0z" />
-                  <path d="M20 22H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1zm-1-2V4H5v16h14zM7 6h4v4H7V6zm0 6h10v2H7v-2zm0 4h10v2H7v-2zm6-9h4v2h-4V7z" />
-                </svg>
-                <span className="font-display text-base font-medium">
-                  State
-                </span>
-              </button>
-            </li>
-          )}
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M20 22H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1zm-1-2V4H5v16h14zM7 6h4v4H7V6zm0 6h10v2H7v-2zm0 4h10v2H7v-2zm6-9h4v2h-4V7z" />
+              </svg>
+              <span className="font-display text-base font-medium">State</span>
+            </button>
+          </li>
 
           {/* Activity */}
           <li className="nav-item" role="presentation">
@@ -147,6 +145,62 @@ export function TokenStats({
               </svg>
               <span className="font-display text-base font-medium">
                 Transactions
+              </span>
+            </button>
+          </li>
+
+          {/* Transfer */}
+          <li className="nav-item" role="presentation">
+            <button
+              className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
+              id="transfer-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#transfer"
+              type="button"
+              role="tab"
+              aria-controls="transfer"
+              aria-selected="false"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                className="mr-1 h-5 w-5 fill-current"
+              >
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M11.95 7.95l-1.414 1.414L8 6.828 8 20H6V6.828L3.465 9.364 2.05 7.95 7 3l4.95 4.95zm10 8.1L17 21l-4.95-4.95 1.414-1.414 2.537 2.536L16 4h2v13.172l2.536-2.536 1.414 1.414z" />
+              </svg>
+              <span className="font-display text-base font-medium">
+                Transfer
+              </span>
+            </button>
+          </li>
+
+          {/* Admin Panel */}
+          <li className="nav-item" role="presentation">
+            <button
+              className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
+              id="admin-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#admin"
+              type="button"
+              role="tab"
+              aria-controls="admin"
+              aria-selected="false"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                className="mr-1 h-5 w-5 fill-current"
+              >
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M11.95 7.95l-1.414 1.414L8 6.828 8 20H6V6.828L3.465 9.364 2.05 7.95 7 3l4.95 4.95zm10 8.1L17 21l-4.95-4.95 1.414-1.414 2.537 2.536L16 4h2v13.172l2.536-2.536 1.414 1.414z" />
+              </svg>
+              <span className="font-display text-base font-medium">
+                Token Owner Actions
               </span>
             </button>
           </li>
@@ -203,16 +257,16 @@ export function TokenStats({
           </div> */}
 
           {/* Details */}
-          {tokenState && (
-            <div
-              className="tab-pane fade"
-              id="state"
-              role="tabpanel"
-              aria-labelledby="state-tab"
-            >
-              <TokenStateTab tokenState={tokenState} />
-            </div>
-          )}
+
+          <div
+            className="tab-pane fade"
+            id="state"
+            role="tabpanel"
+            aria-labelledby="state-tab"
+          >
+            {tokenState && <TokenStateTab tokenState={tokenState} />}
+            {!tokenState && <TokenStateTabLoading />}
+          </div>
 
           {/* Activity */}
           <div
@@ -223,6 +277,26 @@ export function TokenStats({
           >
             {/* Filter */}
             <Transactions transactions={transactions} />
+          </div>
+
+          {/* Transfer */}
+          <div
+            className="tab-pane fade"
+            id="transfer"
+            role="tabpanel"
+            aria-labelledby="transfer-tab"
+          >
+            <NotImplemented />
+          </div>
+
+          {/* Admin Panel */}
+          <div
+            className="tab-pane fade"
+            id="admin"
+            role="tabpanel"
+            aria-labelledby="admin-tab"
+          >
+            <NotImplemented />
           </div>
 
           {/* Price History */}
