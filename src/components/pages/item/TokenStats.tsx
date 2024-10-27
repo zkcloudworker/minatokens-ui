@@ -2,6 +2,7 @@ import { Holders } from "./Holders";
 import type { TokenState } from "@/lib/token";
 //import Properties from "./Properties";
 import { TokenStateTab } from "./TokenState";
+import { TokenStateTabLoading } from "./TokenStateLoading";
 import { Transactions } from "./Transactions";
 //import History from "./History";
 import {
@@ -94,34 +95,30 @@ export function TokenStats({
           </li> */}
 
           {/* Details */}
-          {tokenState && (
-            <li className="nav-item" role="presentation">
-              <button
-                className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
-                id="state-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#state"
-                type="button"
-                role="tab"
-                aria-controls="state"
-                aria-selected="false"
+          <li className="nav-item" role="presentation">
+            <button
+              className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
+              id="state-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#state"
+              type="button"
+              role="tab"
+              aria-controls="state"
+              aria-selected="false"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                className="mr-1 h-5 w-5 fill-current"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  height="24"
-                  className="mr-1 h-5 w-5 fill-current"
-                >
-                  <path fill="none" d="M0 0h24v24H0z" />
-                  <path d="M20 22H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1zm-1-2V4H5v16h14zM7 6h4v4H7V6zm0 6h10v2H7v-2zm0 4h10v2H7v-2zm6-9h4v2h-4V7z" />
-                </svg>
-                <span className="font-display text-base font-medium">
-                  State
-                </span>
-              </button>
-            </li>
-          )}
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M20 22H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1zm-1-2V4H5v16h14zM7 6h4v4H7V6zm0 6h10v2H7v-2zm0 4h10v2H7v-2zm6-9h4v2h-4V7z" />
+              </svg>
+              <span className="font-display text-base font-medium">State</span>
+            </button>
+          </li>
 
           {/* Activity */}
           <li className="nav-item" role="presentation">
@@ -203,16 +200,16 @@ export function TokenStats({
           </div> */}
 
           {/* Details */}
-          {tokenState && (
-            <div
-              className="tab-pane fade"
-              id="state"
-              role="tabpanel"
-              aria-labelledby="state-tab"
-            >
-              <TokenStateTab tokenState={tokenState} />
-            </div>
-          )}
+
+          <div
+            className="tab-pane fade"
+            id="state"
+            role="tabpanel"
+            aria-labelledby="state-tab"
+          >
+            {tokenState && <TokenStateTab tokenState={tokenState} />}
+            {!tokenState && <TokenStateTabLoading />}
+          </div>
 
           {/* Activity */}
           <div

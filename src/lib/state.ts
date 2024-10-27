@@ -146,11 +146,28 @@ export async function getTokenState(params: {
       };
     }
     const adminAddress = PublicKey.fromFields([adminAddress0, adminAddress1]);
+    let adminTokenBalance = 0;
+    try {
+      await fetchMinaAccount({
+        publicKey: adminAddress,
+        tokenId,
+        force: false,
+      });
+      adminTokenBalance = Number(
+        Mina.getBalance(adminAddress, tokenId).toBigInt()
+      );
+    } catch (error) {
+      console.error("getTokenState: Cannot fetch admin token balance", {
+        adminAddress: adminAddress.toBase58(),
+      });
+    }
+
     const tokenState: TokenState = {
       tokenAddress: tokenContractPublicKey.toBase58(),
       tokenId: TokenId.toBase58(tokenId),
       adminContractAddress: adminContractPublicKey.toBase58(),
       adminAddress: adminAddress.toBase58(),
+      adminTokenBalance,
       totalSupply,
       isPaused,
       decimals,
