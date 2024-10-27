@@ -127,6 +127,10 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
     fetchTransactions();
   }, [item]);
 
+  function isNotEmpty(value: string | undefined) {
+    return value && value.length > 0;
+  }
+
   const addLike = async () => {
     if (!like)
       setItem((prev) =>
@@ -162,56 +166,60 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
           {/* Item */}
           <div className="md:flex md:flex-wrap">
             {/* Image */}
-            <figure className="mb-8 md:w-2/5 md:flex-shrink-0 md:flex-grow-0 md:basis-auto lg:w-1/2">
-              <Image
-                width={540}
-                height={670}
-                src={item?.image ?? "/img/gradient_light.jpg"}
-                alt="item"
-                className="cursor-pointer rounded-2.5xl w-[100%]"
-                data-bs-toggle="modal"
-                data-bs-target="#imageModal"
-                crossOrigin="anonymous"
-                priority
-              />
+            {item?.image && (
+              <figure className="mb-8 md:w-2/5 md:flex-shrink-0 md:flex-grow-0 md:basis-auto lg:w-1/2">
+                <Image
+                  width={540}
+                  height={670}
+                  src={item?.image ?? "launchpad.png"}
+                  alt="token image"
+                  className="cursor-pointer rounded-2.5xl w-[100%]"
+                  data-bs-toggle="modal"
+                  data-bs-target="#imageModal"
+                  crossOrigin="anonymous"
+                  priority
+                />
 
-              {/* Modal */}
-              <div
-                className="modal fade"
-                id="imageModal"
-                tabIndex={-1}
-                aria-hidden="true"
-              >
-                <div className="modal-dialog !my-0 flex h-full items-center justify-center p-4">
-                  <Image
-                    width={787}
-                    height={984}
-                    src={item?.image ?? ""}
-                    alt="item"
-                    crossOrigin="anonymous"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  className="btn-close absolute top-6 right-6"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
+                {/* Modal */}
+                <div
+                  className="modal fade"
+                  id="imageModal"
+                  tabIndex={-1}
+                  aria-hidden="true"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="24"
-                    height="24"
-                    className="h-6 w-6 fill-white"
+                  <div className="modal-dialog !my-0 flex h-full items-center justify-center p-4">
+                    <Image
+                      width={787}
+                      height={984}
+                      src={item?.image ?? "launchpad.png"}
+                      alt="token image"
+                      className="w-full rounded-[0.625rem]"
+                      loading="lazy"
+                      crossOrigin="anonymous"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn-close absolute top-6 right-6"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
                   >
-                    <path fill="none" d="M0 0h24v24H0z" />
-                    <path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z" />
-                  </svg>
-                </button>
-              </div>
-              {/* end modal */}
-            </figure>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="h-6 w-6 fill-white"
+                    >
+                      <path fill="none" d="M0 0h24v24H0z" />
+                      <path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z" />
+                    </svg>
+                  </button>
+                </div>
+                {/* end modal */}
+              </figure>
+            )}
 
             {/* Details */}
             <div className="md:w-3/5 md:basis-auto md:pl-8 lg:w-1/2 lg:pl-[3.75rem]">
@@ -287,8 +295,8 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
               </div>
 
               <div className="mb-8 flex items-center space-x-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  {/* <span className="-ml-1" data-tippy-content="ETH">
+                {/*<div className="flex items-center">
+                   <span className="-ml-1" data-tippy-content="ETH">
                     <svg
                       version="1.1"
                       xmlns="http://www.w3.org/2000/svg"
@@ -319,11 +327,11 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                         d="M959.8 1397.6v441.7l540.1-760.6z"
                       ></path>
                     </svg>
-                  </span> */}
+                  </span> 
                   <span className="text-sm font-medium tracking-tight text-green">
                     100 MINA
                   </span>
-                </div>
+                </div>*/}
                 <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
                   {item?.symbol ?? ""}
                 </span>
@@ -377,147 +385,156 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
               </Link>
 
               {/* Creator / Owner */}
-              <div className="mb-8 flex flex-wrap">
-                <div className="mr-8 mb-4 flex">
-                  <figure className="mr-4 shrink-0">
-                    <Link
-                      href={`https://twitter.com/${item?.twitter}`}
-                      className="relative block"
-                    >
-                      <Socials i={1} />
-
-                      <div
-                        className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                        data-tippy-content="Twitter"
+              <div className="flex flex-wrap">
+                {isNotEmpty(item?.twitter) && (
+                  <div className="mr-8 mb-4 flex">
+                    <figure className="mr-4 shrink-0">
+                      <Link
+                        href={`https://twitter.com/${item?.twitter}`}
+                        className="relative block"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          width="24"
-                          height="24"
-                          className="fill-white"
-                        >
-                          <path fill="none" d="M0 0h24v24H0z"></path>
-                          <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                        </svg>
-                      </div>
-                    </Link>
-                  </figure>
-                  <div className="flex flex-col justify-center">
-                    <span className="block text-sm text-jacarta-400 dark:text-white">
-                      <strong>Twitter:</strong>
-                    </span>
-                    <Link href={`/user/2`} className="block text-accent">
-                      <span className="text-sm font-bold">
-                        @{item?.twitter ?? ""}
-                      </span>
-                    </Link>
-                  </div>
-                </div>
+                        <Socials i={1} />
 
-                <div className="mb-4 flex">
-                  <figure className="mr-4 shrink-0">
-                    <Link href={`/user/4`} className="relative block">
-                      <Socials i={2} />
-                      <div
-                        className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                        data-tippy-content="Verified Collection"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          width="24"
-                          height="24"
-                          className="h-[.875rem] w-[.875rem] fill-white"
+                        <div
+                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
+                          data-tippy-content="Twitter"
                         >
-                          <path fill="none" d="M0 0h24v24H0z"></path>
-                          <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                        </svg>
-                      </div>
-                    </Link>
-                  </figure>
-                  <div className="flex flex-col justify-center">
-                    <span className="block text-sm text-jacarta-400 dark:text-white">
-                      Discord:
-                    </span>
-                    <Link href={`/user/6`} className="block text-accent">
-                      <span className="text-sm font-bold">
-                        {item?.discord ?? ""}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            className="fill-white"
+                          >
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                          </svg>
+                        </div>
+                      </Link>
+                    </figure>
+                    <div className="flex flex-col justify-center">
+                      <span className="block text-sm text-jacarta-400 dark:text-white">
+                        <strong>Twitter:</strong>
                       </span>
-                    </Link>
+                      <Link href={`/user/2`} className="block text-accent">
+                        <span className="text-sm font-bold">
+                          @{item?.twitter ?? ""}
+                        </span>
+                      </Link>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {isNotEmpty(item?.discord) && (
+                  <div className="mb-4 flex">
+                    <figure className="mr-4 shrink-0">
+                      <Link href={`/user/4`} className="relative block">
+                        <Socials i={2} />
+                        <div
+                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
+                          data-tippy-content="Verified Collection"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            className="h-[.875rem] w-[.875rem] fill-white"
+                          >
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                          </svg>
+                        </div>
+                      </Link>
+                    </figure>
+                    <div className="flex flex-col justify-center">
+                      <span className="block text-sm text-jacarta-400 dark:text-white">
+                        Discord:
+                      </span>
+                      <Link href={`/user/6`} className="block text-accent">
+                        <span className="text-sm font-bold">
+                          {item?.discord ?? ""}
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="mb-8 flex flex-wrap">
-                <div className="mr-8 mb-4 flex">
-                  <figure className="mr-4 shrink-0">
-                    <Link
-                      href={`https://twitter.com/${item?.twitter}`}
-                      className="relative block"
-                    >
-                      <Socials i={3} />
 
-                      <div
-                        className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                        data-tippy-content="Twitter"
+              <div className="flex flex-wrap">
+                {isNotEmpty(item?.instagram) && (
+                  <div className="mr-8 mb-4 flex">
+                    <figure className="mr-4 shrink-0">
+                      <Link
+                        href={`https://twitter.com/${item?.twitter}`}
+                        className="relative block"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          width="24"
-                          height="24"
-                          className="fill-white"
-                        >
-                          <path fill="none" d="M0 0h24v24H0z"></path>
-                          <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                        </svg>
-                      </div>
-                    </Link>
-                  </figure>
-                  <div className="flex flex-col justify-center">
-                    <span className="block text-sm text-jacarta-400 dark:text-white">
-                      <strong>Instagram:</strong>
-                    </span>
-                    <Link href={`/user/2`} className="block text-accent">
-                      <span className="text-sm font-bold">
-                        @{item?.instagram ?? ""}
-                      </span>
-                    </Link>
-                  </div>
-                </div>
+                        <Socials i={3} />
 
-                <div className="mb-4 flex">
-                  <figure className="mr-4 shrink-0">
-                    <Link href={`/user/4`} className="relative block">
-                      <Socials i={0} />
-                      <div
-                        className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                        data-tippy-content="Verified Collection"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          width="24"
-                          height="24"
-                          className="h-[.875rem] w-[.875rem] fill-white"
+                        <div
+                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
+                          data-tippy-content="Twitter"
                         >
-                          <path fill="none" d="M0 0h24v24H0z"></path>
-                          <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                        </svg>
-                      </div>
-                    </Link>
-                  </figure>
-                  <div className="flex flex-col justify-center">
-                    <span className="block text-sm text-jacarta-400 dark:text-white">
-                      Facebook:
-                    </span>
-                    <Link href={`/user/6`} className="block text-accent">
-                      <span className="text-sm font-bold">
-                        {item?.discord ?? ""}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            className="fill-white"
+                          >
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                          </svg>
+                        </div>
+                      </Link>
+                    </figure>
+                    <div className="flex flex-col justify-center">
+                      <span className="block text-sm text-jacarta-400 dark:text-white">
+                        <strong>Instagram:</strong>
                       </span>
-                    </Link>
+                      <Link href={`/user/2`} className="block text-accent">
+                        <span className="text-sm font-bold">
+                          @{item?.instagram ?? ""}
+                        </span>
+                      </Link>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {isNotEmpty(item?.facebook) && (
+                  <div className="mb-4 flex">
+                    <figure className="mr-4 shrink-0">
+                      <Link href={`/user/4`} className="relative block">
+                        <Socials i={0} />
+                        <div
+                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
+                          data-tippy-content="Verified Collection"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            className="h-[.875rem] w-[.875rem] fill-white"
+                          >
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                          </svg>
+                        </div>
+                      </Link>
+                    </figure>
+                    <div className="flex flex-col justify-center">
+                      <span className="block text-sm text-jacarta-400 dark:text-white">
+                        Facebook:
+                      </span>
+                      <Link href={`/user/6`} className="block text-accent">
+                        <span className="text-sm font-bold">
+                          {item?.discord ?? ""}
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Bid */}

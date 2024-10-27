@@ -53,6 +53,7 @@ export interface TokenInfo {
   discord: string;
   telegram: string;
   instagram: string;
+  facebook: string;
   website: string;
   tokenContractCode?: string;
   adminContractsCode?: string[];
