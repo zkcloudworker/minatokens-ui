@@ -61,6 +61,40 @@ export async function getTokenState(params: {
     const totalSupply = Number(
       Mina.getBalance(tokenContractPublicKey, tokenId).toBigInt()
     );
+    const account = Mina.getAccount(tokenContractPublicKey);
+    const tokenSymbol = account.tokenSymbol;
+    const uri = account.zkapp?.zkappUri;
+
+    if (uri === undefined) {
+      console.error("getTokenState: Token uri not found", {
+        tokenAddress,
+      });
+      return {
+        success: false,
+        error: "Token uri not found",
+      };
+    }
+    const verificationKeyHash = account.zkapp?.verificationKey?.hash.toJSON();
+    if (verificationKeyHash === undefined) {
+      console.error("getTokenState: Token verification key hash not found", {
+        tokenAddress,
+      });
+      return {
+        success: false,
+        error: "Token verification key hash not found",
+      };
+    }
+    const versionData = account.zkapp?.zkappVersion;
+    if (versionData === undefined) {
+      console.error("getTokenState: Token contract version not found", {
+        tokenAddress,
+      });
+      return {
+        success: false,
+        error: "Token contract version not found",
+      };
+    }
+    const version = Number(versionData.toBigint());
 
     await fetchMinaAccount({ publicKey: adminContractPublicKey, force: false });
     if (!Mina.hasAccount(adminContractPublicKey)) {
@@ -74,6 +108,34 @@ export async function getTokenState(params: {
     }
 
     const adminContract = Mina.getAccount(adminContractPublicKey);
+    const adminTokenSymbol = adminContract.tokenSymbol;
+    const adminUri = adminContract.zkapp?.zkappUri;
+
+    const adminVerificationKeyHash =
+      adminContract.zkapp?.verificationKey?.hash.toJSON();
+    if (adminVerificationKeyHash === undefined) {
+      console.error(
+        "getTokenState: Admin contract verification key hash not found",
+        {
+          adminContractPublicKey: adminContractPublicKey.toBase58(),
+        }
+      );
+      return {
+        success: false,
+        error: "Admin contract verification key hash not found",
+      };
+    }
+    const adminVersionData = adminContract.zkapp?.zkappVersion;
+    if (adminVersionData === undefined) {
+      console.error("getTokenState: Admin contract version not found", {
+        adminContractPublicKey: adminContractPublicKey.toBase58(),
+      });
+      return {
+        success: false,
+        error: "Admin contract version not found",
+      };
+    }
+    const adminVersion = Number(adminVersionData.toBigint());
     const adminAddress0 = adminContract.zkapp?.appState[0];
     const adminAddress1 = adminContract.zkapp?.appState[1];
     if (adminAddress0 === undefined || adminAddress1 === undefined) {
@@ -92,6 +154,14 @@ export async function getTokenState(params: {
       totalSupply,
       isPaused,
       decimals,
+      tokenSymbol,
+      verificationKeyHash,
+      uri,
+      version,
+      adminTokenSymbol,
+      adminUri: adminUri ?? "",
+      adminVerificationKeyHash,
+      adminVersion,
     };
     let tokenInfo = info;
     let isStateUpdated = false;
