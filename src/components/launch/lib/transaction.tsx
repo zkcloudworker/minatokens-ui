@@ -1,24 +1,21 @@
 "use client";
 
-import { sendMintTransaction } from "@/lib/token-api";
-import {
-  UpdateTimelineItemFunction,
-  LineId,
-  GroupId,
-  messages,
-} from "./messages";
+import { sendMintTransaction, sendTransferTransaction } from "@/lib/token-api";
+import { UpdateTimelineItemFunction, messages } from "./messages";
 import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
 import { TimeLineItem, IsErrorFunction } from "../TimeLine";
+import { TokenAction } from "@/lib/token";
 const DEBUG = debug();
 const chain = getChain();
 const WALLET = getWallet();
 
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const MINT_FEE = 1e8;
+const TRANSFER_FEE = 1e8;
 
-export async function mintToken(params: {
+export async function tokenTransaction(params: {
   tokenPublicKey: string;
   adminContractPublicKey: string;
   adminPublicKey: string;
@@ -30,13 +27,14 @@ export async function mintToken(params: {
   nonce: number;
   groupId: string;
   isError: IsErrorFunction;
+  action: TokenAction;
 }): Promise<{
   success: boolean;
   error?: string;
   jobId?: string;
 }> {
   console.time("ready to sign");
-  if (DEBUG) console.log("mint token", params);
+  if (DEBUG) console.log(`token ${params.action}`, params);
   const {
     tokenPublicKey,
     adminPublicKey,
@@ -46,7 +44,9 @@ export async function mintToken(params: {
     nonce,
     groupId,
     isError,
+    action,
   } = params;
+  const FEE = action === "mint" ? MINT_FEE : TRANSFER_FEE;
   try {
     const mina = (window as any).mina;
     if (mina === undefined || mina?.isAuro !== true) {
@@ -69,6 +69,7 @@ export async function mintToken(params: {
         serializeTransaction,
         initBlockchain,
         accountBalanceMina,
+        accountBalance,
         fee: getFee,
         fetchMinaAccount,
       },
@@ -115,36 +116,46 @@ export async function mintToken(params: {
     if (DEBUG) console.log(`Sending tx...`);
     console.time("prepared tx");
     const memo =
-      `mint ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`.length > 30
-        ? `mint ${symbol}`.substring(0, 30)
-        : `mint ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`;
+      `${action} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`
+        .length > 30
+        ? `${action} ${symbol}`.substring(0, 30)
+        : `${action} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`;
 
-    await fetchMinaAccount({
-      publicKey: sender,
-      force: true,
-    });
-    await fetchMinaAccount({
-      publicKey: contractAddress,
-      force: true,
-    });
-    await fetchMinaAccount({
-      publicKey: adminContractPublicKey,
-      force: true,
-    });
-    await fetchMinaAccount({
-      publicKey: contractAddress,
-      tokenId,
-      force: true,
-    });
-    await fetchMinaAccount({
-      publicKey: to,
-      tokenId,
-      force: true,
-    });
-    await fetchMinaAccount({
-      publicKey: wallet,
-      force: true,
-    });
+    try {
+      await fetchMinaAccount({
+        publicKey: sender,
+        force: true,
+      });
+      await fetchMinaAccount({
+        publicKey: sender,
+        tokenId,
+        force: true,
+      });
+      await fetchMinaAccount({
+        publicKey: contractAddress,
+        force: true,
+      });
+      await fetchMinaAccount({
+        publicKey: adminContractPublicKey,
+        force: true,
+      });
+      await fetchMinaAccount({
+        publicKey: contractAddress,
+        tokenId,
+        force: true,
+      });
+      await fetchMinaAccount({
+        publicKey: to,
+        tokenId,
+        force: true,
+      });
+      await fetchMinaAccount({
+        publicKey: wallet,
+        force: true,
+      });
+    } catch (error) {
+      console.error("Error fetching mina account", error);
+    }
 
     if (!Mina.hasAccount(sender)) {
       console.error("Sender does not have account");
@@ -163,10 +174,33 @@ export async function mintToken(params: {
         error: "Sender does not have account",
       };
     }
+    const senderTokenBalance = Mina.getAccount(sender, tokenId).balance;
+    if (
+      action === "transfer" &&
+      senderTokenBalance.toBigInt() < amount.toBigInt()
+    ) {
+      console.error("Sender does not have enough tokens");
+
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "insufficientBalance",
+          content: `Account ${sender.toBase58()} does not have enough tokens. Required: ${
+            Number(amount.toBigInt()) / 1_000_000_000
+          } ${symbol}, available: ${
+            Number(senderTokenBalance.toBigInt()) / 1_000_000_000
+          } ${symbol}`,
+          status: "error",
+        },
+      });
+
+      return {
+        success: false,
+        error: "Sender does not have account",
+      };
+    }
     const isNewAccount = Mina.hasAccount(to, tokenId) === false;
-    const requiredBalance = isNewAccount
-      ? 1
-      : 0 + (MINT_FEE + fee) / 1_000_000_000;
+    const requiredBalance = isNewAccount ? 1 : 0 + (FEE + fee) / 1_000_000_000;
     if (requiredBalance > balance) {
       updateTimelineItem({
         groupId,
@@ -194,7 +228,8 @@ export async function mintToken(params: {
           to: PublicKey.fromBase58(WALLET),
           amount: UInt64.from(MINT_FEE),
         });
-        await zkToken.mint(to, amount);
+        if (action === "mint") await zkToken.mint(to, amount);
+        else await zkToken.transfer(sender, to, amount);
       }
     );
     if (AURO_TEST) tx.sign([adminPrivateKey]);
@@ -219,7 +254,9 @@ export async function mintToken(params: {
       groupId,
       update: {
         lineId: "txMint",
-        content: "Mint transaction is built",
+        content: `${
+          action[0].toUpperCase() + action.slice(1)
+        } transaction is built`,
         status: "success",
       },
     });
@@ -246,7 +283,8 @@ export async function mintToken(params: {
           groupId,
           update: {
             lineId: "noUserSignature",
-            content: "No user signature received, mint transaction cancelled",
+            content:
+              "No user signature received, ${action} transaction cancelled",
             status: "error",
           },
         });
@@ -269,18 +307,31 @@ export async function mintToken(params: {
       groupId,
       update: messages.txProved,
     });
-    const jobId = await sendMintTransaction({
-      serializedTransaction,
-      signedData,
-      adminContractPublicKey: adminContractPublicKey.toBase58(),
-      tokenPublicKey: contractAddress.toBase58(),
-      adminPublicKey: sender.toBase58(),
-      to: to.toBase58(),
-      amount: Number(amount.toBigInt()),
-      chain,
-      symbol,
-      sendTransaction: false,
-    });
+    const jobId =
+      action === "mint"
+        ? await sendMintTransaction({
+            serializedTransaction,
+            signedData,
+            adminContractPublicKey: adminContractPublicKey.toBase58(),
+            tokenPublicKey: contractAddress.toBase58(),
+            adminPublicKey: sender.toBase58(),
+            to: to.toBase58(),
+            amount: Number(amount.toBigInt()),
+            chain,
+            symbol,
+            sendTransaction: false,
+          })
+        : await sendTransferTransaction({
+            serializedTransaction,
+            signedData,
+            tokenPublicKey: contractAddress.toBase58(),
+            from: sender.toBase58(),
+            to: to.toBase58(),
+            amount: Number(amount.toBigInt()),
+            chain,
+            symbol,
+            sendTransaction: false,
+          });
     console.timeEnd("sent transaction");
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {
@@ -331,13 +382,13 @@ export async function mintToken(params: {
       groupId,
       update: {
         lineId: "error",
-        content: String(error) ?? "Error while minting token",
+        content: String(error) ?? `Error while ${action}ing token`,
         status: "error",
       },
     });
     return {
       success: false,
-      error: String(error) ?? "Error while minting token",
+      error: String(error) ?? `Error while ${action}ing token`,
     };
   }
 }

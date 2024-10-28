@@ -1,4 +1,5 @@
 "use client";
+import { useTokenDetails } from "@/context/details";
 import { TokenStats } from "./TokenStats";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,34 +43,52 @@ export function Socials({ i }: { i: number }) {
   );
 }
 
-interface Item {
-  id: number;
-  title?: string;
-}
-
 interface ItemDetailsProps {
   tokenAddress: string;
 }
 
 export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
-  const [item, setItem] = useState<DeployedTokenInfo | undefined>(undefined);
-  const [tokenState, setTokenState] = useState<TokenState | undefined>(
-    undefined
-  );
-  const [like, setLike] = useState(false);
-  const [holders, setHolders] = useState<BlockberryTokenHolder[]>([]);
-  const [transactions, setTransactions] = useState<
-    BlockberryTokenTransaction[]
-  >([]);
+  const { state, dispatch } = useTokenDetails();
+
+  const tokenDetails = state[tokenAddress] || {};
+  const item = tokenDetails.info;
+  const setItem = (info: DeployedTokenInfo) =>
+    dispatch({ type: "SET_TOKEN_INFO", payload: { tokenAddress, info } });
+
+  const tokenState = tokenDetails.tokenState;
+  const setTokenState = (tokenState: TokenState) =>
+    dispatch({
+      type: "SET_TOKEN_STATE",
+      payload: { tokenAddress, tokenState },
+    });
+
+  const like = tokenDetails.like ?? false;
+  const setLike = (like: boolean) =>
+    dispatch({ type: "SET_LIKE", payload: { tokenAddress, like } });
+
+  const holders = tokenDetails.holders || [];
+  const setHolders = (holders: BlockberryTokenHolder[]) =>
+    dispatch({ type: "SET_HOLDERS", payload: { tokenAddress, holders } });
+
+  const transactions = tokenDetails.transactions || [];
+  const setTransactions = (transactions: BlockberryTokenTransaction[]) =>
+    dispatch({
+      type: "SET_TRANSACTIONS",
+      payload: { tokenAddress, transactions },
+    });
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
+
+  useEffect(() => {
+    if (DEBUG) console.log("tokenDetails", tokenDetails);
+  }, [state]);
 
   useEffect(() => {
     if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
     const fetchItem = async () => {
       if (tokenAddress) {
         const item = await algoliaGetToken({ tokenAddress });
-        setItem(item);
+        if (item) setItem(item);
         const tokenStatePromise = getTokenState({
           tokenAddress,
           info: item,
@@ -77,6 +96,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
 
         let userAddress = address;
         if (!userAddress) {
+          if (DEBUG) console.log("getting wallet info");
           userAddress = (await getWalletInfo()).address;
           if (userAddress) setAddress(userAddress);
         }
@@ -132,10 +152,9 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   }
 
   const addLike = async () => {
-    if (!like)
-      setItem((prev) =>
-        prev ? { ...prev, likes: (prev.likes ?? 0) + 1 } : prev
-      );
+    if (!like) {
+      dispatch({ type: "ADD_LIKE", payload: { tokenAddress } });
+    }
     setLike(true);
     let userAddress = address;
     if (!userAddress) {
@@ -639,6 +658,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
             holders={holders}
             transactions={transactions}
             tokenState={tokenState}
+            tokenAddress={tokenAddress}
           />
           {/* end tabs */}
         </div>

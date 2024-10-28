@@ -96,3 +96,13 @@ export interface TokenDeployParams {
   tokenId: string;
   adminContractPublicKey: string;
 }
+
+export type TokenAction =
+  | "mint"
+  | "burn"
+  | "pause"
+  | "unpause"
+  | "offer"
+  | "bid"
+  | "transfer"
+  | "changeAdmin";

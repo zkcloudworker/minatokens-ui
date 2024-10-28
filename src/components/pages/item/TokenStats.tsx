@@ -16,6 +16,7 @@ interface TokenStatsProps {
   holders: BlockberryTokenHolder[];
   transactions: BlockberryTokenTransaction[];
   tokenState: TokenState | undefined;
+  tokenAddress: string;
 }
 
 /*
@@ -34,6 +35,7 @@ export function TokenStats({
   holders,
   transactions,
   tokenState,
+  tokenAddress,
 }: TokenStatsProps) {
   return (
     <div className="scrollbar-custom mt-14 overflow-x-auto rounded-lg">
@@ -257,7 +259,10 @@ export function TokenStats({
             role="tabpanel"
             aria-labelledby="admin-tab"
           >
-            <TokenActionsTab tokenState={tokenState} />
+            <TokenActionsTab
+              tokenState={tokenState}
+              tokenAddress={tokenAddress}
+            />
           </div>
 
           {/* Price History */}
