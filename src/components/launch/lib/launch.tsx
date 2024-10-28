@@ -15,7 +15,7 @@ import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
 import { sleep } from "@/lib/sleep";
 import { deployToken } from "./deploy";
-import { mintToken } from "./mint";
+import { tokenTransaction } from "./transaction";
 import {
   TimeLineItem,
   TimelineGroup,
@@ -311,7 +311,7 @@ export async function launchToken(params: {
       update: messages.o1js,
     });
     setLikes((likes += 10));
-    const libPromise = loadLib(updateTimelineItem);
+    const libPromise = loadLib(updateTimelineItem, "verify");
     updateTimelineItem({
       groupId: "verify",
       update: messages.privateKeysGenerated,
@@ -761,7 +761,7 @@ export async function launchToken(params: {
           ],
         });
 
-        const mintResult = await mintToken({
+        const mintResult = await tokenTransaction({
           tokenPublicKey,
           adminContractPublicKey,
           adminPublicKey,
@@ -773,6 +773,7 @@ export async function launchToken(params: {
           symbol,
           lib,
           isError,
+          action: "mint",
         });
         if (mintResult.success === false || mintResult.jobId === undefined) {
           return;

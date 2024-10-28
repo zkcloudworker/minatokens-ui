@@ -13,9 +13,10 @@ import { MintAddressesModal } from "@/components/modals/MintAddressesModal";
 import LevelsModal from "@/components/modals/LevelsModal";
 import ModeChanger from "@/components/common/ModeChanger";
 import { LaunchTokenProvider } from "@/context/launch";
+import { TokenDetailsProvider } from "@/context/details";
 import { SearchProvider } from "@/context/search";
 import { AddressProvider } from "@/context/address";
-
+import { TokenActionProvider } from "@/context/tokenAction";
 if (typeof window !== "undefined") {
   // Import the script only on the client side
   import("bootstrap/dist/js/bootstrap.esm").then((module) => {
@@ -36,13 +37,16 @@ export default function RootLayout({ children }) {
         <SearchProvider>
           <AddressProvider>
             <LaunchTokenProvider>
-              <ModeChanger />
-              {children}
-              <WalletModal />
-              <BuyModal />
-              <BidModal />
-              <MintAddressesModal />
-              <LevelsModal />
+              <TokenDetailsProvider>
+                <TokenActionProvider>
+                  <ModeChanger />
+                  {children}
+                  <WalletModal />
+                  <BuyModal />
+                  <BidModal />
+                  <MintAddressesModal />
+                </TokenActionProvider>
+              </TokenDetailsProvider>
             </LaunchTokenProvider>
           </AddressProvider>
         </SearchProvider>

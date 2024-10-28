@@ -2,7 +2,8 @@ import { UpdateTimelineItemFunction } from "./messages";
 import { loadLibraries, Libraries } from "@/lib/libraries";
 
 export async function loadLib(
-  updateTimelineItem: UpdateTimelineItemFunction
+  updateTimelineItem: UpdateTimelineItemFunction,
+  groupId: string
 ): Promise<Libraries> {
   const lib = await loadLibraries();
   const loadedLibraries = (
@@ -21,7 +22,7 @@ export async function loadLib(
   );
 
   updateTimelineItem({
-    groupId: "verify",
+    groupId,
     update: {
       lineId: "o1js",
       content: loadedLibraries,
