@@ -14,7 +14,7 @@ devnet:
 curl -X POST -H 'x-api-key: API_KEY' \
   -H "Content-Type: application/json" \
   -d '{"tokenAddress":"B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs", "chain":"devnet"}' \
-  http://minatokens.com/api/token
+  https://minatokens.com/api/token
 
 
   reply example:
