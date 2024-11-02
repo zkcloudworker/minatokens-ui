@@ -1,3 +1,4 @@
+"use server";
 import { Field } from "o1js";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { checkApiKey } from "@/lib/api";

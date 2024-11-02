@@ -11,252 +11,169 @@ import {
   UInt64,
   UInt32,
   fetchAccount,
+  UInt8,
 } from "o1js";
+import { algoliasearch } from "algoliasearch";
+
+const IPFS_URL = process.env.IPFS_URL;
+const IPFS_TOKEN = process.env.IPFS_TOKEN;
+const NFT_ALGOLIA_PROJECT = process.env.NFT_ALGOLIA_PROJECT;
+const NFT_ALGOLIA_KEY = process.env.NFT_ALGOLIA_KEY;
 
 interface NFTStateJson {
+  contractAddress: string;
+  nftAddress: string;
+  tokenId: string;
+  tokenSymbol: string;
+  contractUri: string | null;
   name: string;
-  metadata: {
-    data: number;
-    kind: number;
+  metadataRoot: {
+    data: string;
+    kind: string;
   };
   storage: string;
   owner: string;
   price: number;
   version: number;
+  metadata: object | null;
+  algolia: object | null;
 }
 
-// export async function getNFTState(params: {
-//   contractAddress: string; // always B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT
-//   nftAddress: string; // example: B62qnkz5juL135pJAw7XjLXwvrKAdgbau1V9kEpC1S1x8PfUxcu8KMP on mainnet
-//   // B62qoT6jXebkJVmsUmxCxGJmvHJUXPNF417rms4PATi5R6Hw7e56CRt on devnet with markdown
-//   chain: "devnet" | "mainnet";
-// }): Promise<
-//   | {
-//       success: true;
-//       tokenState: NFTStateJson;
-//     }
-//   | {
-//       success: false;
-//       error: string;
-//     }
-// > {
-//   const { contractAddress, nftAddress, chain } = params;
-//   try {
-//     await initBlockchain(chain);
-//     const contractPublicKey = PublicKey.fromBase58(contractAddress);
-//     const nftPublicKey = PublicKey.fromBase58(nftAddress);
-//     const tokenId = TokenId.derive(contractPublicKey);
+export async function getNFTState(params: {
+  contractAddress: string; // always B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT
+  nftAddress: string; // example: B62qnkz5juL135pJAw7XjLXwvrKAdgbau1V9kEpC1S1x8PfUxcu8KMP on mainnet
+  // B62qoT6jXebkJVmsUmxCxGJmvHJUXPNF417rms4PATi5R6Hw7e56CRt on devnet with markdown
+  chain: "devnet" | "mainnet";
+}): Promise<
+  | {
+      success: true;
+      tokenState: NFTStateJson;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
+  const { contractAddress, nftAddress, chain } = params;
+  if (
+    contractAddress !==
+    "B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT"
+  ) {
+    return {
+      success: false,
+      error:
+        "Invalid contract address, must be B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT",
+    };
+  }
+  if (IPFS_URL === undefined || IPFS_TOKEN === undefined) {
+    return {
+      success: false,
+      error: "IPFS_URL or IPFS_TOKEN is not defined",
+    };
+  }
+  if (NFT_ALGOLIA_PROJECT === undefined || NFT_ALGOLIA_KEY === undefined) {
+    return {
+      success: false,
+      error: "NFT_ALGOLIA_PROJECT or NFT_ALGOLIA_KEY is not defined",
+    };
+  }
+  try {
+    await initBlockchain(chain);
+    const contractPublicKey = PublicKey.fromBase58(contractAddress);
+    const nftPublicKey = PublicKey.fromBase58(nftAddress);
+    const tokenId = TokenId.derive(contractPublicKey);
 
-//     await fetchAccount({ publicKey: nftPublicKey, tokenId });
-//     if (!Mina.hasAccount(tokenContractPublicKey)) {
-//       if (DEBUG)
-//         console.error("getTokenState: Token contract account not found", {
-//           tokenAddress,
-//         });
-//       return { success: false, error: "Token contract account not found" };
-//     }
-//     const tokenId = tokenContract.deriveTokenId();
-//     await fetchMinaAccount({
-//       publicKey: tokenContractPublicKey,
-//       tokenId,
-//       force: false,
-//     });
-//     if (!Mina.hasAccount(tokenContractPublicKey, tokenId)) {
-//       console.error(
-//         "getTokenState: Token contract totalSupply account not found",
-//         {
-//           tokenAddress,
-//         }
-//       );
-//       return {
-//         success: false,
-//         error: "Token contract totalSupply account not found",
-//       };
-//     }
+    await fetchMinaAccount({ publicKey: contractPublicKey, force: true });
+    if (!Mina.hasAccount(contractPublicKey)) {
+      console.error("getNFTState: NFT contract account not found", {
+        contractAddress,
+      });
+      return { success: false, error: "NFT contract account not found" };
+    }
+    const contractAccount = Mina.getAccount(contractPublicKey);
+    const tokenSymbol = contractAccount.tokenSymbol;
+    const uri = contractAccount.zkapp?.zkappUri;
 
-//     const adminContractPublicKey = tokenContract.admin.get();
-//     const decimals = tokenContract.decimals.get().toNumber();
-//     const isPaused = (tokenContract.paused.get() as Bool).toBoolean();
-//     const totalSupply = Number(
-//       Mina.getBalance(tokenContractPublicKey, tokenId).toBigInt()
-//     );
-//     const account = Mina.getAccount(tokenContractPublicKey);
-//     const tokenSymbol = account.tokenSymbol;
-//     const uri = account.zkapp?.zkappUri;
+    await fetchMinaAccount({ publicKey: nftPublicKey, tokenId, force: false });
+    if (!Mina.hasAccount(nftPublicKey, tokenId)) {
+      console.error("getNFTState: NFT account not found", {
+        nftAddress,
+        tokenId: TokenId.toBase58(tokenId),
+      });
+      return { success: false, error: "NFT account not found" };
+    }
 
-//     if (uri === undefined) {
-//       console.error("getTokenState: Token uri not found", {
-//         tokenAddress,
-//       });
-//       return {
-//         success: false,
-//         error: "Token uri not found",
-//       };
-//     }
-//     const verificationKeyHash = account.zkapp?.verificationKey?.hash.toJSON();
-//     if (verificationKeyHash === undefined) {
-//       console.error("getTokenState: Token verification key hash not found", {
-//         tokenAddress,
-//       });
-//       return {
-//         success: false,
-//         error: "Token verification key hash not found",
-//       };
-//     }
-//     const versionData = account.zkapp?.zkappVersion;
-//     if (versionData === undefined) {
-//       console.error("getTokenState: Token contract version not found", {
-//         tokenAddress,
-//       });
-//       return {
-//         success: false,
-//         error: "Token contract version not found",
-//       };
-//     }
-//     const version = Number(versionData.toBigint());
+    const account = Mina.getAccount(nftPublicKey, tokenId);
+    const fields = account.zkapp?.appState;
+    if (fields === undefined) {
+      console.error("getNFTState: NFT app state not found", {
+        nftAddress,
+      });
+      return { success: false, error: "NFT app state not found" };
+    }
+    const NFTState_length = 8;
+    if (fields.length !== NFTState_length) {
+      console.error("getNFTState: NFT app state has invalid fields length", {
+        nftAddress,
+      });
+      return { success: false, error: "NFT app state has invalid length" };
+    }
+    if (NFTState.sizeInFields() !== NFTState_length) {
+      console.error("getNFTState: NFTState has invalid length", {
+        nftAddress,
+      });
+      return { success: false, error: "NFTState has invalid length" };
+    }
 
-//     await fetchMinaAccount({ publicKey: adminContractPublicKey, force: false });
-//     if (!Mina.hasAccount(adminContractPublicKey)) {
-//       console.error("getTokenState: Admin contract account not found", {
-//         tokenAddress,
-//       });
-//       return {
-//         success: false,
-//         error: "Admin contract account not found",
-//       };
-//     }
+    const state: NFTState = NFTState.fromFields(fields);
+    const name = Encoding.stringFromFields([state.name]);
+    const data = NFTparams.unpack(state.data);
+    const ipfs = state.storage.toIpfsHash();
+    const algolia = await algoliaGetNFT({ contractAddress, name, chain });
+    const metadata = await loadFromIPFS(ipfs);
+    if (!metadata.success) {
+      console.error("getNFTState: failed to load metadata from IPFS", {
+        nftAddress,
+        error: metadata.error,
+      });
+      return {
+        success: false,
+        error:
+          "failed to load metadata from IPFS: " +
+          (metadata.error ?? "unknown error"),
+      };
+    }
+    const tokenState: NFTStateJson = {
+      contractAddress,
+      nftAddress,
+      tokenId: TokenId.toBase58(tokenId),
+      tokenSymbol,
+      contractUri: uri ?? null,
+      name,
+      metadataRoot: {
+        data: state.metadata.data.toJSON(),
+        kind: state.metadata.kind.toJSON(),
+      },
+      storage: ipfs,
+      owner: state.owner.toBase58(),
+      price: Number(data.price.value.toBigInt()),
+      version: Number(data.version.value.toBigInt()),
+      algolia: algolia ?? null,
+      metadata: metadata.success ? metadata.data : null,
+    };
 
-//     const adminContract = Mina.getAccount(adminContractPublicKey);
-//     const adminTokenSymbol = adminContract.tokenSymbol;
-//     const adminUri = adminContract.zkapp?.zkappUri;
-
-//     const adminVerificationKeyHash =
-//       adminContract.zkapp?.verificationKey?.hash.toJSON();
-//     if (adminVerificationKeyHash === undefined) {
-//       console.error(
-//         "getTokenState: Admin contract verification key hash not found",
-//         {
-//           adminContractPublicKey: adminContractPublicKey.toBase58(),
-//         }
-//       );
-//       return {
-//         success: false,
-//         error: "Admin contract verification key hash not found",
-//       };
-//     }
-//     const adminVersionData = adminContract.zkapp?.zkappVersion;
-//     if (adminVersionData === undefined) {
-//       console.error("getTokenState: Admin contract version not found", {
-//         adminContractPublicKey: adminContractPublicKey.toBase58(),
-//       });
-//       return {
-//         success: false,
-//         error: "Admin contract version not found",
-//       };
-//     }
-//     const adminVersion = Number(adminVersionData.toBigint());
-//     const adminAddress0 = adminContract.zkapp?.appState[0];
-//     const adminAddress1 = adminContract.zkapp?.appState[1];
-//     if (adminAddress0 === undefined || adminAddress1 === undefined) {
-//       console.error("Cannot fetch admin address from admin contract");
-//       return {
-//         success: false,
-//         error: "Cannot fetch admin address from admin contract",
-//       };
-//     }
-//     const adminAddress = PublicKey.fromFields([adminAddress0, adminAddress1]);
-//     let adminTokenBalance = 0;
-//     try {
-//       await fetchMinaAccount({
-//         publicKey: adminAddress,
-//         tokenId,
-//         force: false,
-//       });
-//       adminTokenBalance = Number(
-//         Mina.getBalance(adminAddress, tokenId).toBigInt()
-//       );
-//     } catch (error) {
-//       console.error("getTokenState: Cannot fetch admin token balance", {
-//         adminAddress: adminAddress.toBase58(),
-//       });
-//     }
-
-//     const tokenState: TokenState = {
-//       tokenAddress: tokenContractPublicKey.toBase58(),
-//       tokenId: TokenId.toBase58(tokenId),
-//       adminContractAddress: adminContractPublicKey.toBase58(),
-//       adminAddress: adminAddress.toBase58(),
-//       adminTokenBalance,
-//       totalSupply,
-//       isPaused,
-//       decimals,
-//       tokenSymbol,
-//       verificationKeyHash,
-//       uri,
-//       version,
-//       adminTokenSymbol,
-//       adminUri: adminUri ?? "",
-//       adminVerificationKeyHash,
-//       adminVersion,
-//     };
-//     let tokenInfo = info;
-//     let isStateUpdated = false;
-//     if (tokenInfo === undefined) {
-//       tokenInfo = await algoliaGetToken({
-//         tokenAddress: tokenContractPublicKey.toBase58(),
-//       });
-//     }
-//     if (tokenInfo === undefined) {
-//       console.error("getTokenState: Token info not found", {
-//         tokenAddress,
-//       });
-//     } else {
-//       if (
-//         tokenInfo.adminContractAddress !== tokenState.adminContractAddress ||
-//         tokenInfo.adminAddress !== tokenState.adminAddress ||
-//         tokenInfo.totalSupply !== tokenState.totalSupply ||
-//         tokenInfo.isPaused !== tokenState.isPaused ||
-//         tokenInfo.decimals !== tokenState.decimals ||
-//         tokenInfo.chain === undefined ||
-//         tokenInfo.created === undefined ||
-//         tokenInfo.updated === undefined ||
-//         tokenInfo.tokenId !== tokenState.tokenId
-//       ) {
-//         console.error("getTokenState: Token info mismatch, updating the info", {
-//           tokenAddress,
-//           tokenInfo,
-//           tokenState,
-//         });
-//         tokenInfo.tokenId = tokenState.tokenId;
-//         tokenInfo.adminContractAddress = tokenState.adminContractAddress;
-//         tokenInfo.adminAddress = tokenState.adminAddress;
-//         tokenInfo.totalSupply = tokenState.totalSupply;
-//         tokenInfo.isPaused = tokenState.isPaused;
-//         tokenInfo.decimals = tokenState.decimals;
-//         tokenInfo.updated = Date.now();
-//         if (!tokenInfo.created) tokenInfo.created = tokenInfo.updated;
-//         if (!tokenInfo.chain) tokenInfo.chain = chainId;
-//         console.log("Updating token info", { tokenInfo });
-//         await algoliaWriteToken({
-//           tokenAddress: tokenContractPublicKey.toBase58(),
-//           info: tokenInfo,
-//         });
-//         isStateUpdated = true;
-//       }
-//     }
-//     return {
-//       success: true,
-//       tokenState,
-//       isStateUpdated,
-//     };
-//   } catch (error: any) {
-//     console.error("getTokenState catch", error);
-//     return {
-//       success: false,
-//       error: "getTokenState catch:" + (error?.message ?? String(error)),
-//     };
-//   }
-// }
+    return {
+      success: true,
+      tokenState,
+    };
+  } catch (error: any) {
+    console.error("getNFTState catch", error);
+    return {
+      success: false,
+      error: "getNFTState catch:" + (error?.message ?? String(error)),
+    };
+  }
+}
 
 class Metadata extends Struct({
   data: Field,
@@ -470,4 +387,123 @@ async function initBlockchain(instance: blockchain): Promise<MinaNetwork> {
 
   currentNetwork = network;
   return currentNetwork;
+}
+
+export async function loadFromIPFS(
+  hash: string
+): Promise<
+  { success: true; data: object } | { success: false; error: string }
+> {
+  if (IPFS_URL === undefined || IPFS_TOKEN === undefined) {
+    throw new Error("IPFS_URL or IPFS_TOKEN is not defined");
+  }
+  try {
+    const url = IPFS_URL + hash + "?pinataGatewayToken=" + IPFS_TOKEN;
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error("loadFromIPFS error:", response.statusText);
+      return { success: false, error: response.statusText };
+    }
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error: any) {
+    console.error("loadFromIPFS error:", error?.message ?? error);
+    return { success: false, error: error?.message ?? String(error) };
+  }
+}
+
+export async function algoliaGetNFT(params: {
+  contractAddress: string;
+  name: string;
+  chain: "devnet" | "mainnet";
+}): Promise<object | undefined> {
+  const { contractAddress, name, chain } = params;
+  if (NFT_ALGOLIA_KEY === undefined)
+    throw new Error("NFT_ALGOLIA_KEY is undefined");
+  if (NFT_ALGOLIA_PROJECT === undefined)
+    throw new Error("NFT_ALGOLIA_PROJECT is undefined");
+  try {
+    const client = algoliasearch(NFT_ALGOLIA_PROJECT, NFT_ALGOLIA_KEY);
+    const result = await client.getObject({
+      indexName: chain,
+      objectID: chain + "." + contractAddress + "." + name,
+    });
+    return result;
+  } catch (error: any) {
+    console.error("algoliaGetNFT:", {
+      error: error?.message ?? String(error),
+      params,
+    });
+    return undefined;
+  }
+}
+
+/**
+ * Fetches the Mina account for a given public key with error handling
+ * @param params the parameters for fetching the account
+ * @param params.publicKey the public key of the account
+ * @param params.tokenId the token id of the account
+ * @param params.force whether to force the fetch - use it only if you are sure the account exists
+ * @returns the account object
+ */
+export async function fetchMinaAccount(params: {
+  publicKey: string | PublicKey;
+  tokenId?: string | Field | undefined;
+  force?: boolean;
+}) {
+  const { publicKey, tokenId, force } = params;
+  const timeout = 1000 * 10; // 10 seconds
+  const startTime = Date.now();
+  let result = { account: undefined };
+  while (Date.now() - startTime < timeout) {
+    try {
+      const result = await fetchAccount({
+        publicKey,
+        tokenId,
+      });
+      return result;
+    } catch (error: any) {
+      if (force === true)
+        console.log("Error in fetchMinaAccount:", {
+          error,
+          publicKey:
+            typeof publicKey === "string" ? publicKey : publicKey.toBase58(),
+          tokenId: tokenId?.toString(),
+          force,
+        });
+      else {
+        console.log("fetchMinaAccount error", {
+          error,
+          publicKey:
+            typeof publicKey === "string" ? publicKey : publicKey.toBase58(),
+          tokenId: tokenId?.toString(),
+          force,
+        });
+        return result;
+      }
+    }
+    await sleep(1000 * 5);
+  }
+  if (force === true)
+    throw new Error(
+      `fetchMinaAccount timeout
+      ${{
+        publicKey:
+          typeof publicKey === "string" ? publicKey : publicKey.toBase58(),
+        tokenId: tokenId?.toString(),
+        force,
+      }}`
+    );
+  else
+    console.log(
+      "fetchMinaAccount timeout",
+      typeof publicKey === "string" ? publicKey : publicKey.toBase58(),
+      tokenId?.toString(),
+      force
+    );
+  return result;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
