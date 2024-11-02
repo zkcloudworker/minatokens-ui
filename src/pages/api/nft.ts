@@ -16,13 +16,13 @@ devnet:
 curl -X POST -H 'x-api-key: API_KEY' \
   -H "Content-Type: application/json" \
   -d '{"contractAddress":"B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT", "nftAddress":"B62qoT6jXebkJVmsUmxCxGJmvHJUXPNF417rms4PATi5R6Hw7e56CRt", "chain":"devnet"}' \
-  http://minatokens.com/api/nft
+  https://minatokens.com/api/nft
 
 mainnet:
 curl -X POST -H 'x-api-key: API_KEY' \
   -H "Content-Type: application/json" \
   -d '{"contractAddress":"B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT", "nftAddress":"B62qnkz5juL135pJAw7XjLXwvrKAdgbau1V9kEpC1S1x8PfUxcu8KMP", "chain":"mainnet"}' \
-  http://minatokens.com/api/nft
+  https://minatokens.com/api/nft
 
 
   algolia.status: "applied" | "pending" | "failed" | "created" | "blocked"
