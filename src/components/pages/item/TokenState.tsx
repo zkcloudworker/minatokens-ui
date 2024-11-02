@@ -110,13 +110,10 @@ export function TokenStateTab({ tokenState }: { tokenState: TokenState }) {
                   Total Supply:
                 </span>
                 <span className="text-jacarta-700 dark:text-white">
-                  {(tokenState.totalSupply / 1_000_000_000).toLocaleString(
-                    undefined,
-                    {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 9,
-                    }
-                  )}
+                  {tokenState.totalSupply.toLocaleString(undefined, {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 9,
+                  })}
                 </span>
               </div>
 
