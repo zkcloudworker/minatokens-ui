@@ -58,9 +58,9 @@ export async function getTokenState(params: {
     const adminContractPublicKey = tokenContract.admin.get();
     const decimals = tokenContract.decimals.get().toNumber();
     const isPaused = (tokenContract.paused.get() as Bool).toBoolean();
-    const totalSupply = Number(
-      Mina.getBalance(tokenContractPublicKey, tokenId).toBigInt()
-    );
+    const totalSupply =
+      Number(Mina.getBalance(tokenContractPublicKey, tokenId).toBigInt()) /
+      1_000_000_000;
     const account = Mina.getAccount(tokenContractPublicKey);
     const tokenSymbol = account.tokenSymbol;
     const uri = account.zkapp?.zkappUri;
@@ -157,7 +157,7 @@ export async function getTokenState(params: {
         Mina.getBalance(adminAddress, tokenId).toBigInt()
       );
     } catch (error) {
-      console.error("getTokenState: Cannot fetch admin token balance", {
+      console.log("getTokenState: Cannot fetch admin token balance", {
         adminAddress: adminAddress.toBase58(),
       });
     }
