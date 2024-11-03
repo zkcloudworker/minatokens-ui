@@ -5,7 +5,7 @@ import Redis from "ioredis";
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;
 
 const limiters: { [key: string]: RateLimiterMemory | RateLimiterRedis } = {};
-const verbose = true;
+const verbose = false;
 const printInitMessage = (name: string, type: "memory" | "redis") => {
   if (!verbose) return;
   console.log(`${name} ${type} rate limiter initialized`);
