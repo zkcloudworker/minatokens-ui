@@ -7,7 +7,6 @@ import {
   GroupId,
   messages,
 } from "./messages";
-import { verificationKeys } from "@/lib/vk";
 import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
@@ -69,6 +68,7 @@ export async function deployToken(params: {
         accountBalanceMina,
         fee: getFee,
         fetchMinaAccount,
+        fungibleTokenVerificationKeys,
       },
     } = libraries;
 
@@ -154,7 +154,10 @@ export async function deployToken(params: {
     console.log("Sender balance:", await accountBalanceMina(sender));
     const nonce = await getAccountNonce(sender.toBase58());
 
-    const vk = verificationKeys[chain === "mainnet" ? "mainnet" : "testnet"];
+    const vk =
+      fungibleTokenVerificationKeys[
+        chain === "mainnet" ? "mainnet" : "testnet"
+      ];
     if (vk === undefined) {
       throw new Error("Verification keys are undefined");
     }
