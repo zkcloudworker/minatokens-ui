@@ -34,6 +34,13 @@ initializeRedisRateLimiter({
 
 export function checkApiKey(handler: ApiHandler) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
+    if (req.method === "OPTIONS") {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "*");
+      res.setHeader("Access-Control-Allow-Headers", "*");
+      res.status(200).end();
+      return;
+    }
     const ip =
       req.headers["x-forwarded-for"]?.toString().split(",").shift() ||
       req.socket.remoteAddress ||
