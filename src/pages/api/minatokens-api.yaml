@@ -1,0 +1,260 @@
+openapi: 3.0.0
+info:
+  title: Minatokens API
+  description: API for interacting with Mina Fungible Tokens and NFTs.
+  version: 1.0.0
+servers:
+  - url: https://minatokens.com
+    description: minatokens.com server
+  - url: https://zekotokens.com
+    description: zekotokens.com server
+tags:
+  - name: Fungible Token
+    description: Fungible Tokens Endpoints
+  - name: NFT
+    description: NFT Endpoints
+paths:
+  /api/nft:
+    post:
+      tags:
+        - NFT
+      summary: Mint or retrieve an NFT
+      description: This endpoint allows you to interact with an NFT on the specified chain (mainnet or devnet).
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+          description: "API key for authorization. Get your API key [here](https://minatokens.com/api-keys)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contractAddress:
+                  type: string
+                  example: B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT
+                  description: Always set to this contract address for Mina NFTs.
+                nftAddress:
+                  type: string
+                  example: B62qoT6jXebkJVmsUmxCxGJmvHJUXPNF417rms4PATi5R6Hw7e56CRt
+                  description: The unique NFT address. Example values vary based on the chain.
+                chain:
+                  type: string
+                  enum: [devnet, mainnet]
+                  example: devnet
+                  description: Specifies the blockchain network to target.
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contractAddress:
+                    type: string
+                    example: B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT
+                  nftAddress:
+                    type: string
+                    example: B62qoT6jXebkJVmsUmxCxGJmvHJUXPNF417rms4PATi5R6Hw7e56CRt
+                  tokenId:
+                    type: string
+                    example: wXqDrUzWtK58CaWCzN2g3zseU275dhSnRtBthcroeqT6HGKkos
+                  tokenSymbol:
+                    type: string
+                    example: NFT
+                  contractUri:
+                    type: string
+                    example: https://minanft.io
+                  name:
+                    type: string
+                    example: Minaty 0001
+                  metadataRoot:
+                    type: object
+                    properties:
+                      data:
+                        type: string
+                      kind:
+                        type: string
+                  storage:
+                    type: string
+                    example: bafkreiffyjf6lpxw5uzniwam7lv7oyezfsxnnfj3yeo67ht3nch3gvgvwi
+                  owner:
+                    type: string
+                    example: B62qkX4VQYdmgc7dmLyiPpMhLRfrWjWnyoGGhdqF4bXtTcbv6E1HWsD
+                  price:
+                    type: number
+                    example: 0
+                  version:
+                    type: number
+                    example: 1
+                  algolia:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      chain:
+                        type: string
+                      contractAddress:
+                        type: string
+                      owner:
+                        type: string
+                      price:
+                        type: string
+                      status:
+                        type: string
+                      jobId:
+                        type: string
+                      ipfs:
+                        type: string
+                      version:
+                        type: string
+                      hash:
+                        type: string
+                      collection:
+                        type: string
+                      address:
+                        type: string
+                      description:
+                        type: string
+                      image:
+                        type: string
+                      external_url:
+                        type: string
+                      time:
+                        type: number
+                      metadata:
+                        type: object
+                      properties:
+                        type: object
+                      objectID:
+                        type: string
+                  metadata:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      collection:
+                        type: string
+                      address:
+                        type: string
+                      description:
+                        type: string
+                      image:
+                        type: string
+                      external_url:
+                        type: string
+                      time:
+                        type: number
+                      metadata:
+                        type: object
+                      properties:
+                        type: object
+        "400":
+          description: Invalid request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Server error
+  /api/token:
+    post:
+      tags:
+        - Fungible Token
+      summary: Get Fungible Token details
+      description: Retrieves detailed information about a Mina Fungible Token on the specified chain.
+      parameters:
+        - in: header
+          name: x-api-key
+          required: true
+          schema:
+            type: string
+          description: "API key for authorization. Get your API key [here](https://minatokens.com/api-keys)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tokenAddress:
+                  type: string
+                  example: B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs
+                  description: The address of the token contract
+                chain:
+                  type: string
+                  enum: [devnet, mainnet]
+                  example: devnet
+                  description: Specifies the blockchain network to target
+              required:
+                - tokenAddress
+                - chain
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tokenAddress:
+                    type: string
+                    example: B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs
+                  tokenId:
+                    type: string
+                    example: weDBAqEmqEHE9TXay9DryEMaNs8ts7Qt4X5Rupnxmh8o6wBgwS
+                  adminContractAddress:
+                    type: string
+                    example: B62qjpFSUnwHsYX1KuEfDHjPyg6AuWotyfRApGgpoj6bybvjjAriKHe
+                  adminAddress:
+                    type: string
+                    example: B62qo69VLUPMXEC6AFWRgjdTEGsA3xKvqeU5CgYm3jAbBJL7dTvaQkv
+                  adminTokenBalance:
+                    type: number
+                    example: 0
+                  totalSupply:
+                    type: number
+                    example: 15000
+                  isPaused:
+                    type: boolean
+                    example: false
+                  decimals:
+                    type: number
+                    example: 9
+                  tokenSymbol:
+                    type: string
+                    example: POKRPC
+                  verificationKeyHash:
+                    type: string
+                    example: "25084457276132306637089336910977939820654927814172888515895248592725736067489"
+                  uri:
+                    type: string
+                    example: https://arweave.net/vPYTrGj3tt4CiyN311nnBCQvr_FE927uxfFg5VyxCLU
+                  version:
+                    type: number
+                    example: 0
+                  adminTokenSymbol:
+                    type: string
+                    example: ""
+                  adminUri:
+                    type: string
+                    example: https://arweave.net/vPYTrGj3tt4CiyN311nnBCQvr_FE927uxfFg5VyxCLU
+                  adminVerificationKeyHash:
+                    type: string
+                    example: "1200635497217107248831982322269320244173535715339356861513501242012238077174"
+                  adminVersion:
+                    type: number
+                    example: 0
+        "400":
+          description: Invalid request - Missing or invalid fields
+        "401":
+          description: Unauthorized - Invalid API key
+        "404":
+          description: Token not found or contract state not available
+        "405":
+          description: Method not allowed - Only GET and POST methods are supported
+        "500":
+          description: Server error
