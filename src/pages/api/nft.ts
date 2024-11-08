@@ -152,13 +152,7 @@ curl -X POST -H 'x-api-key: API_KEY' \
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { contractAddress, nftAddress, chain } = req.body;
-  if (req.method === "OPTIONS") {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "*");
-    res.setHeader("Access-Control-Allow-Headers", "*");
-    res.status(200).end();
-    return;
-  }
+
   if (!contractAddress || !nftAddress || !chain) {
     res.status(400).json({ error: "Missing required fields" });
     return;
