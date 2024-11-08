@@ -29,11 +29,11 @@ const nextConfig = {
           },
           {
             key: "Access-Control-Allow-Methods",
-            value: "GET,POST,OPTIONS",
+            value: "*",
           },
           {
             key: "Access-Control-Allow-Headers",
-            value: "X-Requested-With, Content-Type, Authorization, x-api-key",
+            value: "*",
           },
           {
             key: "Access-Control-Allow-Credentials",
