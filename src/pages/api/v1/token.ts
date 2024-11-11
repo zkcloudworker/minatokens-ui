@@ -10,7 +10,7 @@ import { checkAddress } from "@/lib/address";
   // example: B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs
 
 devnet:
-curl -X POST -H 'x-api-key: API_KEY' \
+curl -X POST -H 'x-api-key: BUFFDiC4wmaMtXJ7po8fcCMp7ooYoqj3JH7LcHXLDEQ' \
   -H "Content-Type: application/json" \
   -d '{"tokenAddress":"B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs"}' \
   https://minatokens.com/api/v1/token
