@@ -1,7 +1,7 @@
 "use server";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { checkApiKey } from "@/lib/api";
-import { getBlocksInfo } from "@/lib/api-block";
+import { getBlocksInfo } from "@/lib/api/api-block";
 import { checkAddress } from "@/lib/address";
 
 /* Usage:

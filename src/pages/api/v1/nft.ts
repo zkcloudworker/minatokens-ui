@@ -1,7 +1,7 @@
 "use server";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { checkApiKey } from "@/lib/api";
-import { getNFTState } from "@/lib/nft";
+import { getNFTState } from "@/lib/api/nft";
 import { checkAddress } from "@/lib/address";
 
 /* Usage:
