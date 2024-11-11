@@ -1,20 +1,19 @@
 "use server";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { checkApiKey } from "@/lib/api";
-import { getTokenStateForApi } from "@/lib/api-token";
+import { getTokenStateForApi } from "@/lib/api/api-token";
 import { checkAddress } from "@/lib/address";
 
 /* Usage:
 
   contractAddress: string; 
   // example: B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs
-  chain: "devnet" | "mainnet";
 
 devnet:
 curl -X POST -H 'x-api-key: API_KEY' \
   -H "Content-Type: application/json" \
-  -d '{"tokenAddress":"B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs", "chain":"devnet"}' \
-  https://minatokens.com/api/token
+  -d '{"tokenAddress":"B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs"}' \
+  https://minatokens.com/api/v1/token
 
 
   reply example:
@@ -42,9 +41,9 @@ curl -X POST -H 'x-api-key: API_KEY' \
 */
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { tokenAddress, chain } = req.body;
-  if (!tokenAddress || !chain) {
-    res.status(400).json({ error: "Missing required fields" });
+  const { tokenAddress } = req.body;
+  if (!tokenAddress) {
+    res.status(400).json({ error: "Missing tokenAddress" });
     return;
   }
   if (!checkAddress(tokenAddress)) {
@@ -52,15 +51,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return;
   }
 
-  if (chain !== "devnet" && chain !== "mainnet") {
-    res.status(400).json({ error: "Invalid chain" });
-    return;
-  }
   if (req.method === "GET" || req.method === "POST") {
     try {
       const result = await getTokenStateForApi({
         tokenAddress,
-        chain,
       });
       if (!result.success) {
         res.status(404).json({ error: result.error });
