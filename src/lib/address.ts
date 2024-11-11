@@ -1,11 +1,15 @@
 "use server";
 import { PublicKey } from "o1js";
 import { MintAddress, MintAddressVerified } from "@/lib/token";
+import { getChain } from "@/lib/chain";
+import { initBlockchain } from "zkcloudworker";
+const chain = getChain();
 
 export async function checkMintData(
   params: MintAddress
 ): Promise<MintAddressVerified | undefined> {
   const { address, amount } = params;
+  await initBlockchain(chain);
   if (
     !address ||
     !amount ||
