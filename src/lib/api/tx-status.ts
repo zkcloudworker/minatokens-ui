@@ -51,7 +51,7 @@ export async function getTransactionStatus(
       );
       if (response.ok) {
         const result = (await response.json()) as TxStatus;
-        console.log("blockberry result", result);
+        //console.log("blockberry result", result);
         const status = result.txStatus;
         if (
           status !== "pending" &&
@@ -82,13 +82,13 @@ export async function getTransactionStatus(
           };
         }
       }
-      console.log("blockberry error", {
-        status: response.status,
-        text: response.statusText,
-        json: await response.json(),
-      });
+      // console.log("blockberry error", {
+      //   status: response.status,
+      //   text: response.statusText,
+      //   json: await response.json(),
+      // });
     } catch (error: any) {
-      console.error("blockberry catch", error);
+      //console.error("blockberry catch", error);
     }
 
     await initBlockchain();

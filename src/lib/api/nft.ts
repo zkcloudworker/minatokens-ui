@@ -10,85 +10,64 @@ import {
   Encoding,
   UInt64,
   UInt32,
-  fetchAccount,
-  UInt8,
 } from "o1js";
+import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
+import { checkAddress } from "@/lib/address";
+import { ApiResponse, NFTRequestAnswer, NFTRequestParams } from "./types";
 import { algoliasearch } from "algoliasearch";
+import { getChain } from "@/lib/chain";
+const chain = getChain();
 
 const IPFS_URL = process.env.IPFS_URL;
 const IPFS_TOKEN = process.env.IPFS_TOKEN;
 const NFT_ALGOLIA_PROJECT = process.env.NFT_ALGOLIA_PROJECT;
 const NFT_ALGOLIA_KEY = process.env.NFT_ALGOLIA_KEY;
 
-interface NFTStateJson {
-  contractAddress: string;
-  nftAddress: string;
-  tokenId: string;
-  tokenSymbol: string;
-  contractUri: string | null;
-  name: string;
-  metadataRoot: {
-    data: string;
-    kind: string;
-  };
-  storage: string;
-  owner: string;
-  price: number;
-  version: number;
-  metadata: object | null;
-  algolia: object | null;
-}
-
-export async function getNFTState(params: {
-  contractAddress: string; // always B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT
-  nftAddress: string; // example: B62qnkz5juL135pJAw7XjLXwvrKAdgbau1V9kEpC1S1x8PfUxcu8KMP on mainnet
-  // B62qoT6jXebkJVmsUmxCxGJmvHJUXPNF417rms4PATi5R6Hw7e56CRt on devnet with markdown
-  chain: "devnet" | "mainnet";
-}): Promise<
-  | {
-      success: true;
-      tokenState: NFTStateJson;
-    }
-  | {
-      success: false;
-      error: string;
-    }
-> {
-  const { contractAddress, nftAddress, chain } = params;
+export async function getNFTState(
+  params: NFTRequestParams
+): Promise<ApiResponse<NFTRequestAnswer>> {
+  console.log("getNFTState", params);
+  const { contractAddress, nftAddress } = params;
+  if (chain === "zeko") {
+    return { status: 400, json: { error: "Zeko is not supported" } };
+  }
   if (
     contractAddress !==
     "B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT"
   ) {
     return {
-      success: false,
-      error:
-        "Invalid contract address, must be B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT",
+      status: 400,
+      json: {
+        error:
+          "Invalid contract address, must be B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT",
+      },
     };
   }
+  if (!checkAddress(nftAddress)) {
+    return { status: 400, json: { error: "Invalid nftAddress" } };
+  }
+
   if (IPFS_URL === undefined || IPFS_TOKEN === undefined) {
     return {
-      success: false,
-      error: "IPFS_URL or IPFS_TOKEN is not defined",
+      status: 500,
+      json: { error: "IPFS_URL or IPFS_TOKEN is not defined" },
     };
   }
   if (NFT_ALGOLIA_PROJECT === undefined || NFT_ALGOLIA_KEY === undefined) {
     return {
-      success: false,
-      error: "NFT_ALGOLIA_PROJECT or NFT_ALGOLIA_KEY is not defined",
+      status: 500,
+      json: { error: "NFT_ALGOLIA_PROJECT or NFT_ALGOLIA_KEY is not defined" },
     };
   }
   try {
-    await initBlockchain(chain);
+    await initBlockchain();
     const contractPublicKey = PublicKey.fromBase58(contractAddress);
     const nftPublicKey = PublicKey.fromBase58(nftAddress);
     const tokenId = TokenId.derive(contractPublicKey);
 
     await fetchMinaAccount({ publicKey: contractPublicKey, force: true });
     if (!Mina.hasAccount(contractPublicKey)) {
-      console.error("getNFTState: NFT contract account not found", {
-        contractAddress,
-      });
-      return { success: false, error: "NFT contract account not found" };
+      return { status: 400, json: { error: "NFT contract account not found" } };
     }
     const contractAccount = Mina.getAccount(contractPublicKey);
     const tokenSymbol = contractAccount.tokenSymbol;
@@ -100,7 +79,7 @@ export async function getNFTState(params: {
         nftAddress,
         tokenId: TokenId.toBase58(tokenId),
       });
-      return { success: false, error: "NFT account not found" };
+      return { status: 400, json: { error: "NFT account not found" } };
     }
 
     const account = Mina.getAccount(nftPublicKey, tokenId);
@@ -109,20 +88,23 @@ export async function getNFTState(params: {
       console.error("getNFTState: NFT app state not found", {
         nftAddress,
       });
-      return { success: false, error: "NFT app state not found" };
+      return { status: 400, json: { error: "NFT app state not found" } };
     }
     const NFTState_length = 8;
     if (fields.length !== NFTState_length) {
       console.error("getNFTState: NFT app state has invalid fields length", {
         nftAddress,
       });
-      return { success: false, error: "NFT app state has invalid length" };
+      return {
+        status: 400,
+        json: { error: "NFT app state has invalid length" },
+      };
     }
     if (NFTState.sizeInFields() !== NFTState_length) {
       console.error("getNFTState: NFTState has invalid length", {
         nftAddress,
       });
-      return { success: false, error: "NFTState has invalid length" };
+      return { status: 400, json: { error: "NFTState has invalid length" } };
     }
 
     const state: NFTState = NFTState.fromFields(fields);
@@ -137,13 +119,15 @@ export async function getNFTState(params: {
         error: metadata.error,
       });
       return {
-        success: false,
-        error:
-          "failed to load metadata from IPFS: " +
-          (metadata.error ?? "unknown error"),
+        status: 500,
+        json: {
+          error:
+            "failed to load metadata from IPFS: " +
+            (metadata.error ?? "unknown error"),
+        },
       };
     }
-    const tokenState: NFTStateJson = {
+    const tokenState: NFTRequestAnswer = {
       contractAddress,
       nftAddress,
       tokenId: TokenId.toBase58(tokenId),
@@ -163,14 +147,14 @@ export async function getNFTState(params: {
     };
 
     return {
-      success: true,
-      tokenState,
+      status: 200,
+      json: tokenState,
     };
   } catch (error: any) {
     console.error("getNFTState catch", error);
     return {
-      success: false,
-      error: "getNFTState catch:" + (error?.message ?? String(error)),
+      status: 500,
+      json: { error: "getNFTState catch:" + (error?.message ?? String(error)) },
     };
   }
 }
@@ -269,126 +253,6 @@ class NFTState extends Struct({
   data: Field,
 }) {}
 
-/**
- * blockchain is the type for the chain ID.
- */
-type blockchain = "local" | "devnet" | "lightnet" | "mainnet" | "zeko";
-
-interface MinaNetwork {
-  /** The Mina endpoints */
-  mina: string[];
-
-  /** The archive endpoints */
-  archive: string[];
-
-  /** The chain ID */
-  chainId: blockchain;
-
-  /** The name of the network (optional) */
-  name?: string;
-
-  /** The account manager for Lightnet (optional) */
-  accountManager?: string;
-
-  /** The explorer account URL (optional) */
-  explorerAccountUrl?: string;
-
-  /** The explorer transaction URL (optional) */
-  explorerTransactionUrl?: string;
-
-  /** The faucet URL (optional) */
-  faucet?: string;
-}
-
-const Mainnet: MinaNetwork = {
-  mina: [
-    //"https://proxy.devnet.minaexplorer.com/graphql",
-    "https://api.minascan.io/node/mainnet/v1/graphql",
-  ],
-  archive: [
-    "https://api.minascan.io/archive/mainnet/v1/graphql",
-    //"https://archive.devnet.minaexplorer.com",
-  ],
-  explorerAccountUrl: "https://minascan.io/mainnet/account/",
-  explorerTransactionUrl: "https://minascan.io/mainnet/tx/",
-  chainId: "mainnet",
-  name: "Mainnet",
-};
-
-const Devnet: MinaNetwork = {
-  mina: [
-    "https://api.minascan.io/node/devnet/v1/graphql",
-    //"https://proxy.devnet.minaexplorer.com/graphql",
-  ],
-  archive: [
-    "https://api.minascan.io/archive/devnet/v1/graphql",
-    //"https://archive.devnet.minaexplorer.com",
-  ],
-  explorerAccountUrl: "https://minascan.io/devnet/account/",
-  explorerTransactionUrl: "https://minascan.io/devnet/tx/",
-  chainId: "devnet",
-  name: "Devnet",
-  faucet: "https://faucet.minaprotocol.com",
-};
-
-const Zeko: MinaNetwork = {
-  mina: ["https://devnet.zeko.io/graphql"],
-  archive: [],
-  explorerAccountUrl: "https://zekoscan.io/devnet/account/",
-  explorerTransactionUrl: "https://zekoscan.io/devnet/tx/",
-  chainId: "zeko",
-  name: "Zeko",
-  faucet: "https://zeko.io/faucet",
-};
-
-const Local: MinaNetwork = {
-  mina: [],
-  archive: [],
-  chainId: "local",
-};
-
-const networks: MinaNetwork[] = [Mainnet, Local, Devnet, Zeko];
-
-let currentNetwork: MinaNetwork | undefined = undefined;
-
-async function initBlockchain(instance: blockchain): Promise<MinaNetwork> {
-  if (currentNetwork !== undefined) {
-    if (currentNetwork?.chainId === instance) {
-      return currentNetwork;
-    } else {
-      throw new Error(
-        `Network is already initialized to different chain ${currentNetwork.chainId}, cannot initialize to ${instance}`
-      );
-    }
-  }
-
-  if (instance === "local") {
-    const local = await Mina.LocalBlockchain({
-      proofsEnabled: true,
-    });
-    Mina.setActiveInstance(local);
-
-    currentNetwork = Local;
-    return currentNetwork;
-  }
-
-  const network = networks.find((n) => n.chainId === instance);
-  if (network === undefined) {
-    throw new Error("Unknown network");
-  }
-
-  const networkInstance = Mina.Network({
-    mina: network.mina,
-    archive: network.archive,
-    lightnetAccountManager: network.accountManager,
-    networkId: instance === "mainnet" ? "mainnet" : "testnet",
-  });
-  Mina.setActiveInstance(networkInstance);
-
-  currentNetwork = network;
-  return currentNetwork;
-}
-
 export async function loadFromIPFS(
   hash: string
 ): Promise<
@@ -436,74 +300,4 @@ export async function algoliaGetNFT(params: {
     });
     return undefined;
   }
-}
-
-/**
- * Fetches the Mina account for a given public key with error handling
- * @param params the parameters for fetching the account
- * @param params.publicKey the public key of the account
- * @param params.tokenId the token id of the account
- * @param params.force whether to force the fetch - use it only if you are sure the account exists
- * @returns the account object
- */
-export async function fetchMinaAccount(params: {
-  publicKey: string | PublicKey;
-  tokenId?: string | Field | undefined;
-  force?: boolean;
-}) {
-  const { publicKey, tokenId, force } = params;
-  const timeout = 1000 * 10; // 10 seconds
-  const startTime = Date.now();
-  let result = { account: undefined };
-  while (Date.now() - startTime < timeout) {
-    try {
-      const result = await fetchAccount({
-        publicKey,
-        tokenId,
-      });
-      return result;
-    } catch (error: any) {
-      if (force === true)
-        console.log("Error in fetchMinaAccount:", {
-          error,
-          publicKey:
-            typeof publicKey === "string" ? publicKey : publicKey.toBase58(),
-          tokenId: tokenId?.toString(),
-          force,
-        });
-      else {
-        console.log("fetchMinaAccount error", {
-          error,
-          publicKey:
-            typeof publicKey === "string" ? publicKey : publicKey.toBase58(),
-          tokenId: tokenId?.toString(),
-          force,
-        });
-        return result;
-      }
-    }
-    await sleep(1000 * 5);
-  }
-  if (force === true)
-    throw new Error(
-      `fetchMinaAccount timeout
-      ${{
-        publicKey:
-          typeof publicKey === "string" ? publicKey : publicKey.toBase58(),
-        tokenId: tokenId?.toString(),
-        force,
-      }}`
-    );
-  else
-    console.log(
-      "fetchMinaAccount timeout",
-      typeof publicKey === "string" ? publicKey : publicKey.toBase58(),
-      tokenId?.toString(),
-      force
-    );
-  return result;
-}
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
