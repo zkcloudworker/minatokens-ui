@@ -6,9 +6,10 @@ import {
   sendTransferTransaction,
 } from "@/lib/token-api";
 import { debug } from "@/lib/debug";
-import { getWallet, getChain } from "@/lib/chain";
+import { getChain } from "@/lib/chain";
 import { checkAddress } from "@/lib/address";
 import { ProveTokenTransaction, JobId, ApiResponse } from "./types";
+import { getTokenSymbolAndAdmin } from "./symbol";
 const chain = getChain();
 const DEBUG = debug();
 
@@ -21,14 +22,17 @@ export async function proveToken(
     signedData,
     senderAddress,
     tokenAddress,
-    adminContractAddress,
-    symbol,
     uri,
     sendTransaction,
     to,
     amount,
   } = params;
-  if (DEBUG) console.log("Proving token tx", { txType, tokenAddress, symbol });
+  if (DEBUG)
+    console.log("Proving token tx", {
+      txType,
+      tokenAddress,
+      symbol: params.symbol,
+    });
   console.log("chain", chain);
 
   if (txType !== "deploy" && txType !== "transfer" && txType !== "mint") {
@@ -70,7 +74,10 @@ export async function proveToken(
       json: { error: "Invalid token address" },
     };
   }
-  if (!checkAddress(adminContractAddress)) {
+  if (
+    params.adminContractAddress &&
+    !checkAddress(params.adminContractAddress)
+  ) {
     return {
       status: 400,
       json: { error: "Invalid admin contract address" },
@@ -108,6 +115,35 @@ export async function proveToken(
     return {
       status: 400,
       json: { error: "Invalid amount" },
+    };
+  }
+
+  let adminContractAddress: string | undefined = params.adminContractAddress;
+  let symbol: string | undefined = params.symbol;
+
+  if (txType !== "deploy" && (!symbol || !adminContractAddress)) {
+    const symbolResponse = await getTokenSymbolAndAdmin({
+      tokenAddress,
+    });
+    if (symbolResponse.status !== 200) {
+      return symbolResponse;
+    }
+
+    symbol = params.symbol ?? symbolResponse.json.tokenSymbol;
+    adminContractAddress =
+      adminContractAddress ?? symbolResponse.json.adminContractAddress;
+  }
+  if (!adminContractAddress || !checkAddress(adminContractAddress)) {
+    return {
+      status: 400,
+      json: { error: "Invalid admin contract address" },
+    };
+  }
+
+  if (!symbol || typeof params.symbol !== "string") {
+    return {
+      status: 400,
+      json: { error: "Invalid symbol" },
     };
   }
 

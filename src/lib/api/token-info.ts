@@ -198,9 +198,11 @@ export async function getTokenStateForApi(params: {
   } catch (error: any) {
     console.error("getTokenState catch", error);
     return {
-      status: 500,
+      status: 503,
       json: {
-        error: "getTokenState catch:" + (error?.message ?? String(error)),
+        error:
+          "getTokenState error:" +
+          (error?.message ?? (error ? String(error) : "unknown error")),
       },
     };
   }
