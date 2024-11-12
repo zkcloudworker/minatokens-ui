@@ -10,6 +10,11 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+
+    "experimentalDecorators": true, // needed for decorators
+    "emitDecoratorMetadata": true, // needed for decorators
+    "useDefineForClassFields": false, // ensure correct behaviour of class fields with decorators
+
     "jsx": "preserve",
     "incremental": true,
     "plugins": [

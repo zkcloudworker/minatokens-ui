@@ -1,8 +1,28 @@
 "use server";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { checkApiKey } from "@/lib/api";
-import { getTokenStateForApi } from "@/lib/api/api-token";
-import { checkAddress } from "@/lib/address";
+import { getTokenStateForApi } from "@/lib/api/token-info";
+
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === "GET" || req.method === "POST") {
+    try {
+      const { status, json } = await getTokenStateForApi(
+        req.body as {
+          tokenAddress: string;
+        }
+      );
+      res.status(status).json(json);
+    } catch (error) {
+      res.status(500).json({ error: "Invalid request body" });
+    }
+  } else {
+    // Handle other HTTP methods
+    res.setHeader("Allow", ["GET", "POST"]);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}
+
+export default checkApiKey(handler);
 
 /* Usage:
 
@@ -10,7 +30,7 @@ import { checkAddress } from "@/lib/address";
   // example: B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs
 
 devnet:
-curl -X POST -H 'x-api-key: BUFFDiC4wmaMtXJ7po8fcCMp7ooYoqj3JH7LcHXLDEQ' \
+curl -X POST -H 'x-api-key: API_KEY' \
   -H "Content-Type: application/json" \
   -d '{"tokenAddress":"B62qpFzLKkGKMZcmY6wrbyn8Sf9sWUT1HG4omSbvFKH2nXSNjCoQ6Xs"}' \
   https://minatokens.com/api/v1/token
@@ -39,36 +59,3 @@ curl -X POST -H 'x-api-key: BUFFDiC4wmaMtXJ7po8fcCMp7ooYoqj3JH7LcHXLDEQ' \
   adminVersion: 0,
 };
 */
-
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { tokenAddress } = req.body;
-  if (!tokenAddress) {
-    res.status(400).json({ error: "Missing tokenAddress" });
-    return;
-  }
-  if (!checkAddress(tokenAddress)) {
-    res.status(400).json({ error: "Invalid token address" });
-    return;
-  }
-
-  if (req.method === "GET" || req.method === "POST") {
-    try {
-      const result = await getTokenStateForApi({
-        tokenAddress,
-      });
-      if (!result.success) {
-        res.status(404).json({ error: result.error });
-        return;
-      }
-      res.status(200).json(result.tokenState);
-    } catch (error) {
-      res.status(500).json({ error: "Invalid request body" });
-    }
-  } else {
-    // Handle other HTTP methods
-    res.setHeader("Allow", ["GET", "POST"]);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
-
-export default checkApiKey(handler);
