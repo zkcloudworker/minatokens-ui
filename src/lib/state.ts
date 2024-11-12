@@ -1,5 +1,6 @@
 "use server";
-import { fetchMinaAccount, initBlockchain, FungibleToken } from "zkcloudworker";
+import { fetchMinaAccount, initBlockchain } from "./blockchain";
+import { FungibleToken } from "./api/zkcloudworker/token";
 import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo } from "./token";
 import { algoliaGetToken, algoliaWriteToken } from "./algolia";
@@ -24,7 +25,7 @@ export async function getTokenState(params: {
 > {
   const { tokenAddress, info } = params;
   try {
-    await initBlockchain(chain);
+    await initBlockchain();
     const tokenContractPublicKey = PublicKey.fromBase58(tokenAddress);
     const tokenContract = new FungibleToken(tokenContractPublicKey);
 
