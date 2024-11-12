@@ -7,7 +7,7 @@ import {
 import { PublicKey, UInt64, Mina, AccountUpdate } from "o1js";
 import { FungibleToken, serializeTransaction } from "./zkcloudworker";
 import { TransactionTokenParams, ApiResponse, TokenTransaction } from "./types";
-
+import { getTokenSymbolAndAdmin } from "./symbol";
 import { checkAddress } from "@/lib/address";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
@@ -21,7 +21,7 @@ const TRANSFER_FEE = 1e8;
 export async function tokenTransaction(
   params: TransactionTokenParams
 ): Promise<ApiResponse<TokenTransaction>> {
-  const { tokenAddress, symbol, senderAddress, txType: action } = params;
+  const { tokenAddress, senderAddress, txType: action } = params;
   if (DEBUG) console.log("Token transaction", params);
   console.log("chain", chain);
   await initBlockchain();
@@ -34,7 +34,10 @@ export async function tokenTransaction(
     };
   }
 
-  if (!checkAddress(params.adminContractAddress)) {
+  if (
+    params.adminContractAddress &&
+    !checkAddress(params.adminContractAddress)
+  ) {
     return {
       status: 400,
       json: { error: "Invalid admin contract address" },
@@ -62,10 +65,37 @@ export async function tokenTransaction(
     };
   }
 
-  if (!symbol || typeof symbol !== "string" || symbol.length === 0) {
+  if (
+    params.symbol &&
+    (typeof params.symbol !== "string" || params.symbol.length === 0)
+  ) {
     return {
       status: 400,
       json: { error: "Invalid symbol" },
+    };
+  }
+
+  if (params.memo && typeof params.memo !== "string") {
+    return {
+      status: 400,
+      json: { error: "Invalid memo" },
+    };
+  }
+
+  const symbolResponse = await getTokenSymbolAndAdmin({
+    tokenAddress,
+  });
+  if (symbolResponse.status !== 200) {
+    return symbolResponse;
+  }
+
+  const symbol = params.symbol ?? symbolResponse.json.tokenSymbol;
+  const adminContractAddress =
+    params.adminContractAddress ?? symbolResponse.json.adminContractAddress;
+  if (!checkAddress(adminContractAddress)) {
+    return {
+      status: 400,
+      json: { error: "Invalid admin contract address" },
     };
   }
 
@@ -78,9 +108,7 @@ export async function tokenTransaction(
   const fee = 100_000_000;
   const contractAddress = PublicKey.fromBase58(tokenAddress);
   if (DEBUG) console.log("Contract", contractAddress.toBase58());
-  const adminContractPublicKey = PublicKey.fromBase58(
-    params.adminContractAddress
-  );
+  const adminContractPublicKey = PublicKey.fromBase58(adminContractAddress);
   if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
   const wallet = PublicKey.fromBase58(WALLET);
 
@@ -94,8 +122,9 @@ export async function tokenTransaction(
   const tokenId = zkToken.deriveTokenId();
 
   const memo =
+    params.memo ??
     `${action} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`.length >
-    30
+      30
       ? `${action} ${symbol}`.substring(0, 30)
       : `${action} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`;
   if (DEBUG) console.log("memo:", memo);
@@ -223,7 +252,7 @@ export async function tokenTransaction(
       transaction,
       payload,
       tokenAddress,
-      adminContractAddress: params.adminContractAddress,
+      adminContractAddress,
     } satisfies TokenTransaction,
   };
 }

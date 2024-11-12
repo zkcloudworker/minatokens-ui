@@ -57,7 +57,12 @@ export async function deployToken(
     };
   }
 
-  if (!symbol || typeof symbol !== "string" || symbol.length === 0) {
+  if (
+    !symbol ||
+    typeof symbol !== "string" ||
+    symbol.length === 0 ||
+    symbol.length > 6
+  ) {
     return {
       status: 400,
       json: { error: "Invalid symbol" },

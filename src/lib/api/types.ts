@@ -22,6 +22,7 @@ export interface DeployTokenParams {
   symbol: string;
   decimals: number;
   uri: string;
+  memo?: string;
 }
 
 export interface TokenTransaction {
@@ -42,12 +43,106 @@ export interface TokenTransaction {
 
 export interface TransactionTokenParams {
   txType: "transfer" | "mint";
-  symbol: string;
   senderAddress: string;
   tokenAddress: string;
-  adminContractAddress: string;
+  adminContractAddress?: string;
   to: string;
   amount: number;
+  symbol?: string;
+  memo?: string;
+}
+
+export interface TransactionStatusParams {
+  hash: string;
+}
+
+export interface TxStatus {
+  blockHeight: number;
+  stateHash: string;
+  blockStatus: string;
+  timestamp: number;
+  txHash: string;
+  txStatus: string;
+  failures: {
+    index: number;
+    failureReason: string;
+  }[];
+  memo: string;
+  feePayerAddress: string;
+  feePayerName: string | null;
+  feePayerImg: string | null;
+  fee: number;
+  feeUsd: number;
+  totalBalanceChange: number;
+  totalBalanceChangeUsd: number;
+  updatedAccountsCount: number;
+  updatedAccounts: {
+    accountAddress: string;
+    accountName: string | null;
+    accountImg: string | null;
+    isZkappAccount: boolean;
+    verificationKey: string | null;
+    verificationKeyHash: string | null;
+    incrementNonce: boolean;
+    totalBalanceChange: number;
+    totalBalanceChangeUsd: number;
+    callDepth: number;
+    useFullCommitment: boolean;
+    callData: string;
+    tokenId: string;
+    update: {
+      appState: string[];
+      delegateeAddress: string | null;
+      delegateeName: string | null;
+      delegateeImg: string | null;
+      permissions: {
+        access: string | null;
+        editActionState: string | null;
+        editState: string | null;
+        incrementNonce: string | null;
+        receive: string | null;
+        send: string | null;
+        setDelegate: string | null;
+        setPermissions: string | null;
+        setTiming: string | null;
+        setTokenSymbol: string | null;
+        setVerificationKey: string | null;
+        setVotingFor: string | null;
+        setZkappUri: string | null;
+      };
+      timing: {
+        initialMinimumBalance: string | null;
+        cliffTime: number | null;
+        cliffAmount: string | null;
+        vestingPeriod: number | null;
+        vestingIncrement: string | null;
+      };
+      tokenSymbol: string | null;
+      verificationKey: string | null;
+      votingFor: string | null;
+      zkappUri: string | null;
+    };
+  }[];
+  blockConfirmationsCount: number;
+  isZkappAccount: boolean;
+  nonce: number;
+  isAccountHijack: boolean | null;
+}
+
+export interface TransactionStatus {
+  hash: string;
+  status: "pending" | "applied" | "failed" | "unknown";
+  error?: string;
+  details?: TxStatus;
+}
+
+export interface FaucetParams {
+  address: string;
+}
+
+export interface FaucetResponse {
+  success: true;
+  hash?: string;
 }
 
 export interface ProveTokenTransaction {
@@ -56,7 +151,7 @@ export interface ProveTokenTransaction {
   signedData: string;
   senderAddress: string;
   tokenAddress: string;
-  adminContractAddress: string;
+  adminContractAddress?: string;
   symbol: string;
   uri?: string;
   to?: string;
@@ -90,6 +185,13 @@ export interface TokenState {
   adminUri: string;
   adminVerificationKeyHash: string;
   adminVersion: number;
+}
+
+export interface TokenSymbolAndAdmin {
+  tokenAddress: string;
+  adminContractAddress: string;
+  adminAddress: string;
+  tokenSymbol: string;
 }
 
 export type ApiResponse<T> =
