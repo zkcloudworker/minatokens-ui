@@ -19,7 +19,6 @@ export interface DeployTransaction {
 
 export interface DeployTokenParams {
   adminAddress: string;
-  name: string;
   symbol: string;
   decimals: number;
   uri: string;

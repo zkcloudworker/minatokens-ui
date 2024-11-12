@@ -34,7 +34,7 @@ const ISSUE_FEE = 1e9;
 export async function deployToken(
   params: DeployTokenParams
 ): Promise<ApiResponse<DeployTransaction>> {
-  const { adminAddress, name, symbol, decimals, uri } = params;
+  const { adminAddress, symbol, decimals, uri } = params;
   if (DEBUG) console.log("Deploying token", params);
   console.log("chain", chain);
   await initBlockchain();
@@ -56,12 +56,7 @@ export async function deployToken(
       json: { error: "Invalid decimals" },
     };
   }
-  if (!name || typeof name !== "string" || name.length === 0) {
-    return {
-      status: 400,
-      json: { error: "Invalid name" },
-    };
-  }
+
   if (!symbol || typeof symbol !== "string" || symbol.length === 0) {
     return {
       status: 400,
