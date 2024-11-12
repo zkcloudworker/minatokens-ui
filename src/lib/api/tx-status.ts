@@ -23,6 +23,13 @@ export async function getTransactionStatus(
         json: { error: "Invalid hash" },
       };
     }
+    if (chain === "zeko") {
+      return {
+        status: 200,
+        json: { hash, status: "applied" },
+      };
+    }
+
     if (!BLOCKBERRY_API) {
       console.error("BLOCKBERRY_API is undefined");
       return {
