@@ -83,7 +83,7 @@ async function test() {
 async function deployGameContract(
   deployerKey: PrivateKey,
   players: PublicKey[]
-): Promise<{ zkAppAddress: string; txId: string; vk: string }> {
+): Promise<{ zkAppAddress: string; txId: string }> {
   const zkAppPrivateKey = PrivateKey.random();
   const zkAppAddress = zkAppPrivateKey.toPublicKey();
   const zkAppInstance = new GameContract(zkAppAddress);
@@ -113,5 +113,5 @@ async function deployGameContract(
   const pendingTransaction = await deployTransaction.send();
   const txId = pendingTransaction.hash;
 
-  return { zkAppAddress: zkAppAddress.toBase58(), txId, vk };
+  return { zkAppAddress: zkAppAddress.toBase58(), txId };
 }
