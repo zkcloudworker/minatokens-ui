@@ -46,7 +46,9 @@ export class GameContract extends SmartContract {
     this.player1.set(player1Address);
     this.player2.set(player2Address);
 
-    this.send({ to: this.address, amount: UInt64.from(1_000_000_000) });
+    const sender = this.sender.getUnconstrained();
+    const senderUpdate = AccountUpdate.createSigned(sender);
+    senderUpdate.send({ to: this.address, amount: UInt64.from(1_000_000_000) });
   }
 
   @method async distributeReward(winnerAddress: PublicKey) {
