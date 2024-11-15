@@ -13,6 +13,8 @@ import {
 } from "o1js";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
+  res.status(405).json({ error: "Not allowed" });
+  return;
   if (req.method === "GET" || req.method === "POST") {
     try {
       const { status, json } = await test();
