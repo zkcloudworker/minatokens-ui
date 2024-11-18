@@ -88,15 +88,17 @@ export function apiHandler<T, V>(params: {
     async function reply(status: number, json: { error: string } | V) {
       res.status(status).json(json);
 
-      await prisma.aPIKeyCalls.create({
-        data: {
-          address: key,
-          status,
-          chain: getChainId(),
-          endpoint: name,
-          error: (json as any)?.error || null,
-        },
-      });
+      if (!isInternal) {
+        await prisma.aPIKeyCalls.create({
+          data: {
+            address: key,
+            status,
+            chain: getChainId(),
+            endpoint: name,
+            error: (json as any)?.error,
+          },
+        });
+      }
     }
 
     try {
@@ -164,11 +166,19 @@ export function apiHandler<T, V>(params: {
           return;
         }
         if (!isInternal && key && name && email) {
-          await readme.log(README_API_KEY, req, res, {
-            apiKey: key,
-            label: name,
-            email: email,
-          });
+          await readme.log(
+            README_API_KEY,
+            req,
+            res,
+            {
+              apiKey: key,
+              label: name,
+              email: email,
+            },
+            {
+              baseLogUrl: "https://minatokens.readme.io",
+            }
+          );
         }
       });
       const revokedCheck = await prisma.revokedKeys.findUnique({

@@ -18,7 +18,7 @@ function getChainName(chain: string): Chain | undefined {
   return chains.find((c) => c.name === chain)?.value;
 }
 const categories = [
-  "All",
+  "All endpoints",
   "info",
   "deploy",
   "transaction",
