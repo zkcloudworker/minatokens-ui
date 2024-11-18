@@ -191,8 +191,8 @@ function generateSlackMessage(params: KeyParams): object {
             discord ?? "N/A"
           }\n${
             features
-              ? "*Features requested:* No"
-              : "*Features requested:*\n" + features
+              ? "*Features requested:*\n" + features
+              : "*Features requested:* No"
           }\n*Chains requested:* ${chains?.join(", ") ?? "N/A"}`,
         },
       },
@@ -220,8 +220,8 @@ function generateErrorMessage(params: KeyParams, existingKey: APIKey): object {
             discord ?? "N/A"
           }\n${
             features
-              ? "*Features requested:* No"
-              : "*Features requested:*\n" + features
+              ? "*Features requested:*\n" + features
+              : "*Features requested:* No"
           }\n*Chains requested:* ${chains?.join(", ") ?? "N/A"}`,
         },
       },
