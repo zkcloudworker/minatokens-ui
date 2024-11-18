@@ -168,6 +168,9 @@ export interface TransactionResult {
   tx?: string;
 }
 
+export interface TokenStateRequestParams {
+  tokenAddress: string;
+}
 export interface TokenState {
   tokenAddress: string;
   tokenId: string;
@@ -234,6 +237,11 @@ export type ApiResponse<T> =
   | {
       /** Forbidden - user doesn't have permission */
       status: 403;
+      json: { error: string };
+    }
+  | {
+      /** Too many requests */
+      status: 429;
       json: { error: string };
     }
   | {

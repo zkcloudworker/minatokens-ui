@@ -70,7 +70,7 @@ export async function algoliaGetTokenList(
   try {
     let tokenList: TokenList | undefined = undefined;
     let blockberryTokensFilter: string | undefined = undefined;
-    if (DEBUG) console.log("algoliaGetTokenList", params, indexName);
+    // if (DEBUG) console.log("algoliaGetTokenList", params, indexName);
     const blockberryTokensPromise = ownedByAddress
       ? getAllTokensByAddress({
           account: ownedByAddress,

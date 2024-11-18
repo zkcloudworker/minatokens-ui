@@ -85,14 +85,14 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
               height={64}
               src="/img/zkCloudWorker-logo.png"
               className="dark:hidden"
-              alt="Minatokens | MINA Launchpad"
+              alt="MinaTokens | MINA Launchpad"
             />
             <Image
               width={64}
               height={64}
               src="/img/zkCloudWorker-logo.png"
               className="hidden dark:block"
-              alt="Minatokens | MINA Launchpad"
+              alt="MinaTokens | MINA Launchpad"
             />
             <div className="text-jacarta-900 dark:text-white -ms-3">
               {getSiteName()}
@@ -143,17 +143,17 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
                   height={66}
                   src="/img/zkCloudWorker-logo.png"
                   className="--max-h-7 dark:hidden"
-                  alt="Minatokens | MINA Launchpad"
+                  alt="MinaTokens | MINA Launchpad"
                 />
                 <Image
                   width={56}
                   height={56}
                   src="/img/zkCloudWorker-logo.png"
                   className="hidden --max-h-7 dark:block"
-                  alt="Minatokens | MINA Launchpad"
+                  alt="MinaTokens | MINA Launchpad"
                 />
                 <div className="text-jacarta-900 dark:text-white -ms-3">
-                  Minatokens
+                  MinaTokens
                 </div>
               </Link>
 

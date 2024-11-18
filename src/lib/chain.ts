@@ -72,9 +72,9 @@ export function getSiteName(): string {
   const chain = getChain();
   switch (chain) {
     case "mainnet":
-      return "Minatokens";
+      return "MinaTokens";
     case "devnet":
-      return "Minatokens";
+      return "MinaTokens";
     case "zeko":
       return "Zekotokens";
   }

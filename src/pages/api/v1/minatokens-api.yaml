@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Minatokens API
+  title: MinaTokens API
   description: API for interacting with Mina Fungible Tokens and NFTs.
   version: 1.0.0
 servers:

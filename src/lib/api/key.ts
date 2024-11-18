@@ -1,10 +1,11 @@
 "use server";
 import { ApiResponse } from "./types";
 import { APIKey, PrismaClient } from "@prisma/client";
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT } from "jose";
 import formData from "form-data";
 import { checkAddress } from "@/lib/address";
 import { getChain } from "@/lib/chain";
+import { getBlockberryScamInfo } from "../blockberry-tokens";
 const chain = getChain();
 
 const {
@@ -72,16 +73,62 @@ export async function generateApiKey(
       };
     }
 
-    const jwt = await generateJWT({ address, email });
-
     const prisma = new PrismaClient({
       datasourceUrl: process.env.POSTGRES_PRISMA_URL,
     });
+
+    const addressBlacklist = await prisma.addressBlacklist.findUnique({
+      where: { address },
+    });
+    if (addressBlacklist) {
+      await sendSlackNotification(
+        generateBlackListMessage(params, "address", address)
+      );
+      return {
+        status: 400,
+        json: { error: "Address is blacklisted" },
+      };
+    }
+    const emailBlacklist = await prisma.emailBlacklist.findUnique({
+      where: { email },
+    });
+    if (emailBlacklist) {
+      await sendSlackNotification(
+        generateBlackListMessage(params, "email", email)
+      );
+      return {
+        status: 400,
+        json: { error: "Email is blacklisted" },
+      };
+    }
+    if (discord) {
+      const discordBlacklist = await prisma.discordBlacklist.findUnique({
+        where: { discord },
+      });
+      if (discordBlacklist) {
+        await sendSlackNotification(
+          generateBlackListMessage(params, "discord", discord)
+        );
+        return {
+          status: 400,
+          json: { error: "Discord is blacklisted" },
+        };
+      }
+    }
+    const blockberryScamInfo = await getBlockberryScamInfo({ address });
+    if (blockberryScamInfo && blockberryScamInfo.length > 0) {
+      await sendSlackNotification(
+        generateBlackListMessage(params, "scam address", address)
+      );
+      return {
+        status: 400,
+        json: { error: "Address is a scam" },
+      };
+    }
     const key = await prisma.aPIKey.findUnique({
       where: { address },
     });
-    console.log("Key found:", key);
-    if (key) {
+    if (key && key.email !== email) {
       await sendErrorEmail({ email, address });
       await sendSlackNotification(generateErrorMessage(params, key));
       return {
@@ -89,8 +136,14 @@ export async function generateApiKey(
         json: { error: "Key already exists" },
       };
     }
-    await prisma.aPIKey.create({
-      data: {
+    await prisma.aPIKey.upsert({
+      where: { address },
+      update: {
+        email,
+        name,
+        discord,
+      },
+      create: {
         address,
         email,
         name,
@@ -117,7 +170,14 @@ export async function generateApiKey(
         },
       },
     });
-
+    await prisma.aPIKeyHistory.create({
+      data: {
+        address,
+        email,
+        discord,
+      },
+    });
+    const jwt = await generateJWT({ address, name, email });
     await sendEmail({ email, jwt });
     await sendSlackNotification(generateSlackMessage(params));
 
@@ -141,14 +201,16 @@ function validateEmail(email: string): boolean {
 
 async function generateJWT(params: {
   address: string;
+  name: string;
   email: string;
 }): Promise<string> {
-  const { address, email } = params;
+  const { address, name, email } = params;
 
   const secret = new TextEncoder().encode(API_SECRET);
 
   const jwt = await new SignJWT({
     address,
+    name,
     email,
   })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
@@ -157,18 +219,6 @@ async function generateJWT(params: {
     .setExpirationTime("1y")
     .sign(secret);
 
-  // try {
-  //   const isVerified = await jwtVerify(jwt, secret);
-  //   console.log("Is verified:", isVerified);
-  //   console.log(
-  //     "Expiry:",
-  //     new Date(isVerified.payload.exp! * 1000).toISOString()
-  //   );
-  //   return jwt;
-  // } catch (error) {
-  //   console.error(error);
-  //   return "";
-  // }
   return jwt;
 }
 
@@ -232,6 +282,46 @@ function generateErrorMessage(params: KeyParams, existingKey: APIKey): object {
           text: `*Existing key:*\n*Email:* ${existingKey.email}\n*Discord:* ${
             existingKey.discord ?? "N/A"
           }`,
+        },
+      },
+    ],
+  };
+  return message;
+}
+
+function generateBlackListMessage(
+  params: KeyParams,
+  key: string,
+  value: string
+): object {
+  const { address, email, name, discord, features, chains } = params;
+  const message = {
+    blocks: [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: `API Key cannot be generated for ${name} as it is blacklisted`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Address:* ${address}\n*Email:* ${email}\n*Discord:* ${
+            discord ?? "N/A"
+          }\n${
+            features
+              ? "*Features requested:*\n" + features
+              : "*Features requested:* No"
+          }\n*Chains requested:* ${chains?.join(", ") ?? "N/A"}`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Blacklisted:*\n*key:* ${key}\n*value:* ${value}`,
         },
       },
     ],

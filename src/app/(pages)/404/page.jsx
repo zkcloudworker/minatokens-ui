@@ -1,18 +1,20 @@
-import Footer1 from "@/components/footer/Footer1";
-import Header1 from "@/components/headers/Header1";
+import TokenFooter from "@/components/footer/TokenFooter";
+import TokenHeader from "@/components/headers/TokenHeader";
 import NotFound from "@/components/pages/404";
+import { getSiteName } from "@/lib/chain";
 
 export const metadata = {
-  title: "Not Found || Xhibiter | NFT Marketplace Nextjs Template",
+  title: `${getSiteName()} | Not Found`,
 };
+
 export default function NotFoundPage() {
   return (
     <>
-      <Header1 />
+      <TokenHeader showSearch={false} />
       <main className="pt-[5.5rem] lg:pt-24">
         <NotFound />
       </main>
-      <Footer1 />
+      <TokenFooter />
     </>
   );
 }
