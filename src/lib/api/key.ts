@@ -1,6 +1,6 @@
 "use server";
 import { ApiResponse } from "./types";
-import { PrismaClient } from "@prisma/client";
+import { APIKey, PrismaClient } from "@prisma/client";
 import { SignJWT, jwtVerify } from "jose";
 import formData from "form-data";
 import { checkAddress } from "@/lib/address";
@@ -73,11 +73,22 @@ export async function generateApiKey(
     }
 
     const jwt = await generateJWT({ address, email });
-    await sendEmail({ email, jwt });
-    await sendSlackNotification(generateSlackMessage(params));
+
     const prisma = new PrismaClient({
       datasourceUrl: process.env.POSTGRES_PRISMA_URL,
     });
+    const key = await prisma.aPIKey.findUnique({
+      where: { address },
+    });
+    console.log("Key found:", key);
+    if (key) {
+      await sendErrorEmail({ email, address });
+      await sendSlackNotification(generateErrorMessage(params, key));
+      return {
+        status: 400,
+        json: { error: "Key already exists" },
+      };
+    }
     await prisma.aPIKey.create({
       data: {
         address,
@@ -106,10 +117,9 @@ export async function generateApiKey(
         },
       },
     });
-    const key = await prisma.aPIKey.findUnique({
-      where: { address },
-    });
-    console.log("Key created:", key);
+
+    await sendEmail({ email, jwt });
+    await sendSlackNotification(generateSlackMessage(params));
 
     return {
       status: 200,
@@ -191,6 +201,44 @@ function generateSlackMessage(params: KeyParams): object {
   return message;
 }
 
+function generateErrorMessage(params: KeyParams, existingKey: APIKey): object {
+  const { address, email, name, discord, features, chains } = params;
+  const message = {
+    blocks: [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: `API Key cannot be generated for ${name} as it already exists`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Address:* ${address}\n*Email:* ${email}\n*Discord:* ${
+            discord ?? "N/A"
+          }\n${
+            features
+              ? "*Features requested:* No"
+              : "*Features requested:*\n" + features
+          }\n*Chains requested:* ${chains?.join(", ") ?? "N/A"}`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Existing key:*\n*Email:* ${existingKey.email}\n*Discord:* ${
+            existingKey.discord ?? "N/A"
+          }`,
+        },
+      },
+    ],
+  };
+  return message;
+}
+
 async function sendSlackNotification(message: object) {
   if (!SLACK_WEBHOOK_URL) {
     throw new Error("SLACK_WEBHOOK_URL not set");
@@ -218,8 +266,37 @@ async function sendEmail(params: { email: string; jwt: string }) {
   form.append("from", "MinaTokens API <api@minatokens.com>");
   form.append("to", email);
   form.append("subject", "Your MinaTokens API Key");
-  form.append("text", `Your API Key is: ${jwt}`);
-  //form.append("html", `<h1>Your API Key is: ${jwt}</h1>`);
+  form.append("template", "API key");
+  form.append("h:X-Mailgun-Variables", `{"jwt": "${jwt}"}`);
+
+  const response = await fetch(MAILGUN_API_ENDPOINT, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(
+        `api:${MAILGUN_API_SEND_KEY}`
+      ).toString("base64")}`,
+      ...form.getHeaders(),
+    },
+    body: Uint8Array.from(form.getBuffer()),
+  });
+  if (!response.ok) {
+    console.error(`Failed to send email: ${response.statusText}`);
+  } else {
+    console.log("Email sent:", await response.text());
+  }
+}
+
+async function sendErrorEmail(params: { email: string; address: string }) {
+  if (!MAILGUN_API_ENDPOINT || !MAILGUN_API_SEND_KEY) {
+    throw new Error("MAILGUN_API_ENDPOINT or MAILGUN_API_SEND_KEY not set");
+  }
+  const { email, address } = params;
+  const form = new formData();
+  form.append("from", "MinaTokens API <api@minatokens.com>");
+  form.append("to", email);
+  form.append("subject", "Your MinaTokens API Key cannot be generated");
+  form.append("template", "API key error");
+  form.append("h:X-Mailgun-Variables", `{"address": "${address}"}`);
 
   const response = await fetch(MAILGUN_API_ENDPOINT, {
     method: "POST",
