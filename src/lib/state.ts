@@ -158,9 +158,9 @@ export async function getTokenState(params: {
         Mina.getBalance(adminAddress, tokenId).toBigInt()
       );
     } catch (error) {
-      console.log("getTokenState: Cannot fetch admin token balance", {
-        adminAddress: adminAddress.toBase58(),
-      });
+      // console.log("getTokenState: Cannot fetch admin token balance", {
+      //   adminAddress: adminAddress.toBase58(),
+      // });
     }
 
     const tokenState: TokenState = {

@@ -5,8 +5,7 @@ export const processes = [
     imgSrc: "/img/process/process5.svg",
     alt: "process",
     title: "1. Set up your wallet",
-    description:
-      "Please set up your Auro wallet.",
+    description: "Please set up your Auro wallet.",
   },
   {
     id: 2,
@@ -64,7 +63,7 @@ export const process3 = [
     title: "1. Set up your wallet",
     bgClass: "bg-accent",
     description:
-      "Once you've set up your Auro wallet, connect it to Minatokens by clicking the Wallet button in the top right corner.",
+      "Once you've set up your Auro wallet, connect it to MinaTokens by clicking the Wallet button in the top right corner.",
   },
   {
     id: 2,

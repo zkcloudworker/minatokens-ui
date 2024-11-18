@@ -1,7 +1,7 @@
 "use server";
 import { Mina, PublicKey, Bool, TokenId, Struct, UInt8 } from "o1js";
 import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
-import { ApiResponse, TokenState } from "./types";
+import { ApiResponse, TokenState, TokenStateRequestParams } from "./types";
 import { checkAddress } from "@/lib/address";
 
 class FungibleTokenState extends Struct({
@@ -18,9 +18,9 @@ class FungibleTokenAdminState extends Struct({
 
 const FungibleTokenAdminStateSize = FungibleTokenAdminState.sizeInFields();
 
-export async function getTokenStateForApi(params: {
-  tokenAddress: string;
-}): Promise<ApiResponse<TokenState>> {
+export async function getTokenStateForApi(
+  params: TokenStateRequestParams
+): Promise<ApiResponse<TokenState>> {
   const { tokenAddress } = params;
   try {
     await initBlockchain();

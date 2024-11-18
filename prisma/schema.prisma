@@ -1,6 +1,6 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("POSTGRES_PRISMA_URL")
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
@@ -22,16 +22,19 @@ enum Chain {
 }
 
 model APIKey {
-  address    String  @id
-  email      String  @db.VarChar(255)
-  name       String  @db.VarChar(255)
-  discord    String?  @db.VarChar(100)
-  createdAt  DateTime @default(now())
-  plan Plan @default(free)
-  chains APIKeyChain[]
-  usage APIKeyUsage[]
-  jobData JobData[] @relation("APIKeyToJobData")
+  address     String          @id
+  email       String          @db.VarChar(255)
+  name        String          @db.VarChar(255)
+  discord     String?         @db.VarChar(100)
+  createdAt   DateTime        @default(now())
+  plan        Plan            @default(free)
+  chains      APIKeyChain[]
+  proofs      APIKeyProofs[]
+  jobData     JobData[]       @relation("APIKeyToJobData")
   revokedKeys RevokedKeys?
+  apiKeyCalls APIKeyCalls[]
+  history     APIKeyHistory[]
+
   @@index([email])
   @@index([plan])
   @@index([address])
@@ -39,76 +42,114 @@ model APIKey {
 }
 
 model RevokedKeys {
-  address String @id
-  apiKey APIKey @relation(fields: [address], references: [address], onDelete: Cascade)
-  reason String
+  address String   @id
+  apiKey  APIKey   @relation(fields: [address], references: [address], onDelete: Cascade)
+  reason  String
+  time    DateTime @default(now())
 }
 
 model AddressBlacklist {
-  address String @id
-  reason String
+  address String   @id
+  reason  String
+  time    DateTime @default(now())
 }
 
 model EmailBlacklist {
-  email String @id
+  email  String   @id
   reason String
+  time   DateTime @default(now())
 }
 
 model DiscordBlacklist {
-  discord String @id
-  reason String
+  discord String   @id
+  reason  String
+  time    DateTime @default(now())
 }
 
 model APIKeyChain {
-  address String
-  chain Chain
-  @@id([address, chain])
+  address   String
+  chain     Chain
   activated Boolean
-  apiKey APIKey @relation(fields: [address], references: [address], onDelete: Cascade)
+  apiKey    APIKey  @relation(fields: [address], references: [address], onDelete: Cascade)
+
+  @@id([address, chain])
   @@index([address])
   @@index([chain])
   @@index([activated])
 }
 
-model APIKeyUsage {
+model APIKeyHistory {
   address String
-  chain Chain
-  jobId String
+  email   String
+  discord String?
+  time    DateTime @default(now())
+  apiKey  APIKey   @relation(fields: [address], references: [address], onDelete: Cascade)
+
+  @@id([address, time])
+  @@index([address])
+  @@index([email])
+  @@index([discord])
+  @@index([time])
+}
+
+model APIKeyCalls {
+  id      String   @id @default(cuid())
+  address String
+  chain   Chain
+  endpoint String
+  status  Int
+  error   String?
+  time    DateTime @default(now())
+  apiKey  APIKey   @relation(fields: [address], references: [address], onDelete: Cascade)
+
+  @@index([address])
+  @@index([chain])
+  @@index([time])
+}
+
+model APIKeyProofs {
+  address String
+  chain   Chain
+  jobId   String   @unique
+  time    DateTime @default(now())
+  apiKey  APIKey   @relation(fields: [address], references: [address], onDelete: Cascade)
+  jobData JobData  @relation(fields: [jobId], references: [jobId], onDelete: Cascade)
+
   @@id([address, chain, jobId])
-  apiKey APIKey @relation(fields: [address], references: [address], onDelete: Cascade)
-  jobData JobData @relation(fields: [jobId], references: [jobId], onDelete: Cascade)
   @@index([address])
   @@index([jobId])
   @@index([chain])
+  @@index([time])
 }
 
 model JobData {
-  jobId String @id 
-  address String?
-  apiKey APIKey? @relation("APIKeyToJobData", fields: [address], references: [address], onDelete: Cascade)
-  apiKeyUsages APIKeyUsage[]
-  id String
-  taskId String?
-  developer String
-  repo String
-  task String?
-  userId String?
-  args String?
-  metadata String?
-  chain Chain
-  filename String?
-  txNumber Int
-  timeCreated DateTime @default(now())
-  timeStarted DateTime?
-  timeFinished DateTime?
-  timeFailed DateTime?
-  timeUsed DateTime?
-  jobStatus String
+  jobId          String        @id
+  address        String?
+  apiKey         APIKey?       @relation("APIKeyToJobData", fields: [address], references: [address], onDelete: Cascade)
+  proofs         APIKeyProofs? @relation()
+  id             String
+  taskId         String?
+  developer      String
+  repo           String
+  task           String?
+  userId         String?
+  args           String?
+  metadata       String?
+  chain          Chain
+  filename       String?
+  txNumber       Int
+  timeCreated    DateTime      @default(now())
+  timeStarted    DateTime?
+  timeFinished   DateTime?
+  timeFailed     DateTime?
+  timeUsed       DateTime?
+  jobStatus      String
   billedDuration Int?
-  result String?
-  logStreams Json?
-  logs String[]
-  isFullLog Boolean?
+  result         String?
+  logStreams     Json?
+  logs           String[]
+  isFullLog      Boolean?
+
   @@index([chain])
   @@index([jobId])
   @@index([timeCreated])

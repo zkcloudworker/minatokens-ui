@@ -337,3 +337,44 @@ export async function getTransactionsByToken(params: {
     return undefined;
   }
 }
+
+export interface BlockberryScamInfo {
+  scamId: number;
+  objectType: string;
+  onchainId: string;
+  defaultSecurityMessage: string;
+  securityMessage: string;
+  scamType: string | null;
+}
+
+export async function getBlockberryScamInfo(params: {
+  address: string;
+}): Promise<BlockberryScamInfo[] | undefined> {
+  if (chain === "zeko") return undefined;
+  const { address } = params;
+  if (BLOCKBERRY_API === undefined) {
+    throw new Error("BLOCKBERRY_API is undefined");
+  }
+  const options = {
+    method: "GET",
+    headers: {
+      accept: "application/json",
+      "x-api-key": BLOCKBERRY_API,
+    },
+  };
+  try {
+    const response = await fetch(
+      `https://api.blockberry.one/mina-${chain}/v1/security/scams?onChainIds=${address}`,
+      options
+    );
+    if (!response.ok) {
+      console.error("response:", response);
+      return undefined;
+    }
+    const result = await response.json();
+    return result as unknown as BlockberryScamInfo[];
+  } catch (err) {
+    console.error(err);
+    return undefined;
+  }
+}

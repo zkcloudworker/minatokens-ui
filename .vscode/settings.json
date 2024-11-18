@@ -1,3 +1,11 @@
 {
-  "cSpell.words": ["datasource", "MINATOKENS", "upstash"]
+  "cSpell.words": [
+    "blockinfo",
+    "cuid",
+    "datasource",
+    "minanames",
+    "MINATOKENS",
+    "readmeio",
+    "upstash"
+  ]
 }

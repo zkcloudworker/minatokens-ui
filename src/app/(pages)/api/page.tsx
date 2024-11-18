@@ -1,20 +1,23 @@
 import TokenFooter from "@/components/footer/TokenFooter";
 import TokenHeader from "@/components/headers/TokenHeader";
-import NotFound from "@/components/pages/404";
+import Ranking from "@/components/pages/api/API";
+import { FC } from "react";
 import { getSiteName } from "@/lib/chain";
 
 export const metadata = {
-  title: `${getSiteName()} | Not Found`,
+  title: `${getSiteName()} | API`,
 };
 
-export default function NotFoundPage() {
+const ApiPage: FC = () => {
   return (
     <>
       <TokenHeader showSearch={false} />
-      <main className="pt-[5.5rem] lg:pt-24">
-        <NotFound />
+      <main>
+        <Ranking />
       </main>
       <TokenFooter />
     </>
   );
-}
+};
+
+export default ApiPage;

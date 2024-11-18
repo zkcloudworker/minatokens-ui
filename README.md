@@ -1,2 +1,1 @@
-# Minatokens Launchpad UI
-
+# MinaTokens Launchpad UI
