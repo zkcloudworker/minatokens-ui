@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:development": "cross-env NODE_ENV=development next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
@@ -14,7 +14,8 @@
     "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev --name v3",
     "prisma:studio": "dotenv -e .env.local -- prisma studio",
     "prisma:push": "dotenv -e .env.local -- prisma db push",
-    "prisma:migrate:deploy": "dotenv -e .env.local -- prisma migrate deploy"
+    "prisma:migrate:deploy": "dotenv -e .env.local -- prisma migrate deploy",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@algolia/client-search": "^5.13.0",

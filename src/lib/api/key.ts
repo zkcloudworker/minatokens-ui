@@ -179,9 +179,11 @@ function generateSlackMessage(params: KeyParams): object {
           type: "mrkdwn",
           text: `*Address:* ${address}\n*Email:* ${email}\n*Discord:* ${
             discord ?? "N/A"
-          }\n*Features requested:* ${features ?? "N/A"}\n*Chains requested:* ${
-            chains ?? "N/A"
-          }`,
+          }\n${
+            features
+              ? "*Features requested:* No"
+              : "*Features requested:*\n" + features
+          }\n*Chains requested:* ${chains?.join(", ") ?? "N/A"}`,
         },
       },
     ],
