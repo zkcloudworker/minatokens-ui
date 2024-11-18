@@ -28,10 +28,12 @@ export interface KeyResponse {
 }
 
 export async function generateApiKey(
-  params: KeyParams
+  formData: Record<string, any>
 ): Promise<ApiResponse<KeyResponse>> {
-  const { address, email, name, discord, features, chains } = params;
-  console.log("Generating API key", params);
+  console.log("Generating API key", formData);
+  const params = parseFormData(formData);
+  console.log("Parsed form data", params);
+  const { address, email, name, discord } = params;
   try {
     if (
       !API_SECRET ||
@@ -232,4 +234,30 @@ async function sendEmail(params: { email: string; jwt: string }) {
   } else {
     console.log("Email sent:", await response.text());
   }
+}
+
+/*
+{
+  'Your name': 'name',
+  'Your MINA address (B62...)': 'B62qrmxBQZp7czXnBjqXtqzdMTr9oh3gjFUwVwjmUgMi9kMmLh2Fn6G',
+  'On what chains do you plan to use API key?': [ 'Mina devnet', 'Mina mainnet' ],
+  'What features do you want us to add to MinaTokens Custom Token Launchpad?': 'features\n123',
+  'Your discord handle': 'discord'
+}
+*/
+
+function parseFormData(formData: Record<string, any>): KeyParams {
+  const params: KeyParams = {
+    address: formData["Your MINA address (B62...)"] as string,
+    email: formData["email"] as string,
+    name: formData["Your name"] as string,
+    discord: formData["Your discord handle"] as string | undefined,
+    features: formData[
+      "What features do you want us to add to MinaTokens Custom Token Launchpad?"
+    ] as string,
+    chains: formData["On what chains do you plan to use API key?"] as
+      | string[]
+      | undefined,
+  };
+  return params;
 }

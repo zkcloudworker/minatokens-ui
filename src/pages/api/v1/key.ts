@@ -6,7 +6,9 @@ import { generateApiKey, KeyParams } from "@/lib/api/key";
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "GET" || req.method === "POST") {
     try {
-      const { status, json } = await generateApiKey(req.body as KeyParams);
+      const { status, json } = await generateApiKey(
+        req.body as Record<string, any>
+      );
       if (status === 200) {
         console.log("generated api key:", { status, json });
       } else {
