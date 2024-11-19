@@ -187,6 +187,8 @@ const API: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [activeTimeOption, setActiveTimeOption] = useState(timeOptions[3]);
   const [apiCalls, setApiCalls] = useState<APIKeyCalls[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const { address, setAddress } = useContext(AddressContext);
 
   async function openGoogleForm() {
@@ -205,23 +207,36 @@ const API: React.FC = () => {
     window.open(url, "_blank");
   }
 
+  const fetchApiCalls = async () => {
+    const address = await getAddress(false);
+    if (address) {
+      const { data, totalPages } = await getApiCalls({
+        address,
+        chain: activeBlockchainOption?.value,
+        endpoint: activeCategory === categories[0] ? undefined : activeCategory,
+        timePeriod: activeTimeOption.seconds,
+        page,
+        itemsPerPage: 10,
+      });
+      setApiCalls(data);
+      setTotalPages(totalPages);
+    }
+  };
+
   useEffect(() => {
     if (DEBUG) console.log("address", address);
-    const fetchItem = async () => {
-      const address = await getAddress(false);
-      if (address) {
-        const apiCalls = await getApiCalls({
-          address,
-          chain: activeBlockchainOption?.value,
-          endpoint:
-            activeCategory === categories[0] ? undefined : activeCategory,
-          timePeriod: activeTimeOption.seconds,
-        });
-        setApiCalls(apiCalls);
-      }
-    };
-    fetchItem();
-  }, [address, activeBlockchainOption, activeCategory, activeTimeOption]);
+    fetchApiCalls();
+  }, [address, activeBlockchainOption, activeCategory, activeTimeOption, page]);
+
+  useEffect(() => {
+    if (page === 1) {
+      const interval = setInterval(() => {
+        fetchApiCalls();
+      }, 10000);
+
+      return () => clearInterval(interval);
+    }
+  }, [page]);
 
   async function getAddress(tryConnect = true): Promise<string | undefined> {
     let userAddress = address;
@@ -400,56 +415,76 @@ const API: React.FC = () => {
             </div>
           </div>
 
-          <div className="dropdown relative my-1 cursor-pointer">
-            <div
-              className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
-              role="button"
-              id="sortOrdering"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
+          <div className="flex items-center gap-2 my-1">
+            <button
+              onClick={() => {
+                fetchApiCalls();
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-jacarta-100 bg-white hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
             >
-              <span className="font-display">{activeTimeOption.label}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 width="24"
                 height="24"
-                className="h-4 w-4 fill-jacarta-500 dark:fill-white"
+                className="h-4 w-4 fill-jacarta-700 group-hover:fill-white dark:fill-jacarta-100"
               >
                 <path fill="none" d="M0 0h24v24H0z" />
-                <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
+                <path d="M5.463 4.433A9.961 9.961 0 0 1 12 2c5.523 0 10 4.477 10 10 0 2.136-.67 4.116-1.81 5.74L17 12h3A8 8 0 0 0 6.46 6.228l-.997-1.795zm13.074 15.134A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12c0-2.136.67-4.116 1.81-5.74L7 12H4a8 8 0 0 0 13.54 5.772l.997 1.795z" />
               </svg>
-            </div>
+            </button>
 
-            <div
-              className="dropdown-menu z-10 hidden w-full whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
-              aria-labelledby="sortOrdering"
-            >
-              {timeOptions.map((elm, i) => (
-                <button
-                  onClick={() => setActiveTimeOption(elm)}
-                  key={i}
-                  className={
-                    activeTimeOption == elm
-                      ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                      : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                  }
+            <div className="dropdown relative cursor-pointer">
+              <div
+                className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
+                role="button"
+                id="sortOrdering"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <span className="font-display">{activeTimeOption.label}</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  className="h-4 w-4 fill-jacarta-500 dark:fill-white"
                 >
-                  {elm.label}
-                  {activeTimeOption == elm && (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      height="24"
-                      className="mb-[3px] h-4 w-4 fill-accent"
-                    >
-                      <path fill="none" d="M0 0h24v24H0z" />
-                      <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
-                    </svg>
-                  )}
-                </button>
-              ))}
+                  <path fill="none" d="M0 0h24v24H0z" />
+                  <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
+                </svg>
+              </div>
+
+              <div
+                className="dropdown-menu z-10 hidden w-full whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
+                aria-labelledby="sortOrdering"
+              >
+                {timeOptions.map((elm, i) => (
+                  <button
+                    onClick={() => setActiveTimeOption(elm)}
+                    key={i}
+                    className={
+                      activeTimeOption == elm
+                        ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                        : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                    }
+                  >
+                    {elm.label}
+                    {activeTimeOption == elm && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="24"
+                        height="24"
+                        className="mb-[3px] h-4 w-4 fill-accent"
+                      >
+                        <path fill="none" d="M0 0h24v24H0z" />
+                        <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -489,7 +524,7 @@ const API: React.FC = () => {
               </div>
               <div className="w-[55%] py-3 px-4" role="columnheader">
                 <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
-                  Error
+                  Result
                 </span>
               </div>
             </div>
@@ -548,6 +583,61 @@ const API: React.FC = () => {
                 </div>
               </Link>
             ))}
+          </div>
+          {/* Pagination */}
+          <div className="flex items-center justify-center space-x-3 py-8">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-jacarta-100 bg-white text-sm font-semibold dark:border-jacarta-600 dark:bg-jacarta-700 disabled:opacity-50"
+            >
+              <span className="sr-only">Previous</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                className="h-4 w-4 fill-jacarta-700 dark:fill-white"
+              >
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M10.828 12l4.95 4.95-1.414 1.414L8 12l6.364-6.364 1.414 1.414z" />
+              </svg>
+            </button>
+
+            <div className="flex items-center justify-center space-x-1">
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i + 1)}
+                  className={`flex h-8 w-8 items-center justify-center rounded text-sm font-semibold
+                  ${
+                    page === i + 1
+                      ? "bg-accent text-white"
+                      : "border border-jacarta-100 bg-white dark:border-jacarta-600 dark:bg-jacarta-700"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-jacarta-100 bg-white text-sm font-semibold dark:border-jacarta-600 dark:bg-jacarta-700 disabled:opacity-50"
+            >
+              <span className="sr-only">Next</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                className="h-4 w-4 fill-jacarta-700 dark:fill-white"
+              >
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M13.172 12l-4.95-4.95 1.414-1.414L16 12l-6.364 6.364-1.414-1.414z" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>

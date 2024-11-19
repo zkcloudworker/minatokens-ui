@@ -7,12 +7,26 @@ export async function getApiCalls(params: {
   address: string;
   chain: Chain | undefined;
   endpoint: string | undefined;
-  timePeriod: number; // in seconds, 0 for all time
-}): Promise<APIKeyCalls[]> {
-  const { address, chain, endpoint, timePeriod } = params;
+  timePeriod: number;
+  page: number;
+  itemsPerPage: number;
+}): Promise<{ data: APIKeyCalls[]; totalPages: number }> {
+  const { address, chain, endpoint, timePeriod, page, itemsPerPage } = params;
   console.log("getApiCalls", params);
   const prisma = new PrismaClient({
     datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+  });
+
+  const totalCount = await prisma.aPIKeyCalls.count({
+    where: {
+      address,
+      chain,
+      endpoint,
+      time:
+        timePeriod > 0
+          ? { gte: new Date(Date.now() - timePeriod * 1000) }
+          : undefined,
+    },
   });
 
   const apiCalls = await prisma.aPIKeyCalls.findMany({
@@ -26,9 +40,17 @@ export async function getApiCalls(params: {
           : undefined,
     },
     orderBy: {
-      time: "desc", // Sort by time in descending order
+      time: "desc",
     },
+    skip: (page - 1) * itemsPerPage,
+    take: itemsPerPage,
   });
   console.log("getApiCalls", apiCalls);
-  return apiCalls;
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+  return {
+    data: apiCalls,
+    totalPages,
+  };
 }
