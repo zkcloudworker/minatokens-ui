@@ -43,9 +43,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 const API: React.FC = () => {
-  const [activeBlockchainOption, setActiveBlockchainOption] = useState<
-    { name: string; value: Chain } | undefined
-  >(undefined);
+  const [activeBlockchainOption, setActiveBlockchainOption] = useState<{
+    name: string;
+    value: Chain | undefined;
+  }>(chains[0]);
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [activeTimeOption, setActiveTimeOption] = useState(timeOptions[3]);
   const [apiCalls, setApiCalls] = useState<APIKeyCalls[]>([]);
@@ -226,7 +227,11 @@ const API: React.FC = () => {
                 <ul className="flex flex-col flex-wrap">
                   {chains.map((elm, i) => (
                     <li
-                      onClick={() => setActiveBlockchainOption(elm)}
+                      onClick={() =>
+                        setActiveBlockchainOption(
+                          chains.find((c) => c.value === elm.value) || chains[0]
+                        )
+                      }
                       key={i}
                       className="cursor-pointer"
                     >
