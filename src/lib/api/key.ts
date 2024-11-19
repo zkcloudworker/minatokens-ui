@@ -177,7 +177,7 @@ export async function generateApiKey(
         discord,
       },
     });
-    const jwt = await generateJWT({ address, name, email });
+    const jwt = await generateJWT({ address, name, email, expiry: "1y" });
     await sendEmail({ email, jwt });
     await sendSlackNotification(generateSlackMessage(params));
 
@@ -199,12 +199,13 @@ function validateEmail(email: string): boolean {
   return regex.test(email);
 }
 
-async function generateJWT(params: {
+export async function generateJWT(params: {
   address: string;
   name: string;
   email: string;
+  expiry: string;
 }): Promise<string> {
-  const { address, name, email } = params;
+  const { address, name, email, expiry } = params;
 
   const secret = new TextEncoder().encode(API_SECRET);
 
@@ -216,7 +217,7 @@ async function generateJWT(params: {
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuedAt()
     .setIssuer("minatokens.com")
-    .setExpirationTime("1y")
+    .setExpirationTime(expiry)
     .sign(secret);
 
   return jwt;
