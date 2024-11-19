@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useContext, FC } from "react";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
+import { Mainnet, Devnet, Zeko } from "@/lib/networks";
 import { Chain, APIKeyCalls } from "@prisma/client";
 import { getApiCalls } from "@/lib/api-calls";
 import Image from "next/image";
@@ -75,6 +76,107 @@ function timeString(time: Date): string {
     minute: "2-digit",
     hour12: false,
   });
+}
+
+/*
+    function getResult(json: any): string | undefined {
+      switch (name) {
+        case "tx-result":
+          return (json as TransactionResult)?.hash;
+        case "tx-status":
+          return (json as TransactionStatus)?.status;
+        case "faucet":
+          return (json as FaucetResponse)?.hash;
+        case "prove":
+          return (json as JobId)?.jobId;
+        default:
+          return undefined;
+      }
+    }
+*/
+
+function explorerUrl(chain: Chain, hash: string): string {
+  switch (chain) {
+    case "mina_mainnet":
+      return Mainnet.explorerTransactionUrl + hash;
+    case "mina_devnet":
+      return Devnet.explorerTransactionUrl + hash;
+    case "zeko_mainnet":
+      return Zeko.explorerTransactionUrl + hash; // TODO: fix after Zeko mainnet is launched
+    case "zeko_devnet":
+      return Zeko.explorerTransactionUrl + hash;
+    default:
+      return "";
+  }
+}
+
+function showResult(params: {
+  endpoint: string;
+  chain: Chain;
+  result: string | null;
+  error: string | null;
+}) {
+  const { endpoint, chain, result, error } = params;
+  if (error)
+    return (
+      <span className={`text-${error ? "red" : "green"}`}>
+        {error ?? "None"}
+      </span>
+    );
+  if (endpoint === "tx-status" && result)
+    return (
+      <span
+        className={`text-${
+          result === "applied"
+            ? "green"
+            : result === "failed"
+            ? "red"
+            : "yellow"
+        }`}
+      >
+        {result ?? "None"}
+      </span>
+    );
+  if (endpoint === "prove" && result)
+    return (
+      <span>
+        <a
+          href={`https://zkcloudworker.com/job/${result}`}
+          className="text-accent"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          {result}
+        </a>
+      </span>
+    );
+  if (endpoint === "faucet" && result)
+    return (
+      <span>
+        <a
+          href={explorerUrl(chain, result)}
+          className="text-accent"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          {result}
+        </a>
+      </span>
+    );
+  if (endpoint === "tx-result" && result)
+    return (
+      <span>
+        <a
+          href={explorerUrl(chain, result)}
+          className="text-accent"
+          target="_blank"
+          rel="noreferrer noopener"
+        >
+          {result}
+        </a>
+      </span>
+    );
+  return <span></span>;
 }
 
 const API: React.FC = () => {
@@ -437,9 +539,12 @@ const API: React.FC = () => {
                   className="flex w-[55%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
                   role="cell"
                 >
-                  <span className={`text-${elm.error ? "red" : "green"}`}>
-                    {elm.error ?? "None"}
-                  </span>
+                  {showResult({
+                    endpoint: elm.endpoint,
+                    chain: elm.chain,
+                    result: elm.result,
+                    error: elm.error,
+                  })}
                 </div>
               </Link>
             ))}

@@ -8,9 +8,10 @@ import {
 import * as readme from "readmeio";
 import { jwtVerify } from "jose";
 import { Chain, PrismaClient } from "@prisma/client";
-import { ApiResponse } from "./api/types";
+import { ApiResponse, FaucetResponse } from "./api/types";
 import { debug } from "./debug";
 import { getChain } from "@/lib/chain";
+import { JobId, TransactionResult, TransactionStatus } from "@/lib/api/types";
 const chain = getChain();
 const DEBUG = debug();
 const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY } = process.env;
@@ -87,6 +88,21 @@ export function apiHandler<T, V>(params: {
       datasourceUrl: process.env.POSTGRES_PRISMA_URL,
     });
 
+    function getResult(json: any): string | undefined {
+      switch (name) {
+        case "tx-result":
+          return (json as TransactionResult)?.hash;
+        case "tx-status":
+          return (json as TransactionStatus)?.status;
+        case "faucet":
+          return (json as FaucetResponse)?.hash;
+        case "prove":
+          return (json as JobId)?.jobId;
+        default:
+          return undefined;
+      }
+    }
+
     async function reply(status: number, json: { error: string } | V) {
       if (!isInternal) {
         await prisma.aPIKeyCalls.create({
@@ -96,6 +112,7 @@ export function apiHandler<T, V>(params: {
             chain: getChainId(),
             endpoint: name,
             error: (json as any)?.error,
+            result: getResult(json),
           },
         });
       }
