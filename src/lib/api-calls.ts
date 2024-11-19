@@ -25,6 +25,9 @@ export async function getApiCalls(params: {
           ? { gte: new Date(Date.now() - timePeriod * 1000) }
           : undefined,
     },
+    orderBy: {
+      time: "desc", // Sort by time in descending order
+    },
   });
   console.log("getApiCalls", apiCalls);
   return apiCalls;

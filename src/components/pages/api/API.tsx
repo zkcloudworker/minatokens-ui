@@ -5,6 +5,9 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { Chain, APIKeyCalls } from "@prisma/client";
 import { getApiCalls } from "@/lib/api-calls";
+import Image from "next/image";
+import Link from "next/link";
+
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 const chains: { name: string; value: Chain | undefined }[] = [
@@ -39,8 +42,42 @@ const timeOptions = [
   { value: "30-days", label: "Last 30 Days", seconds: 2592000 },
   { value: "all-time", label: "All Time", seconds: 0 },
 ];
-import Image from "next/image";
-import Link from "next/link";
+
+function timeString(time: Date): string {
+  const now = new Date();
+  const diff = now.getTime() - time.getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const isToday = time.toDateString() === new Date().toDateString();
+
+  if (seconds < 60) {
+    return `${seconds}s ago`;
+  }
+  if (minutes < 60) {
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s ago`;
+  }
+
+  // For same day but more than an hour ago, show 24h time
+  if (isToday) {
+    return time.toLocaleTimeString("en-US", {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  // For previous days show date and time
+  return time.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
 
 const API: React.FC = () => {
   const [activeBlockchainOption, setActiveBlockchainOption] = useState<{
@@ -369,15 +406,7 @@ const API: React.FC = () => {
                   role="cell"
                 >
                   <span className="text-sm font-medium tracking-tight">
-                    {`${new Date(elm.time).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}, ${new Date(elm.time).toLocaleTimeString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                      hour12: false,
-                    })}`}
+                    {timeString(elm.time)}
                   </span>
                 </div>
                 <div
