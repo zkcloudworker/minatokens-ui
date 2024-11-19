@@ -88,7 +88,7 @@ export function apiHandler<T, V>(params: {
     }
 
     if (isReadme) {
-      console.log("isReadme", isReadme);
+      console.log("isReadme", { body: req.body, headers: req.headers });
       const signature = req.headers["readme-signature"];
       console.log("signature", signature);
       if (!signature || typeof signature !== "string") {
