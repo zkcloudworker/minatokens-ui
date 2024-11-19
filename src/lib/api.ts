@@ -12,6 +12,7 @@ import { ApiResponse, FaucetResponse } from "./api/types";
 import { debug } from "./debug";
 import { getChain } from "@/lib/chain";
 import { JobId, TransactionResult, TransactionStatus } from "@/lib/api/types";
+import { readmeApi } from "./api/readme";
 const chain = getChain();
 const DEBUG = debug();
 const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY } = process.env;
@@ -57,8 +58,9 @@ export function apiHandler<T, V>(params: {
   name: string;
   handler: (params: T) => Promise<ApiResponse<V>>;
   isInternal?: boolean;
+  isReadme?: boolean;
 }) {
-  const { name, handler, isInternal = false } = params;
+  const { name, handler, isInternal = false, isReadme = false } = params;
 
   return async (req: NextApiRequest & { body: T }, res: NextApiResponse) => {
     if (req.method === "OPTIONS") {
@@ -73,6 +75,43 @@ export function apiHandler<T, V>(params: {
       res.setHeader("Allow", ["GET", "POST"]);
       res.status(405).end(`Method ${req.method} Not Allowed`);
       return;
+    }
+
+    const ip =
+      req.headers["x-forwarded-for"]?.toString().split(",").shift() ||
+      req.socket.remoteAddress ||
+      "0.0.0.0";
+
+    if (await rateLimit({ name: "ipMemory", key: ip })) {
+      return await reply(429, { error: "Too many requests" });
+    }
+
+    if (isReadme) {
+      console.log("isReadme", isReadme);
+      const signature = req.headers["readme-signature"];
+      if (!signature || typeof signature !== "string") {
+        return reply(401, { error: "Unauthorized" });
+      }
+      const email = req.body.email;
+      if (!email || typeof email !== "string") {
+        return reply(400, { error: "Email is required" });
+      }
+      if (await rateLimit({ name: "apiMemory", key: "readme" })) {
+        return await reply(429, { error: "Too many requests" });
+      }
+      if (!README_API_KEY) {
+        console.error("Readme API secret not set");
+        return res.status(500).json({ error: "Readme API secret not set" });
+      }
+      try {
+        readme.verifyWebhook(req.body, signature, README_API_KEY);
+      } catch (e: any) {
+        // Handle invalid requests
+        return res.status(401).json({ error: e?.message || "Unauthorized" });
+      }
+      const { status, json } = await readmeApi({ email });
+      console.log("readmeApi", { status, json });
+      return res.status(status).json(json);
     }
 
     const start = Date.now();
@@ -147,15 +186,6 @@ export function apiHandler<T, V>(params: {
     }
 
     try {
-      const ip =
-        req.headers["x-forwarded-for"]?.toString().split(",").shift() ||
-        req.socket.remoteAddress ||
-        "0.0.0.0";
-
-      if (await rateLimit({ name: "ipMemory", key: ip })) {
-        return await reply(429, { error: "Too many requests" });
-      }
-
       if (isInternal && apiKey !== MINATOKENS_API_KEY) {
         if (!MINATOKENS_API_KEY) {
           console.error("API key not set");
