@@ -17,9 +17,7 @@ const chains: { name: string; value: Chain | undefined }[] = [
   { name: "Zeko mainnet", value: "zeko_mainnet" },
   { name: "Zeko devnet", value: "zeko_devnet" },
 ];
-function getChainId(chain: string): Chain | undefined {
-  return chains.find((c) => c.name === chain)?.value;
-}
+
 function getChainName(chain: Chain): string | undefined {
   return chains.find((c) => c.value === chain)?.name;
 }
