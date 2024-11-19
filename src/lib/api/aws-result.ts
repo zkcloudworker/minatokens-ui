@@ -1,12 +1,16 @@
 import { zkCloudWorkerClient } from "zkcloudworker";
 import { getChain } from "../chain";
+export interface JobResult {
+  success: boolean;
+  error?: string;
+  tx?: string;
+  hash?: string;
+}
 
 const ZKCW_JWT = process.env.ZKCW_JWT;
 const chain = getChain();
 
-export async function getResult(
-  jobId: string
-): Promise<{ success: boolean; error?: string; tx?: string; hash?: string }> {
+export async function getResult(jobId: string): Promise<JobResult> {
   if (ZKCW_JWT === undefined) throw new Error("ZKCW_JWT is undefined");
   try {
     const client: zkCloudWorkerClient = new zkCloudWorkerClient({

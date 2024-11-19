@@ -35,6 +35,12 @@ const config: Config = {
       orange: "#FEB240",
       "orange-bright": "#FA6D1E",
       red: "#EF4444",
+      yellow: {
+        300: "#fde047",
+        400: "#facc15",
+        500: "#eab308",
+        600: "#ca8a04",
+      },
       blue: "#428AF8",
       jacarta: {
         base: "#5A5D79",
