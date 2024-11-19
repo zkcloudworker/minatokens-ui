@@ -86,8 +86,6 @@ export function apiHandler<T, V>(params: {
     });
 
     async function reply(status: number, json: { error: string } | V) {
-      res.status(status).json(json);
-
       if (!isInternal) {
         await prisma.aPIKeyCalls.create({
           data: {
@@ -99,6 +97,10 @@ export function apiHandler<T, V>(params: {
           },
         });
       }
+      if ((json as any)?.error) {
+        console.error("api reply", { status, error: (json as any)?.error });
+      }
+      res.status(status).json(json);
     }
 
     try {
