@@ -46,12 +46,6 @@ export default function Hero() {
               >
                 Explore
               </Link>
-              <Link
-                href="/api"
-                className=" rtl:!mr-6 w-36 rounded-full bg-white py-3 px-8 text-center font-semibold text-accent shadow-white-volume transition-all hover:bg-accent-dark hover:text-white hover:shadow-accent-volume"
-              >
-                API
-              </Link>
             </div>
           </div>
 
