@@ -129,7 +129,7 @@ export function apiHandler<T, V>(params: {
               email: userEmail,
             },
             {
-              baseLogUrl: "https://minatokens.readme.io",
+              baseLogUrl: "https://docs.minatokens.com",
             }
           );
 
