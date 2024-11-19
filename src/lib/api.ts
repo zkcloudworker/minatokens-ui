@@ -15,7 +15,8 @@ import { JobId, TransactionResult, TransactionStatus } from "@/lib/api/types";
 import { readmeApi } from "./api/readme";
 const chain = getChain();
 const DEBUG = debug();
-const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY } = process.env;
+const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY, README_DOCS_SECRET } =
+  process.env;
 
 initializeMemoryRateLimiter({
   name: "ipMemory",
@@ -101,13 +102,15 @@ export function apiHandler<T, V>(params: {
       if (await rateLimit({ name: "apiMemory", key: "readme" })) {
         return await reply(429, { error: "Too many requests" });
       }
-      if (!README_API_KEY) {
-        console.error("Readme API secret not set");
-        return res.status(500).json({ error: "Readme API secret not set" });
+      if (!README_DOCS_SECRET) {
+        console.error("Readme Docs API secret not set");
+        return res
+          .status(500)
+          .json({ error: "Readme Docs API secret not set" });
       }
       try {
         console.log("verifying webhook");
-        readme.verifyWebhook(req.body, signature, README_API_KEY);
+        readme.verifyWebhook(req.body, signature, README_DOCS_SECRET);
         console.log("webhook verified");
       } catch (e: any) {
         // Handle invalid requests
