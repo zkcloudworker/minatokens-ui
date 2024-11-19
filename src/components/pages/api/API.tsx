@@ -7,15 +7,18 @@ import { Chain, APIKeyCalls } from "@prisma/client";
 import { getApiCalls } from "@/lib/api-calls";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
-const chains: { name: string; value: Chain }[] = [
+const chains: { name: string; value: Chain | undefined }[] = [
+  { name: "All Chains", value: undefined },
   { name: "Mina mainnet", value: "mina_mainnet" },
   { name: "Mina devnet", value: "mina_devnet" },
   { name: "Zeko mainnet", value: "zeko_mainnet" },
   { name: "Zeko devnet", value: "zeko_devnet" },
 ];
-const blockChainOptions = chains.map((chain) => chain.name);
-function getChainName(chain: string): Chain | undefined {
+function getChainId(chain: string): Chain | undefined {
   return chains.find((c) => c.name === chain)?.value;
+}
+function getChainName(chain: Chain): string | undefined {
+  return chains.find((c) => c.value === chain)?.name;
 }
 const categories = [
   "All endpoints",
@@ -36,14 +39,13 @@ const timeOptions = [
   { value: "30-days", label: "Last 30 Days", seconds: 2592000 },
   { value: "all-time", label: "All Time", seconds: 0 },
 ];
-import { ranking } from "@/data/ranking";
 import Image from "next/image";
 import Link from "next/link";
 
 const API: React.FC = () => {
-  const [activeBlockchainOption, setActiveBlockchainOption] = useState(
-    blockChainOptions[0]
-  );
+  const [activeBlockchainOption, setActiveBlockchainOption] = useState<
+    { name: string; value: Chain } | undefined
+  >(undefined);
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [activeTimeOption, setActiveTimeOption] = useState(timeOptions[3]);
   const [apiCalls, setApiCalls] = useState<APIKeyCalls[]>([]);
@@ -72,8 +74,9 @@ const API: React.FC = () => {
       if (address) {
         const apiCalls = await getApiCalls({
           address,
-          chain: getChainName(activeBlockchainOption),
-          endpoint: activeCategory,
+          chain: activeBlockchainOption?.value,
+          endpoint:
+            activeCategory === categories[0] ? undefined : activeCategory,
           timePeriod: activeTimeOption.seconds,
         });
         setApiCalls(apiCalls);
@@ -156,7 +159,7 @@ const API: React.FC = () => {
                   <path fill="none" d="M0 0h24v24H0z" />
                   <path d="M14 10v4h-4v-4h4zm2 0h5v4h-5v-4zm-2 11h-4v-5h4v5zm2 0v-5h5v4a1 1 0 0 1-1 1h-4zM14 3v5h-4V3h4zm2 0h4a1 1 0 0 1 1 1v4h-5V3zm-8 7v4H3v-4h5zm0 11H4a1 1 0 0 1-1-1v-4h5v5zM8 3v5H3V4a1 1 0 0 1 1-1h4z" />
                 </svg>
-                <span>All Categories</span>
+                <span>{activeCategory}</span>
               </button>
               <div
                 className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
@@ -214,14 +217,14 @@ const API: React.FC = () => {
                   <path fill="none" d="M0 0h24v24H0z" />
                   <path d="M20 16h2v6h-6v-2H8v2H2v-6h2V8H2V2h6v2h8V2h6v6h-2v8zm-2 0V8h-2V6H8v2H6v8h2v2h8v-2h2zM4 4v2h2V4H4zm0 14v2h2v-2H4zM18 4v2h2V4h-2zm0 14v2h2v-2h-2z" />
                 </svg>
-                <span>All Chains</span>
+                <span>{activeBlockchainOption?.name ?? "All Chains"}</span>
               </button>
               <div
                 className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
                 aria-labelledby="blockchainFilter"
               >
                 <ul className="flex flex-col flex-wrap">
-                  {blockChainOptions.map((elm, i) => (
+                  {chains.map((elm, i) => (
                     <li
                       onClick={() => setActiveBlockchainOption(elm)}
                       key={i}
@@ -230,7 +233,7 @@ const API: React.FC = () => {
                       {activeBlockchainOption == elm ? (
                         <div className="dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
                           <span className="text-jacarta-700 dark:text-white">
-                            {elm}
+                            {elm.name}
                           </span>
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -245,7 +248,7 @@ const API: React.FC = () => {
                         </div>
                       ) : (
                         <div className="dropdown-item flex w-full items-center rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                          {elm}
+                          {elm.name}
                         </div>
                       )}
                     </li>
@@ -322,24 +325,34 @@ const API: React.FC = () => {
               className="flex rounded-t-2lg bg-jacarta-50 dark:bg-jacarta-600"
               role="row"
             >
-              <div className="w-[40%] py-3 px-4" role="columnheader">
+              <div className="w-[15%] py-3 px-4" role="columnheader">
+                <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
+                  Date
+                </span>
+              </div>
+              <div className="w-[10%] py-3 px-4" role="columnheader">
                 <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
                   Endpoint
                 </span>
               </div>
-              <div className="w-[12%] py-3 px-4" role="columnheader">
+              <div className="w-[15%] py-3 px-4" role="columnheader">
+                <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
+                  Chain
+                </span>
+              </div>
+              <div className="w-[10%] py-3 px-4" role="columnheader">
                 <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
                   Status
                 </span>
               </div>
-              <div className="w-[12%] py-3 px-4" role="columnheader">
+              <div className="w-[55%] py-3 px-4" role="columnheader">
                 <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
                   Error
                 </span>
               </div>
             </div>
 
-            {ranking.map((elm, i) => (
+            {apiCalls.map((elm, i) => (
               <Link
                 href={`/user/${elm.id}`}
                 key={i}
@@ -347,37 +360,53 @@ const API: React.FC = () => {
                 role="row"
               >
                 <div
-                  className="flex w-[40%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                  className="flex w-[15%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
                   role="cell"
                 >
                   <span className="text-sm font-medium tracking-tight">
-                    {elm.volume}
+                    {`${new Date(elm.time).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}, ${new Date(elm.time).toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: false,
+                    })}`}
                   </span>
                 </div>
                 <div
-                  className="flex w-[12%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                  className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
                   role="cell"
                 >
-                  <span
-                    className={`text-${
-                      elm.percentageChange?.includes("+") ? "green" : "red"
-                    }`}
-                  >
-                    {elm.percentageChange}
+                  <span className="text-sm font-medium tracking-tight">
+                    {elm.endpoint}
                   </span>
                 </div>
                 <div
-                  className="flex w-[12%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                  className="flex w-[15%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                  role="cell"
+                >
+                  <span className="text-sm font-medium tracking-tight">
+                    {getChainName(elm.chain)}
+                  </span>
+                </div>
+                <div
+                  className="flex w-[10%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
                   role="cell"
                 >
                   <span
-                    className={`text-${
-                      elm.percentageChangeweekly?.includes("+")
-                        ? "green"
-                        : "red"
-                    }`}
+                    className={`text-${elm.status === 200 ? "green" : "red"}`}
                   >
-                    {elm.percentageChangeweekly}
+                    {elm.status}
+                  </span>
+                </div>
+                <div
+                  className="flex w-[55%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                  role="cell"
+                >
+                  <span className={`text-${elm.error ? "red" : "green"}`}>
+                    {elm.error ?? "None"}
                   </span>
                 </div>
               </Link>
