@@ -10,6 +10,7 @@ export async function getApiCalls(params: {
   timePeriod: number; // in seconds, 0 for all time
 }): Promise<APIKeyCalls[]> {
   const { address, chain, endpoint, timePeriod } = params;
+  console.log("getApiCalls", params);
   const prisma = new PrismaClient({
     datasourceUrl: process.env.POSTGRES_PRISMA_URL,
   });
@@ -25,5 +26,6 @@ export async function getApiCalls(params: {
           : undefined,
     },
   });
+  console.log("getApiCalls", apiCalls);
   return apiCalls;
 }

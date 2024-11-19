@@ -22,7 +22,7 @@ import {
 } from "./zkcloudworker";
 import { DeployTransaction, DeployTokenParams, ApiResponse } from "./types";
 
-import { checkAddress } from "@/lib/address";
+import { checkAddress } from "./address";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
 import { getAccountNonce } from "../nonce";

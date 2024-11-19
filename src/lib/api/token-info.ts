@@ -2,7 +2,7 @@
 import { Mina, PublicKey, Bool, TokenId, Struct, UInt8 } from "o1js";
 import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
 import { ApiResponse, TokenState, TokenStateRequestParams } from "./types";
-import { checkAddress } from "@/lib/address";
+import { checkAddress } from "./address";
 
 class FungibleTokenState extends Struct({
   decimals: UInt8,

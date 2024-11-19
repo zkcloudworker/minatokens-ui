@@ -3,7 +3,6 @@
 import { sendDeployTransaction } from "@/lib/token-api";
 import { debug } from "@/lib/debug";
 import { getChain } from "@/lib/chain";
-import { checkAddress } from "@/lib/address";
 import { getResult } from "@/lib/api/aws-result";
 import { JobId, TransactionResult, ApiResponse } from "./types";
 const chain = getChain();

@@ -1,6 +1,6 @@
 "use server";
 import { ApiResponse, FaucetParams, FaucetResponse, TxStatus } from "./types";
-import { checkAddress } from "@/lib/address";
+import { checkAddress } from "./address";
 import { getChain } from "@/lib/chain";
 const chain = getChain();
 
