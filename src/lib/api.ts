@@ -88,9 +88,7 @@ export function apiHandler<T, V>(params: {
     }
 
     if (isReadme) {
-      console.log("isReadme", { body: req.body, headers: req.headers });
       const signature = req.headers["readme-signature"];
-      console.log("signature", signature);
       if (!signature || typeof signature !== "string") {
         return reply(401, { error: "Unauthorized" });
       }
@@ -109,16 +107,13 @@ export function apiHandler<T, V>(params: {
           .json({ error: "Readme Docs API secret not set" });
       }
       try {
-        console.log("verifying webhook");
         readme.verifyWebhook(req.body, signature, README_DOCS_SECRET);
-        console.log("webhook verified");
       } catch (e: any) {
         // Handle invalid requests
         console.error("webhook verification failed", e);
         return res.status(401).json({ error: e?.message || "Unauthorized" });
       }
       const { status, json } = await readmeApi({ email });
-      console.log("readmeApi", { status, json });
       return res.status(status).json(json);
     }
 
