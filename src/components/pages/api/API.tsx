@@ -163,7 +163,7 @@ function showResult(params: {
         </a>
       </span>
     );
-  if (endpoint === "tx-result" && result)
+  if (endpoint === "result" && result)
     return (
       <span>
         <a
