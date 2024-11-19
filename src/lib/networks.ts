@@ -59,7 +59,7 @@ export const Devnet: MinaNetworkParams = {
 
 export const Zeko: MinaNetworkParams = {
   mina: ["https://devnet.zeko.io/graphql"],
-  archive: [],
+  archive: ["https://devnet.zeko.io/graphql"],
   explorerAccountUrl: "https://zekoscan.io/devnet/account/",
   explorerTransactionUrl: "https://zekoscan.io/devnet/tx/",
   chain: "zeko",

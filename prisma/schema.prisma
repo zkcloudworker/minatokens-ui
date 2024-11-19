@@ -99,6 +99,7 @@ model APIKeyCalls {
   endpoint String
   status  Int
   error   String?
+  result  String?
   time    DateTime @default(now())
   apiKey  APIKey   @relation(fields: [address], references: [address], onDelete: Cascade)
 
