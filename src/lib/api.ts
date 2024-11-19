@@ -80,7 +80,9 @@ export function apiHandler<T, V>(params: {
     if (!apiKey || typeof apiKey !== "string" || apiKey === "") {
       return reply(401, { error: "Unauthorized" });
     }
-    let key: string = apiKey;
+    let userKey: string = apiKey;
+    let userName: string | null = null;
+    let userEmail: string | null = null;
     const prisma = new PrismaClient({
       datasourceUrl: process.env.POSTGRES_PRISMA_URL,
     });
@@ -89,7 +91,7 @@ export function apiHandler<T, V>(params: {
       if (!isInternal) {
         await prisma.aPIKeyCalls.create({
           data: {
-            address: key,
+            address: userKey,
             status,
             chain: getChainId(),
             endpoint: name,
@@ -97,6 +99,27 @@ export function apiHandler<T, V>(params: {
           },
         });
       }
+      if (!README_API_KEY) {
+        console.error("README API key not set");
+      } else if (!isInternal && userKey && userName && userEmail) {
+        const log = await readme.log(
+          README_API_KEY,
+          req,
+          res,
+          {
+            apiKey: userKey,
+            label: userName,
+            email: userEmail,
+          },
+          {
+            baseLogUrl: "https://minatokens.readme.io",
+          }
+        );
+        if (DEBUG) console.log("README log", log);
+      } else if (!isInternal) {
+        console.error("No user info found for API key", userKey);
+      }
+
       if ((json as any)?.error) {
         console.error("api reply", { status, error: (json as any)?.error });
       }
@@ -121,9 +144,6 @@ export function apiHandler<T, V>(params: {
         return await reply(401, { error: "Unauthorized" });
       }
 
-      let name: string | null = null;
-      let email: string | null = null;
-
       if (!isInternal) {
         try {
           if (!API_SECRET) {
@@ -143,53 +163,34 @@ export function apiHandler<T, V>(params: {
           ) {
             return await reply(401, { error: "Unauthorized" });
           }
-          key = jwt.payload.address as string;
-          name = jwt.payload.name as string;
-          email = jwt.payload.email as string;
+          userKey = jwt.payload.address as string;
+          userName = jwt.payload.name as string;
+          userEmail = jwt.payload.email as string;
         } catch (error) {
           console.error(error);
           return await reply(401, { error: "Unauthorized" });
         }
       }
 
-      if (await rateLimit({ name: "apiMemory", key })) {
+      if (await rateLimit({ name: "apiMemory", key: userKey })) {
         return await reply(429, { error: "Too many requests" });
       }
       if (await rateLimit({ name: "ipRedis", key: ip })) {
         return await reply(429, { error: "Too many requests" });
       }
-      if (await rateLimit({ name: "apiRedis", key: apiKey })) {
+      if (await rateLimit({ name: "apiRedis", key: userKey })) {
         return await reply(429, { error: "Too many requests" });
       }
 
-      res.on("finish", async () => {
-        if (!README_API_KEY) {
-          console.error("README API key not set");
-          return;
+      if (!isInternal) {
+        const revokedCheck = await prisma.revokedKeys.findUnique({
+          where: {
+            address: userKey,
+          },
+        });
+        if (revokedCheck) {
+          return await reply(401, { error: "Unauthorized" });
         }
-        if (!isInternal && key && name && email) {
-          await readme.log(
-            README_API_KEY,
-            req,
-            res,
-            {
-              apiKey: key,
-              label: name,
-              email: email,
-            },
-            {
-              baseLogUrl: "https://minatokens.readme.io",
-            }
-          );
-        }
-      });
-      const revokedCheck = await prisma.revokedKeys.findUnique({
-        where: {
-          address: key,
-        },
-      });
-      if (revokedCheck) {
-        return await reply(401, { error: "Unauthorized" });
       }
 
       try {
