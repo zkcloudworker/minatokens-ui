@@ -90,7 +90,7 @@ export function apiHandler<T, V>(params: {
 
     function getResult(json: any): string | undefined {
       switch (name) {
-        case "tx-result":
+        case "result":
           return (json as TransactionResult)?.hash;
         case "tx-status":
           return (json as TransactionStatus)?.status;

@@ -131,7 +131,7 @@ function showResult(params: {
             ? "green"
             : result === "failed"
             ? "red"
-            : "yellow"
+            : "yellow-500"
         }`}
       >
         {result ?? "None"}
@@ -142,7 +142,7 @@ function showResult(params: {
       <span>
         <a
           href={`https://zkcloudworker.com/job/${result}`}
-          className="text-accent"
+          className="text-accent hover:underline"
           target="_blank"
           rel="noreferrer noopener"
         >
@@ -155,7 +155,7 @@ function showResult(params: {
       <span>
         <a
           href={explorerUrl(chain, result)}
-          className="text-accent"
+          className="text-accent hover:underline"
           target="_blank"
           rel="noreferrer noopener"
         >
@@ -168,7 +168,7 @@ function showResult(params: {
       <span>
         <a
           href={explorerUrl(chain, result)}
-          className="text-accent"
+          className="text-accent hover:underline"
           target="_blank"
           rel="noreferrer noopener"
         >
@@ -530,12 +530,7 @@ const API: React.FC = () => {
             </div>
 
             {apiCalls.map((elm, i) => (
-              <Link
-                href={`/user/${elm.id}`}
-                key={i}
-                className="flex transition-shadow hover:shadow-lg"
-                role="row"
-              >
+              <div key={i} className="flex">
                 <div
                   className="flex w-[15%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
                   role="cell"
@@ -581,7 +576,7 @@ const API: React.FC = () => {
                     error: elm.error,
                   })}
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
           {/* Pagination */}
@@ -605,20 +600,47 @@ const API: React.FC = () => {
             </button>
 
             <div className="flex items-center justify-center space-x-1">
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`flex h-8 w-8 items-center justify-center rounded text-sm font-semibold
-                  ${
-                    page === i + 1
-                      ? "bg-accent text-white"
-                      : "border border-jacarta-100 bg-white dark:border-jacarta-600 dark:bg-jacarta-700"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              {[...Array(totalPages)].map((_, i) => {
+                const pageNum = i + 1;
+
+                // Always show first page, current page, and last page
+                // Show up to 5 pages before and after current page
+                if (
+                  pageNum === 1 ||
+                  pageNum === totalPages ||
+                  pageNum === page ||
+                  (pageNum >= page - 5 && pageNum <= page + 5)
+                ) {
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setPage(pageNum)}
+                      className={`flex h-8 w-8 items-center justify-center rounded text-sm font-semibold
+                      ${
+                        page === pageNum
+                          ? "bg-accent text-white"
+                          : "border border-jacarta-100 bg-white dark:border-jacarta-600 dark:bg-jacarta-700"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                }
+
+                // Show ellipsis for gaps in page numbers
+                if (
+                  (pageNum === page - 6 && pageNum > 1) ||
+                  (pageNum === page + 6 && pageNum < totalPages)
+                ) {
+                  return (
+                    <span key={i} className="px-1">
+                      ...
+                    </span>
+                  );
+                }
+
+                return null;
+              })}
             </div>
 
             <button
