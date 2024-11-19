@@ -105,7 +105,7 @@ export function apiHandler<T, V>(params: {
 
     async function reply(status: number, json: { error: string } | V) {
       if (!isInternal) {
-        await prisma.aPIKeyCalls.create({
+        const prismaPromise = prisma.aPIKeyCalls.create({
           data: {
             address: userKey,
             status,
@@ -115,26 +115,29 @@ export function apiHandler<T, V>(params: {
             result: getResult(json),
           },
         });
-      }
-      if (!README_API_KEY) {
-        console.error("README API key not set");
-      } else if (!isInternal && userKey && userName && userEmail) {
-        const log = await readme.log(
-          README_API_KEY,
-          req,
-          res,
-          {
-            apiKey: userKey,
-            label: userName,
-            email: userEmail,
-          },
-          {
-            baseLogUrl: "https://minatokens.readme.io",
-          }
-        );
-        if (DEBUG) console.log("README log", log);
-      } else if (!isInternal) {
-        console.error("No user info found for API key", userKey);
+
+        if (!README_API_KEY) {
+          console.error("README API key not set");
+        } else if (userKey && userName && userEmail) {
+          const log = await readme.log(
+            README_API_KEY,
+            req,
+            res,
+            {
+              apiKey: userKey,
+              label: userName,
+              email: userEmail,
+            },
+            {
+              baseLogUrl: "https://docs.minatokens.com",
+            }
+          );
+
+          if (DEBUG) console.log("README log", log);
+        } else {
+          console.error("No user info found for API key", userKey);
+        }
+        await prismaPromise;
       }
 
       if ((json as any)?.error) {

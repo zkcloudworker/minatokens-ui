@@ -274,12 +274,12 @@ const API: React.FC = () => {
             Explore our comprehensive API documentation and try out live API
             endpoints at{" "}
             <a
-              href="https://minatokens.readme.io"
+              href="https://docs.minatokens.com"
               className="text-accent"
               target="_blank"
               rel="noreferrer noopener"
             >
-              https://minatokens.readme.io
+              https://docs.minatokens.com
             </a>
           </p>
 
