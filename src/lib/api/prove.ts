@@ -7,7 +7,7 @@ import {
 } from "@/lib/token-api";
 import { debug } from "@/lib/debug";
 import { getChain } from "@/lib/chain";
-import { checkAddress } from "@/lib/address";
+import { checkAddress } from "./address";
 import { ProveTokenTransaction, JobId, ApiResponse } from "./types";
 import { getTokenSymbolAndAdmin } from "./symbol";
 const chain = getChain();

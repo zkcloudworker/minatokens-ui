@@ -3,7 +3,7 @@ import { ApiResponse } from "./types";
 import { APIKey, PrismaClient } from "@prisma/client";
 import { SignJWT } from "jose";
 import formData from "form-data";
-import { checkAddress } from "@/lib/address";
+import { checkAddress } from "./address";
 import { getChain } from "@/lib/chain";
 import { getBlockberryScamInfo } from "../blockberry-tokens";
 const chain = getChain();

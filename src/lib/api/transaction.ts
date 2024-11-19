@@ -8,7 +8,7 @@ import { PublicKey, UInt64, Mina, AccountUpdate } from "o1js";
 import { FungibleToken, serializeTransaction } from "./zkcloudworker";
 import { TransactionTokenParams, ApiResponse, TokenTransaction } from "./types";
 import { getTokenSymbolAndAdmin } from "./symbol";
-import { checkAddress } from "@/lib/address";
+import { checkAddress } from "./address";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
 import { getAccountNonce } from "../nonce";

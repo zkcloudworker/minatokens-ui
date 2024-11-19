@@ -38,7 +38,9 @@ export async function checkMintData(
   }
 }
 
-export function checkAddress(address: string | undefined): boolean {
+export async function checkAddress(
+  address: string | undefined
+): Promise<boolean> {
   if (!address || typeof address !== "string") {
     console.error("checkAddress params are invalid:", address);
     return false;
