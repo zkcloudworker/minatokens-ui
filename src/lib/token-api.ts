@@ -43,7 +43,7 @@ export async function sendTransferTransaction(
 
 export async function getResult(
   jobId: string
-): Promise<FungibleTokenJobResult | undefined> {
+): Promise<FungibleTokenJobResult> {
   const api = getAPI();
   return await api.getResult(jobId);
 }
