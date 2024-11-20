@@ -162,15 +162,15 @@ export async function waitForProveJob(params: {
         tokenContractAddress,
         address,
       });
-      console.log(
-        "balanceResult",
-        balanceResult,
-        "received in ",
-        Date.now() - start,
-        "ms in attempt:",
-        attempt
-      );
     }
+    console.log(
+      "balanceResult",
+      balanceResult,
+      "received in ",
+      Date.now() - start,
+      "ms in attempt:",
+      attempt
+    );
     if (
       balanceResult.success === false ||
       balanceResult.balance === undefined
