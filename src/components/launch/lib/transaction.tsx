@@ -129,7 +129,7 @@ export async function tokenTransaction(params: {
       await fetchMinaAccount({
         publicKey: sender,
         tokenId,
-        force: true,
+        force: false,
       });
       await fetchMinaAccount({
         publicKey: contractAddress,
@@ -147,7 +147,7 @@ export async function tokenTransaction(params: {
       await fetchMinaAccount({
         publicKey: to,
         tokenId,
-        force: true,
+        force: false,
       });
       await fetchMinaAccount({
         publicKey: wallet,
@@ -174,7 +174,9 @@ export async function tokenTransaction(params: {
         error: "Sender does not have account",
       };
     }
-    const senderTokenBalance = Mina.getAccount(sender, tokenId).balance;
+    const senderTokenBalance = Mina.hasAccount(sender, tokenId)
+      ? Mina.getAccount(sender, tokenId).balance
+      : UInt64.from(0);
     if (
       action === "transfer" &&
       senderTokenBalance.toBigInt() < amount.toBigInt()
