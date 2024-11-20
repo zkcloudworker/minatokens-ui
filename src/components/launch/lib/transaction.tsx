@@ -5,7 +5,6 @@ import { UpdateTimelineItemFunction, messages } from "./messages";
 import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
-import { TimeLineItem, IsErrorFunction } from "../TimeLine";
 import { TokenAction } from "@/lib/token";
 const DEBUG = debug();
 const chain = getChain();
@@ -26,7 +25,6 @@ export async function tokenTransaction(params: {
   updateTimelineItem: UpdateTimelineItemFunction;
   nonce: number;
   groupId: string;
-  isError: IsErrorFunction;
   action: TokenAction;
 }): Promise<{
   success: boolean;
@@ -43,7 +41,6 @@ export async function tokenTransaction(params: {
     updateTimelineItem,
     nonce,
     groupId,
-    isError,
     action,
   } = params;
   const FEE = action === "mint" ? MINT_FEE : TRANSFER_FEE;

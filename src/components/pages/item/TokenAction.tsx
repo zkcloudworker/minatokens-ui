@@ -37,7 +37,7 @@ const initialAddresses: MintAddress[] = MINT_TEST
 
 let isErrorNow = false;
 export function isError(): boolean {
-  if (DEBUG) console.log("isErrorNow called", isErrorNow);
+  // if (DEBUG) console.log("isErrorNow called", isErrorNow);
   return isErrorNow;
 }
 
@@ -102,7 +102,7 @@ export function TokenActionComponent({
       action,
       statistics: newStatistics,
     });
-    if (DEBUG) console.log("Updated statistics:", newStatistics);
+    // if (DEBUG) console.log("Updated statistics:", newStatistics);
   }, [state]);
 
   function addLog(group: TimelineGroup) {

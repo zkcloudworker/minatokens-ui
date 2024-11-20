@@ -633,7 +633,6 @@ export async function launchToken(params: {
       jobId: deployJobId,
       groupId: "deploy",
       updateTimelineItem,
-      isError,
       type: "deploy",
       tokenContractAddress: tokenPublicKey,
     });
@@ -650,7 +649,6 @@ export async function launchToken(params: {
       groupId: "deploy",
       updateTimelineItem,
       info,
-      isError,
     });
     if (!contractVerified) {
       return;
@@ -772,7 +770,6 @@ export async function launchToken(params: {
           updateTimelineItem,
           symbol,
           lib,
-          isError,
           action: "mint",
         });
         if (mintResult.success === false || mintResult.jobId === undefined) {
@@ -788,7 +785,6 @@ export async function launchToken(params: {
           jobId: mintJobId,
           groupId,
           updateTimelineItem,
-          isError,
           type: "mint",
           tokenContractAddress: tokenPublicKey,
           address: item.address,
