@@ -17,6 +17,7 @@ import { TokenDetailsProvider } from "@/context/details";
 import { SearchProvider } from "@/context/search";
 import { AddressProvider } from "@/context/address";
 import { TokenActionProvider } from "@/context/tokenAction";
+import { Analytics } from "@vercel/analytics/next";
 if (typeof window !== "undefined") {
   // Import the script only on the client side
   import("bootstrap/dist/js/bootstrap.esm").then((module) => {
@@ -50,6 +51,7 @@ export default function RootLayout({ children }) {
             </LaunchTokenProvider>
           </AddressProvider>
         </SearchProvider>
+        <Analytics />
       </body>
     </html>
   );
