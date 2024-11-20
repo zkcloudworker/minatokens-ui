@@ -36,7 +36,7 @@ export function getMintStatistics(): MintStatistics {
 
 let isErrorNow = false;
 export function isError(): boolean {
-  if (DEBUG) console.log("isErrorNow called", isErrorNow);
+  // if (DEBUG) console.log("isErrorNow called", isErrorNow);
   return isErrorNow;
 }
 
@@ -96,7 +96,7 @@ const LaunchToken: React.FC = () => {
     const mintItems = state.timelineItems.filter((item) =>
       item.groupId.startsWith("minting")
     );
-    if (DEBUG) console.log("mintItems", mintItems);
+    // if (DEBUG) console.log("mintItems", mintItems);
     const newStatistics = {
       success: 0,
       error: 0,
@@ -113,7 +113,7 @@ const LaunchToken: React.FC = () => {
     });
 
     statistics = newStatistics;
-    if (DEBUG) console.log("Updated statistics:", statistics);
+    // if (DEBUG) console.log("Updated statistics:", statistics);
   }, [state]);
 
   const handleLaunchButtonClick = async (data: LaunchTokenData) => {

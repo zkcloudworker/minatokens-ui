@@ -17,7 +17,6 @@ import {
   explorerTransactionUrl,
   explorerAccountUrl,
 } from "@/lib/chain";
-import { IsErrorFunction } from "../TimeLine";
 import { sendTransaction } from "@/lib/send";
 import { getTokenBalance } from "@/lib/verify";
 const chain = getChain();
@@ -27,7 +26,6 @@ export async function waitForProveJob(params: {
   jobId: string;
   groupId: string;
   updateTimelineItem: UpdateTimelineItemFunction;
-  isError: IsErrorFunction;
   type: "deploy" | "mint";
   tokenContractAddress: string;
   address?: string;
@@ -36,7 +34,6 @@ export async function waitForProveJob(params: {
     jobId,
     groupId,
     updateTimelineItem,
-    isError,
     type,
     tokenContractAddress,
     address,
@@ -50,19 +47,13 @@ export async function waitForProveJob(params: {
   while (
     result?.tx === undefined &&
     result?.error === undefined &&
-    result?.success !== false &&
-    !isError()
+    result?.success !== false
   ) {
     await sleep(10000);
     result = await getResult(jobId);
   }
 
-  if (
-    result?.error ||
-    result?.tx === undefined ||
-    isError() ||
-    result?.success == false
-  ) {
+  if (result?.error || result?.tx === undefined || result?.success == false) {
     updateTimelineItem({
       groupId,
       update: {
@@ -107,10 +98,29 @@ export async function waitForProveJob(params: {
   if (!transaction) {
     return false;
   }
-  if (isError()) return false;
 
-  const sendResult = await sendTransaction(transaction);
-  if (DEBUG) console.log("Transaction sent:", sendResult);
+  const start = Date.now();
+  let sendResult = await sendTransaction(transaction);
+  const TIMEOUT = 1000 * 60 * 10;
+  let attempt = 1;
+  while (
+    (sendResult.success === false || sendResult.hash === undefined) &&
+    Date.now() - start < TIMEOUT
+  ) {
+    attempt++;
+    await sleep(10000);
+    sendResult = await sendTransaction(transaction);
+  }
+  if (DEBUG)
+    console.log(
+      "Transaction sent:",
+      sendResult,
+      "in",
+      attempt,
+      "attempt after",
+      Date.now() - start,
+      "ms"
+    );
   if (sendResult.success === false || sendResult.hash === undefined) {
     updateTimelineItem({
       groupId,
@@ -124,13 +134,11 @@ export async function waitForProveJob(params: {
     });
     return false;
   }
-  if (isError()) return false;
 
   const txIncluded = await waitForMinaTx({
     hash: sendResult.hash,
     groupId,
     updateTimelineItem,
-    isError,
     type,
   });
 
@@ -203,10 +211,9 @@ export async function waitForMinaTx(params: {
   hash: string;
   groupId: string;
   updateTimelineItem: UpdateTimelineItemFunction;
-  isError: IsErrorFunction;
   type: "deploy" | "mint";
 }): Promise<boolean> {
-  const { hash, groupId, updateTimelineItem, isError, type } = params;
+  const { hash, groupId, updateTimelineItem, type } = params;
   const txSentMsg = (
     <>
       Transaction is{" "}
@@ -240,7 +247,7 @@ export async function waitForMinaTx(params: {
   let count = 0;
   if (DEBUG)
     console.log("Waiting for Mina transaction to be mined...", { hash, ok });
-  while (!ok && count < 100 && !isError()) {
+  while (!ok && count < 100) {
     await sleep(delay);
     status = await getTxStatusFast({ hash });
     ok = status?.result ?? false;
@@ -302,7 +309,6 @@ export async function waitForContractVerification(params: {
   groupId: GroupId;
   updateTimelineItem: UpdateTimelineItemFunction;
   info: TokenInfo;
-  isError: IsErrorFunction;
 }): Promise<boolean> {
   const {
     groupId,
@@ -312,7 +318,6 @@ export async function waitForContractVerification(params: {
     adminAddress,
     info,
     tokenId,
-    isError,
   } = params;
 
   let count = 0;
@@ -328,7 +333,7 @@ export async function waitForContractVerification(params: {
   });
   if (DEBUG)
     console.log("Waiting for contract state to be verified...", verified);
-  while (!verified && count++ < 100 && !isError()) {
+  while (!verified && count++ < 100) {
     if (DEBUG)
       console.log("Waiting for contract state to be verified...", verified);
     await sleep(10000);
