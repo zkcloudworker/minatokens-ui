@@ -243,10 +243,10 @@ export async function tokenTransaction(params: {
     const payload = {
       transaction,
       onlySign: true,
+      nonce,
       feePayer: {
         fee: fee,
         memo: memo,
-        nonce,
       },
     };
     console.timeEnd("prepared tx");
