@@ -431,7 +431,7 @@ export async function tokenAction(params: {
         updateTimelineItem,
         symbol,
         lib,
-        isError,
+
         action,
       });
       if (mintResult.success === false || mintResult.jobId === undefined) {
@@ -445,7 +445,7 @@ export async function tokenAction(params: {
         jobId: mintJobId,
         groupId,
         updateTimelineItem,
-        isError,
+
         type: "mint",
         tokenContractAddress: tokenAddress,
         address: item.address,
