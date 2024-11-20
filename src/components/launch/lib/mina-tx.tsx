@@ -50,13 +50,19 @@ export async function waitForProveJob(params: {
   while (
     result?.tx === undefined &&
     result?.error === undefined &&
+    result?.success !== false &&
     !isError()
   ) {
     await sleep(10000);
     result = await getResult(jobId);
   }
 
-  if (result?.error || result?.tx === undefined || isError()) {
+  if (
+    result?.error ||
+    result?.tx === undefined ||
+    isError() ||
+    result?.success == false
+  ) {
     updateTimelineItem({
       groupId,
       update: {
