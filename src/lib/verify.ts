@@ -1,6 +1,6 @@
 "use server";
 import { fetchMinaAccount, initBlockchain, FungibleToken } from "zkcloudworker";
-import { Mina, PublicKey, TokenId } from "o1js";
+import { Mina, PublicKey, TokenId, fetchAccount } from "o1js";
 import { TokenInfo, DeployedTokenInfo } from "./token";
 import { getTokenState } from "./state";
 import { algoliaWriteToken } from "./algolia";
@@ -161,17 +161,26 @@ export async function getTokenBalance(params: {
     const publicKey = PublicKey.fromBase58(address);
     const tokenContract = new FungibleToken(tokenContractPublicKey);
     const tokenId = tokenContract.deriveTokenId();
-    await fetchMinaAccount({
-      publicKey,
-      tokenId,
-      force: false,
-    });
+    try {
+      await fetchAccount({
+        publicKey,
+        tokenId,
+      });
+    } catch (error) {
+      console.error("getTokenBalance: fetchAccount failed", {
+        error,
+      });
+      return { success: false, error: "getTokenBalance: fetchAccount failed" };
+    }
     if (!Mina.hasAccount(tokenContractPublicKey, tokenId)) {
       console.error("getTokenBalance: Token contract user account not found", {
         tokenContractAddress,
         address,
       });
-      return { success: false, error: "User account don't have tokens" };
+      return {
+        success: false,
+        error: "getTokenBalance: Token contract user account not found",
+      };
     }
     const balance = Number(
       Mina.getAccount(publicKey, tokenId).balance.toBigInt()

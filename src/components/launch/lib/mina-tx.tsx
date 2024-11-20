@@ -138,10 +138,33 @@ export async function waitForProveJob(params: {
     if (!address) {
       throw new Error("Address is required for minting");
     }
-    const balanceResult = await getTokenBalance({
+    const start = Date.now();
+    const TIMEOUT = 1000 * 60 * 5;
+    let attempt = 1;
+    let balanceResult = await getTokenBalance({
       tokenContractAddress,
       address,
     });
+    while (
+      (balanceResult.success === false ||
+        balanceResult.balance === undefined) &&
+      Date.now() - start < TIMEOUT
+    ) {
+      attempt++;
+      await sleep(5000);
+      balanceResult = await getTokenBalance({
+        tokenContractAddress,
+        address,
+      });
+      console.log(
+        "balanceResult",
+        balanceResult,
+        "received in ",
+        Date.now() - start,
+        "ms in attempt:",
+        attempt
+      );
+    }
     if (
       balanceResult.success === false ||
       balanceResult.balance === undefined
