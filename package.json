@@ -12,7 +12,7 @@
     "prisma:generate": "prisma generate",
     "prisma:format": "prisma format",
     "prisma:seed": "dotenv -e .env.local -- prisma db seed",
-    "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev --name v7",
+    "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev --name v8",
     "prisma:status": "dotenv -e .env.local -- prisma migrate status",
     "prisma:studio": "dotenv -e .env.local -- prisma studio",
     "prisma:push": "dotenv -e .env.local -- prisma db push",
@@ -58,7 +58,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-custom-groups": "^1.1.2",
     "tippy.js": "^6.3.7",
-    "zkcloudworker": "^0.16.9"
+    "zkcloudworker": "^0.16.10"
   },
   "devDependencies": {
     "@types/bootstrap": "^5.2.10",
@@ -69,7 +69,7 @@
     "@typescript-eslint/eslint-plugin": "^8.13.0",
     "autoprefixer": "^10.0.1",
     "cross-env": "^7.0.3",
-    "dotenv-cli": "^7.4.3",
+    "dotenv-cli": "^7.4.4",
     "eslint": "^8",
     "eslint-config-next": "^14.2.13",
     "postcss": "^8.4.48",
