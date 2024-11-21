@@ -31,7 +31,11 @@ export async function jobResult(
   if (result.success) {
     return {
       status: 200,
-      json: { hash: result.hash, tx: result.tx },
+      json: {
+        hash: result.hash,
+        tx: result.tx,
+        jobStatus: result?.jobStatus,
+      },
     };
   } else {
     return {

@@ -191,7 +191,7 @@ const maxResponseTimeMs = [
   { endpoint: "default", max: 1000 },
 ];
 
-function showResponseTime(endpoint: string, responseTimeMs: number | null) {
+function showResponseTime(endpoint: string, responseTimeMs: number) {
   const max = maxResponseTimeMs.find((elm) => elm.endpoint === endpoint)?.max;
   if (!responseTimeMs) return "";
   const minutes = Math.floor(responseTimeMs / 60000);

@@ -166,6 +166,7 @@ export interface JobId {
 export interface TransactionResult {
   hash?: string;
   tx?: string;
+  jobStatus?: string;
 }
 
 export interface TokenStateRequestParams {

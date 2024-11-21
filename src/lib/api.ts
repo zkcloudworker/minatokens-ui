@@ -133,7 +133,10 @@ export function apiHandler<T, V>(params: {
     function getResult(json: any): string | undefined {
       switch (name) {
         case "result":
-          return (json as TransactionResult)?.hash;
+          return (
+            (json as TransactionResult)?.hash ??
+            (json as TransactionResult)?.jobStatus
+          );
         case "tx-status":
           return (json as TransactionStatus)?.status;
         case "faucet":
