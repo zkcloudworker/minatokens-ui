@@ -12,7 +12,7 @@ export async function getApiCalls(params: {
   itemsPerPage: number;
 }): Promise<{ data: APIKeyCalls[]; totalPages: number }> {
   const { address, chain, endpoint, timePeriod, page, itemsPerPage } = params;
-  // console.log("getApiCalls", params);
+  console.log("getApiCalls", params);
   const prisma = new PrismaClient({
     datasourceUrl: process.env.POSTGRES_PRISMA_URL,
   });

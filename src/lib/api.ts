@@ -64,6 +64,7 @@ export function apiHandler<T, V>(params: {
   const { name, handler, isInternal = false, isReadme = false } = params;
 
   return async (req: NextApiRequest & { body: T }, res: NextApiResponse) => {
+    const start = Date.now();
     if (req.method === "OPTIONS") {
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Access-Control-Allow-Methods", "*");
@@ -117,8 +118,6 @@ export function apiHandler<T, V>(params: {
       return res.status(status).json(json);
     }
 
-    const start = Date.now();
-
     const apiKey = req.headers["x-api-key"];
     if (!apiKey || typeof apiKey !== "string" || apiKey === "") {
       return reply(401, { error: "Unauthorized" });
@@ -147,17 +146,6 @@ export function apiHandler<T, V>(params: {
 
     async function reply(status: number, json: { error: string } | V) {
       if (!isInternal) {
-        const prismaPromise = prisma.aPIKeyCalls.create({
-          data: {
-            address: userKey,
-            status,
-            chain: getChainId(),
-            endpoint: name,
-            error: (json as any)?.error,
-            result: getResult(json),
-          },
-        });
-
         if (!README_API_KEY) {
           console.error("README API key not set");
         } else if (userKey && userName && userEmail) {
@@ -179,11 +167,21 @@ export function apiHandler<T, V>(params: {
         } else {
           console.error("No user info found for API key", userKey);
         }
-        await prismaPromise;
-      }
-
-      if ((json as any)?.error) {
-        console.error("api reply", { status, error: (json as any)?.error });
+        if ((json as any)?.error) {
+          console.error("api reply", { status, error: (json as any)?.error });
+        }
+        const end = Date.now();
+        await prisma.aPIKeyCalls.create({
+          data: {
+            address: userKey,
+            status,
+            chain: getChainId(),
+            endpoint: name,
+            error: (json as any)?.error,
+            result: getResult(json),
+            responseTimeMs: end - start,
+          },
+        });
       }
       res.status(status).json(json);
     }

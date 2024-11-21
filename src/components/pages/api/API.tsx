@@ -179,6 +179,38 @@ function showResult(params: {
   return <span></span>;
 }
 
+const maxResponseTimeMs = [
+  { endpoint: "info", max: 100 },
+  { endpoint: "deploy", max: 1000 },
+  { endpoint: "transaction", max: 1000 },
+  { endpoint: "prove", max: 10000 },
+  { endpoint: "result", max: 1000 },
+  { endpoint: "tx-status", max: 1000 },
+  { endpoint: "faucet", max: 1000 },
+  { endpoint: "default", max: 1000 },
+];
+
+function showResponseTime(endpoint: string, responseTimeMs: number | null) {
+  const max = maxResponseTimeMs.find((elm) => elm.endpoint === endpoint)?.max;
+  if (!responseTimeMs) return "";
+  const minutes = Math.floor(responseTimeMs / 60000);
+  const seconds = Math.floor((responseTimeMs % 60000) / 1000);
+  const ms = responseTimeMs % 1000;
+
+  let timeStr = "";
+  if (minutes > 0) timeStr += `${minutes} min `;
+  if (seconds > 0) timeStr += `${seconds} sec `;
+  timeStr += `${ms}ms`;
+
+  return (
+    <span
+      className={responseTimeMs < (max || 1000) ? "text-green" : "text-red"}
+    >
+      {timeStr}
+    </span>
+  );
+}
+
 const API: React.FC = () => {
   const [activeBlockchainOption, setActiveBlockchainOption] = useState<{
     name: string;
@@ -226,17 +258,22 @@ const API: React.FC = () => {
   useEffect(() => {
     if (DEBUG) console.log("address", address);
     fetchApiCalls();
-  }, [address, activeBlockchainOption, activeCategory, activeTimeOption, page]);
 
-  useEffect(() => {
+    // Only set up polling interval if we're on page 1
+    let interval: NodeJS.Timeout | undefined;
     if (page === 1) {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         fetchApiCalls();
       }, 10000);
-
-      return () => clearInterval(interval);
     }
-  }, [page]);
+
+    // Clean up function will clear the interval when dependencies change
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [address, activeBlockchainOption, activeCategory, activeTimeOption, page]);
 
   async function getAddress(tryConnect = true): Promise<string | undefined> {
     let userAddress = address;
@@ -522,7 +559,12 @@ const API: React.FC = () => {
                   Status
                 </span>
               </div>
-              <div className="w-[55%] py-3 px-4" role="columnheader">
+              <div className="w-[15%] py-3 px-4" role="columnheader">
+                <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
+                  Response Time
+                </span>
+              </div>
+              <div className="w-[40%] py-3 px-4" role="columnheader">
                 <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
                   Result
                 </span>
@@ -566,7 +608,13 @@ const API: React.FC = () => {
                   </span>
                 </div>
                 <div
-                  className="flex w-[55%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                  className="flex w-[15%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                  role="cell"
+                >
+                  {showResponseTime(elm.endpoint, elm.responseTimeMs)}
+                </div>
+                <div
+                  className="flex w-[40%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
                   role="cell"
                 >
                   {showResult({
@@ -595,7 +643,7 @@ const API: React.FC = () => {
                 className="h-4 w-4 fill-jacarta-700 dark:fill-white"
               >
                 <path fill="none" d="M0 0h24v24H0z" />
-                <path d="M10.828 12l4.95 4.95-1.414 1.414L8 12l6.364-6.364 1.414 1.414z" />
+                <path d="M10.828 12l4.95 4.95-1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
               </svg>
             </button>
 
