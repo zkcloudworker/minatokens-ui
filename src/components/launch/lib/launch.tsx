@@ -625,7 +625,22 @@ export async function launchToken(params: {
       });
       return;
     }
-    if (isError()) return;
+    if (isError()) {
+      addLog({
+        groupId: "error",
+        status: "error",
+        title: "Error launching token",
+        lines: [
+          {
+            lineId: "error",
+            content: "Error launching token",
+            status: "error",
+          },
+        ],
+      });
+      await stopProcessUpdateRequests();
+      return;
+    }
     setLikes((likes += 10));
     const deployJobId = deployResult.jobId;
 
@@ -638,6 +653,18 @@ export async function launchToken(params: {
     });
 
     if (!txIncluded) {
+      addLog({
+        groupId: "error",
+        status: "error",
+        title: "Error launching token",
+        lines: [
+          {
+            lineId: "error",
+            content: "Transaction not included",
+            status: "error",
+          },
+        ],
+      });
       return;
     }
     setLikes((likes += 10));
@@ -651,10 +678,38 @@ export async function launchToken(params: {
       info,
     });
     if (!contractVerified) {
+      addLog({
+        groupId: "error",
+        status: "error",
+        title: "Error launching token",
+        lines: [
+          {
+            lineId: "error",
+            content: "Contract verification failed",
+            status: "error",
+          },
+        ],
+      });
+      await stopProcessUpdateRequests();
       return;
     }
 
-    if (isError()) return;
+    if (isError()) {
+      addLog({
+        groupId: "error",
+        status: "error",
+        title: "Error launching token",
+        lines: [
+          {
+            lineId: "error",
+            content: "Error launching token",
+            status: "error",
+          },
+        ],
+      });
+      await stopProcessUpdateRequests();
+      return;
+    }
 
     if (DEBUG) {
       console.log("Minting tokens", mintItems);
@@ -773,6 +828,42 @@ export async function launchToken(params: {
           action: "mint",
         });
         if (mintResult.success === false || mintResult.jobId === undefined) {
+          const statistics = getMintStatistics();
+          const mintedTokensMsg = (
+            <>
+              Successfully minted{" "}
+              <a
+                href={`${explorerTokenUrl()}${tokenId}`}
+                className="text-accent hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {symbol}
+              </a>{" "}
+              tokens to {statistics.success} addresses
+            </>
+          );
+          updateTimelineItem({
+            groupId: "mint",
+            update: {
+              lineId: "mintingTokens",
+              content: mintedTokensMsg,
+              status: "error",
+            },
+          });
+          addLog({
+            groupId: "error",
+            status: "error",
+            title: "Error launching token",
+            lines: [
+              {
+                lineId: "error",
+                content: "Failed to mint tokens",
+                status: "error",
+              },
+            ],
+          });
+          await stopProcessUpdateRequests();
           return;
         }
         const mintJobId = mintResult.jobId;
@@ -790,7 +881,45 @@ export async function launchToken(params: {
           address: item.address,
         });
         mintPromises.push(waitForMintJobPromise);
-        if (isError()) return;
+        if (isError()) {
+          const statistics = getMintStatistics();
+          const mintedTokensMsg = (
+            <>
+              Successfully minted{" "}
+              <a
+                href={`${explorerTokenUrl()}${tokenId}`}
+                className="text-accent hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {symbol}
+              </a>{" "}
+              tokens to {statistics.success} addresses
+            </>
+          );
+          updateTimelineItem({
+            groupId: "mint",
+            update: {
+              lineId: "mintingTokens",
+              content: mintedTokensMsg,
+              status: "error",
+            },
+          });
+          addLog({
+            groupId: "error",
+            status: "error",
+            title: "Error launching token",
+            lines: [
+              {
+                lineId: "error",
+                content: "Failed to mint tokens",
+                status: "error",
+              },
+            ],
+          });
+          await stopProcessUpdateRequests();
+          return;
+        }
       }
       while (!showMintStatistics(tokensToMint) && !isError()) {
         await sleep(10000);
