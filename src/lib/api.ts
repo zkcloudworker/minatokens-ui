@@ -8,11 +8,12 @@ import {
 import * as readme from "readmeio";
 import { jwtVerify } from "jose";
 import { Chain, PrismaClient } from "@prisma/client";
-import { ApiResponse, FaucetResponse } from "./api/types";
+import { ApiResponse, FaucetResponse, TokenTransaction } from "./api/types";
 import { debug } from "./debug";
 import { getChain } from "@/lib/chain";
 import { JobId, TransactionResult, TransactionStatus } from "@/lib/api/types";
 import { readmeApi } from "./api/readme";
+import { TokenInfo } from "./token";
 const chain = getChain();
 const DEBUG = debug();
 const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY, README_DOCS_SECRET } =
@@ -139,6 +140,10 @@ export function apiHandler<T, V>(params: {
           return (json as FaucetResponse)?.hash;
         case "prove":
           return (json as JobId)?.jobId;
+        case "transaction":
+          return (json as TokenTransaction)?.payload?.feePayer?.memo;
+        case "info":
+          return (json as TokenInfo)?.symbol;
         default:
           return undefined;
       }
