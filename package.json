@@ -58,7 +58,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-custom-groups": "^1.1.2",
     "tippy.js": "^6.3.7",
-    "zkcloudworker": "^0.16.8"
+    "zkcloudworker": "^0.16.9"
   },
   "devDependencies": {
     "@types/bootstrap": "^5.2.10",
