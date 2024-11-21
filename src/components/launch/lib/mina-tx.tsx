@@ -245,9 +245,11 @@ export async function waitForMinaTx(params: {
   let status = await getTxStatusFast({ hash });
   let ok = status?.result ?? false;
   let count = 0;
+  const TIMEOUT = 1000 * 60 * 60;
+  const start = Date.now();
   if (DEBUG)
     console.log("Waiting for Mina transaction to be mined...", { hash, ok });
-  while (!ok && count < 100) {
+  while (!ok && Date.now() - start < TIMEOUT) {
     await sleep(delay);
     status = await getTxStatusFast({ hash });
     ok = status?.result ?? false;
