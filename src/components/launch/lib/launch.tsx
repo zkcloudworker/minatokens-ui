@@ -716,7 +716,6 @@ export async function launchToken(params: {
     }
     setLikes((likes += 10));
 
-    let minted = 0;
     if (mintItems.length > 0) {
       const tokensToMint = mintItems.length;
 
@@ -828,43 +827,7 @@ export async function launchToken(params: {
           action: "mint",
         });
         if (mintResult.success === false || mintResult.jobId === undefined) {
-          const statistics = getMintStatistics();
-          const mintedTokensMsg = (
-            <>
-              Successfully minted{" "}
-              <a
-                href={`${explorerTokenUrl()}${tokenId}`}
-                className="text-accent hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {symbol}
-              </a>{" "}
-              tokens to {statistics.success} addresses
-            </>
-          );
-          updateTimelineItem({
-            groupId: "mint",
-            update: {
-              lineId: "mintingTokens",
-              content: mintedTokensMsg,
-              status: "error",
-            },
-          });
-          addLog({
-            groupId: "error",
-            status: "error",
-            title: "Error launching token",
-            lines: [
-              {
-                lineId: "error",
-                content: "Failed to mint tokens",
-                status: "error",
-              },
-            ],
-          });
-          await stopProcessUpdateRequests();
-          return;
+          break;
         }
         const mintJobId = mintResult.jobId;
         supply += item.amount;
@@ -882,43 +845,7 @@ export async function launchToken(params: {
         });
         mintPromises.push(waitForMintJobPromise);
         if (isError()) {
-          const statistics = getMintStatistics();
-          const mintedTokensMsg = (
-            <>
-              Successfully minted{" "}
-              <a
-                href={`${explorerTokenUrl()}${tokenId}`}
-                className="text-accent hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {symbol}
-              </a>{" "}
-              tokens to {statistics.success} addresses
-            </>
-          );
-          updateTimelineItem({
-            groupId: "mint",
-            update: {
-              lineId: "mintingTokens",
-              content: mintedTokensMsg,
-              status: "error",
-            },
-          });
-          addLog({
-            groupId: "error",
-            status: "error",
-            title: "Error launching token",
-            lines: [
-              {
-                lineId: "error",
-                content: "Failed to mint tokens",
-                status: "error",
-              },
-            ],
-          });
-          await stopProcessUpdateRequests();
-          return;
+          break;
         }
       }
       while (!showMintStatistics(tokensToMint) && !isError()) {
