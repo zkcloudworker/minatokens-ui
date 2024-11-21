@@ -110,6 +110,15 @@ function explorerUrl(chain: Chain, hash: string): string {
   }
 }
 
+const JobStatus = [
+  { name: "created", color: "yellow-500" },
+  { name: "started", color: "yellow-500" },
+  { name: "finished", color: "green" },
+  { name: "failed", color: "red" },
+  { name: "used", color: "green" },
+  { name: "restarted", color: "yellow-500" },
+];
+
 function showResult(params: {
   endpoint: string;
   chain: Chain;
@@ -164,18 +173,31 @@ function showResult(params: {
       </span>
     );
   if (endpoint === "result" && result)
-    return (
-      <span>
-        <a
-          href={explorerUrl(chain, result)}
-          className="text-accent hover:underline"
-          target="_blank"
-          rel="noreferrer noopener"
+    if (JobStatus.find((s) => s.name === result))
+      return (
+        <span
+          className={`text-${JobStatus.find((s) => s.name === result)?.color}`}
         >
           {result}
-        </a>
-      </span>
-    );
+        </span>
+      );
+    else if (result.startsWith("5J"))
+      return (
+        <span>
+          <a
+            href={explorerUrl(chain, result)}
+            className="text-accent hover:underline"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            {result}
+          </a>
+        </span>
+      );
+    else
+      return (
+        <span className="text-sm font-medium tracking-tight">{result}</span>
+      );
   return <span></span>;
 }
 
