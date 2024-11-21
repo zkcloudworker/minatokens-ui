@@ -1,6 +1,6 @@
 import { BlockBerryChain } from "./chain";
 import { getZkAppTxFromBlockBerry } from "./blockberry";
-const TIMEOUT = 1000 * 60 * 21;
+const TIMEOUT = 1000 * 60 * 30;
 
 export async function txStatus(params: {
   hash: string;

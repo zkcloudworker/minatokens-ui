@@ -137,7 +137,7 @@ export async function fetchMinaAccount(params: {
   force?: boolean;
 }) {
   const { publicKey, tokenId, force } = params;
-  const timeout = 1000 * 10; // 10 seconds
+  const timeout = 1000 * 30; // 30 seconds
   const startTime = Date.now();
   let result = { account: undefined };
   while (Date.now() - startTime < timeout) {
