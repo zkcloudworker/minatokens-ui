@@ -169,6 +169,9 @@ export async function getTokenBalance(params: {
     } catch (error) {
       console.error("getTokenBalance: fetchAccount failed", {
         error,
+        tokenContractAddress,
+        address,
+        tokenId: TokenId.toBase58(tokenId),
       });
       return { success: false, error: "getTokenBalance: fetchAccount failed" };
     }
@@ -176,6 +179,7 @@ export async function getTokenBalance(params: {
       console.error("getTokenBalance: Token contract user account not found", {
         tokenContractAddress,
         address,
+        tokenId: TokenId.toBase58(tokenId),
       });
       return {
         success: false,
@@ -187,7 +191,10 @@ export async function getTokenBalance(params: {
     );
     return { success: true, balance };
   } catch (error: any) {
-    console.error("getTokenBalance: catch", error);
+    console.error("getTokenBalance: catch", error, {
+      tokenContractAddress,
+      address,
+    });
     return { success: false, error: error?.message ?? "cannot fetch balance" };
   }
 }
