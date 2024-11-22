@@ -79,15 +79,18 @@ export async function proveToken(
     };
   }
 
-  const symbolResponse = await getTokenSymbolAndAdmin({
-    tokenAddress: tx.tokenAddress,
-  });
-  if (symbolResponse.status !== 200) {
-    return symbolResponse;
-  }
+  let symbol = tx.symbol;
+  let adminContractAddress = tx.adminContractAddress;
 
-  const symbol = symbolResponse.json.tokenSymbol;
-  const adminContractAddress = symbolResponse.json.adminContractAddress;
+  // const symbolResponse = await getTokenSymbolAndAdmin({
+  //   tokenAddress: tx.tokenAddress,
+  // });
+  // if (symbolResponse.status !== 200) {
+  //   return symbolResponse;
+  // }
+
+  // const symbol = symbolResponse.json.tokenSymbol;
+  // const adminContractAddress = symbolResponse.json.adminContractAddress;
 
   if (!adminContractAddress || !checkAddress(adminContractAddress)) {
     return {
