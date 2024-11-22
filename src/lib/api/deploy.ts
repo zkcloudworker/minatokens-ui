@@ -95,6 +95,24 @@ export async function deployToken(
       json: { error: "Invalid image" },
     };
   }
+
+  if (params.memo && typeof params.memo !== "string") {
+    return {
+      status: 400,
+      json: { error: "Invalid memo" },
+    };
+  }
+
+  if (
+    params.memo &&
+    typeof params.memo === "string" &&
+    params.memo.length > 30
+  ) {
+    return {
+      status: 400,
+      json: { error: "Memo is too long" },
+    };
+  }
   console.time("prepared tx");
 
   const sender = PublicKey.fromBase58(adminAddress);
@@ -111,7 +129,9 @@ export async function deployToken(
   const wallet = PublicKey.fromBase58(WALLET);
   const zkToken = new FungibleToken(contractAddress);
   const zkAdmin = new FungibleTokenAdmin(adminContractPublicKey);
-  const memo = `deploy token ${symbol}`.substring(0, 30);
+  const memo = params.memo
+    ? params.memo.substring(0, 30)
+    : `deploy token ${symbol}`;
   const developerFee = params.developerFee
     ? UInt64.from(params.developerFee)
     : undefined;
