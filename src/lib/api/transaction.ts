@@ -84,6 +84,17 @@ export async function tokenTransaction(
     };
   }
 
+  if (
+    params.memo &&
+    typeof params.memo === "string" &&
+    params.memo.length > 30
+  ) {
+    return {
+      status: 400,
+      json: { error: "Memo is too long" },
+    };
+  }
+
   const symbolResponse = await getTokenSymbolAndAdmin({
     tokenAddress,
   });
