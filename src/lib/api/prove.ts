@@ -60,6 +60,16 @@ export async function proveToken(
     };
   }
 
+  try {
+    const signedDataJson = JSON.parse(signedData);
+    console.log("signedDataJson", signedDataJson);
+  } catch (e) {
+    return {
+      status: 400,
+      json: { error: "Invalid signedData" },
+    };
+  }
+
   if (!checkAddress(tx.senderAddress)) {
     return {
       status: 400,
