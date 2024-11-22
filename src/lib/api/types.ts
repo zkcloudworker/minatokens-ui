@@ -79,15 +79,7 @@ export interface TokenTransaction {
 
 export interface ProveTokenTransaction {
   tx: DeployTransaction | TokenTransaction;
-  signedData: {
-    zkappCommand: any;
-    feePayer: {
-      feePayer: string;
-      fee: number;
-      nonce: number;
-      memo: string;
-    };
-  };
+  signedData: string;
   sendTransaction?: boolean;
 }
 
