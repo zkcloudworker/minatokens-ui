@@ -26,6 +26,7 @@ import { checkAddress } from "./address";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
 import { getAccountNonce } from "../nonce";
+import { accountExists } from "../account";
 const WALLET = getWallet();
 const chain = getChain();
 const DEBUG = debug();
@@ -66,6 +67,14 @@ export async function deployToken(
       json: { error: "Invalid API key address" },
     };
   }
+
+  if (params.developerFee && !(await accountExists(apiKeyAddress))) {
+    return {
+      status: 400,
+      json: { error: "Developer address is not activated" },
+    };
+  }
+
   if (
     !decimals ||
     typeof decimals !== "number" ||
