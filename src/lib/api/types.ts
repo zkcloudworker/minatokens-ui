@@ -27,8 +27,8 @@ export interface DeployTransaction {
   serializedTransaction: string;
   transaction: string;
   uri: string;
-  memo?: string;
-  nonce?: number;
+  memo: string;
+  nonce: number;
   developerAddress: string;
   developerFee?: number;
 }

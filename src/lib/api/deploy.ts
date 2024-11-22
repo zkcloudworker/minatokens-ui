@@ -236,6 +236,8 @@ export async function deployToken(
       wallet_payload,
       mina_signer_payload,
       uri,
+      memo,
+      nonce,
       developerAddress: apiKeyAddress,
       developerFee: params.developerFee,
     } satisfies DeployTransaction,
