@@ -111,7 +111,7 @@ function explorerUrl(chain: Chain, hash: string): string {
 }
 
 const JobStatus = [
-  { name: "created", color: "yellow-500" },
+  { name: "created", color: "blue" },
   { name: "started", color: "yellow-500" },
   { name: "finished", color: "green" },
   { name: "failed", color: "red" },

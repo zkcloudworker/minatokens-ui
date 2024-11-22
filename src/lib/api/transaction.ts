@@ -19,13 +19,28 @@ const MINT_FEE = 1e8;
 const TRANSFER_FEE = 1e8;
 
 export async function tokenTransaction(
-  params: TransactionTokenParams
+  params: TransactionTokenParams,
+  apiKeyAddress: string
 ): Promise<ApiResponse<TokenTransaction>> {
   const { tokenAddress, senderAddress, txType: action } = params;
   if (DEBUG) console.log("Token transaction", params);
   console.log("chain", chain);
   await initBlockchain();
   const FEE = action === "mint" ? MINT_FEE : TRANSFER_FEE;
+
+  if (params.nonce && typeof params.nonce !== "number") {
+    return {
+      status: 400,
+      json: { error: "Invalid nonce" },
+    };
+  }
+
+  if (params.developerFee && typeof params.developerFee !== "number") {
+    return {
+      status: 400,
+      json: { error: "Invalid developer fee" },
+    };
+  }
 
   if (!checkAddress(tokenAddress)) {
     return {
@@ -34,13 +49,10 @@ export async function tokenTransaction(
     };
   }
 
-  if (
-    params.adminContractAddress &&
-    !checkAddress(params.adminContractAddress)
-  ) {
+  if (!checkAddress(apiKeyAddress)) {
     return {
       status: 400,
-      json: { error: "Invalid admin contract address" },
+      json: { error: "Invalid API key address" },
     };
   }
 
@@ -65,16 +77,6 @@ export async function tokenTransaction(
     };
   }
 
-  if (
-    params.symbol &&
-    (typeof params.symbol !== "string" || params.symbol.length === 0)
-  ) {
-    return {
-      status: 400,
-      json: { error: "Invalid symbol" },
-    };
-  }
-
   if (params.memo && typeof params.memo !== "string") {
     return {
       status: 400,
@@ -89,9 +91,8 @@ export async function tokenTransaction(
     return symbolResponse;
   }
 
-  const symbol = params.symbol ?? symbolResponse.json.tokenSymbol;
-  const adminContractAddress =
-    params.adminContractAddress ?? symbolResponse.json.adminContractAddress;
+  const symbol = symbolResponse.json.tokenSymbol;
+  const adminContractAddress = symbolResponse.json.adminContractAddress;
   if (!checkAddress(adminContractAddress)) {
     return {
       status: 400,
@@ -115,6 +116,10 @@ export async function tokenTransaction(
   const to = PublicKey.fromBase58(params.to);
   if (DEBUG) console.log("to:", to.toBase58());
   const amount = UInt64.from(params.amount);
+  const developerFee = params.developerFee
+    ? UInt64.from(params.developerFee)
+    : undefined;
+  const developerFeeAddress = PublicKey.fromBase58(apiKeyAddress);
 
   if (DEBUG) console.log("amount:", amount.toBigInt());
 
@@ -220,23 +225,28 @@ export async function tokenTransaction(
     };
   }
 
-  const nonce = await getAccountNonce(sender.toBase58());
+  const nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
   if (DEBUG) console.log("nonce:", nonce);
   const tx = await Mina.transaction({ sender, fee, memo, nonce }, async () => {
     if (isNewAccount) AccountUpdate.fundNewAccount(sender, 1);
-    const provingFee = AccountUpdate.createSigned(sender);
-    provingFee.send({
+    const feeAccountUpdate = AccountUpdate.createSigned(sender);
+    feeAccountUpdate.send({
       to: PublicKey.fromBase58(WALLET),
       amount: UInt64.from(MINT_FEE),
     });
+    if (developerFee) {
+      feeAccountUpdate.send({
+        to: developerFeeAddress,
+        amount: developerFee,
+      });
+    }
     if (action === "mint") await zkToken.mint(to, amount);
     else await zkToken.transfer(sender, to, amount);
   });
 
   const serializedTransaction = serializeTransaction(tx);
   const transaction = tx.toJSON();
-  const txJSON = JSON.parse(transaction);
-  const payload = {
+  const wallet_payload = {
     transaction,
     nonce,
     onlySign: true,
@@ -245,16 +255,36 @@ export async function tokenTransaction(
       memo: memo,
     },
   };
+
+  const mina_signer_payload = {
+    zkappCommand: JSON.parse(transaction),
+    feePayer: {
+      feePayer: sender.toBase58(),
+      fee: fee,
+      nonce: nonce,
+      memo: memo,
+    },
+  };
   console.timeEnd("prepared tx");
 
   return {
     status: 200,
     json: {
-      serializedTransaction,
-      transaction,
-      payload,
+      txType: action,
+      senderAddress: sender.toBase58(),
       tokenAddress,
       adminContractAddress,
+      symbol,
+      wallet_payload,
+      mina_signer_payload,
+      serializedTransaction,
+      transaction,
+      to: to.toBase58(),
+      amount: Number(amount.toBigInt()),
+      memo,
+      nonce,
+      developerAddress: apiKeyAddress,
+      developerFee: params.developerFee,
     } satisfies TokenTransaction,
   };
 }

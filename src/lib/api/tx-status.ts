@@ -12,7 +12,8 @@ const chain = getChain();
 const BLOCKBERRY_API = process.env.BLOCKBERRY_API;
 
 export async function getTransactionStatus(
-  params: TransactionStatusParams
+  params: TransactionStatusParams,
+  apiKeyAddress: string
 ): Promise<ApiResponse<TransactionStatus>> {
   console.log("getTransactionStatus", params);
   const { hash } = params;
