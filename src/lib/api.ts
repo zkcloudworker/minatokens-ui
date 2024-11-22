@@ -244,9 +244,11 @@ export function apiHandler<T, V>(params: {
           userKey = jwt.payload.address as string;
           userName = jwt.payload.name as string;
           userEmail = jwt.payload.email as string;
-        } catch (error) {
+        } catch (error: any) {
           console.error(error);
-          return res.status(401).json({ error: "Unauthorized" });
+          return res
+            .status(401)
+            .json({ error: error?.message ?? "Unauthorized" });
         }
       }
 
