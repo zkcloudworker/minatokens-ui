@@ -93,7 +93,7 @@ export async function readmeApi(
       };
     }
 
-    const jwt = await generateJWT({ address, name, email, expiry: "1d" });
+    const jwt = await generateJWT({ address, name, email, expiry: "1y" });
 
     return {
       status: 200,
