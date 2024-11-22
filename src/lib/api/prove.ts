@@ -63,6 +63,42 @@ export async function proveToken(
   try {
     const signedDataJson = JSON.parse(signedData);
     console.log("signedDataJson", signedDataJson);
+    /*
+signedDataJson {
+  zkappCommand: {
+    feePayer: {
+      body: [Object],
+      authorization: '7mXSyamUMTh2XGK6nDRYPpjBeBCoprwdCz4d9LGcpv9hgbRmBVMUApsNHeZJ5GRWP11X9crf83DKWBvobPqRDauDnLk7Xdzp'
+    },
+    accountUpdates: [
+      [Object], [Object],
+      [Object], [Object],
+      [Object], [Object],
+      [Object]
+    ],
+    memo: 'E4Yo8nXTuaAttX7VpvMaZpeYAZkBov3WUK1RjT9nLtybrK8neebqV'
+  },
+  feePayer: {
+    feePayer: 'B62qjFmTAzmLvPXRhUn8H83BoqtQxFtqHe8DkYBrj44TP6uKWWNfa1a',
+    fee: '100000000',
+    nonce: '35',
+    memo: 'mint 100 TEST',
+    validUntil: null
+  }
+}
+    */
+    if (!signedDataJson.feePayer) {
+      return {
+        status: 400,
+        json: { error: "Invalid signedData - missing feePayer" },
+      };
+    }
+    if (!signedDataJson.zkappCommand) {
+      return {
+        status: 400,
+        json: { error: "Invalid signedData - missing zkappCommand" },
+      };
+    }
   } catch (e) {
     return {
       status: 400,
