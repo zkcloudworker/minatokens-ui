@@ -29,7 +29,8 @@ export interface KeyResponse {
 }
 
 export async function generateApiKey(
-  formData: Record<string, any>
+  formData: Record<string, any>,
+  apiKeyAddress: string
 ): Promise<ApiResponse<KeyResponse>> {
   console.log("Generating API key", formData);
   const params = parseFormData(formData);

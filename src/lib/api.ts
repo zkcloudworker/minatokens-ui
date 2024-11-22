@@ -8,7 +8,12 @@ import {
 import * as readme from "readmeio";
 import { jwtVerify } from "jose";
 import { Chain, PrismaClient } from "@prisma/client";
-import { ApiResponse, FaucetResponse, TokenTransaction } from "./api/types";
+import {
+  ApiResponse,
+  DeployTransaction,
+  FaucetResponse,
+  TokenTransaction,
+} from "./api/types";
 import { debug } from "./debug";
 import { getChain } from "@/lib/chain";
 import { JobId, TransactionResult, TransactionStatus } from "@/lib/api/types";
@@ -58,7 +63,7 @@ function getChainId(): Chain {
 
 export function apiHandler<T, V>(params: {
   name: string;
-  handler: (params: T) => Promise<ApiResponse<V>>;
+  handler: (params: T, apiKeyAddress: string) => Promise<ApiResponse<V>>;
   isInternal?: boolean;
   isReadme?: boolean;
 }) {
@@ -144,7 +149,9 @@ export function apiHandler<T, V>(params: {
         case "prove":
           return (json as JobId)?.jobId;
         case "transaction":
-          return (json as TokenTransaction)?.payload?.feePayer?.memo;
+          return (json as TokenTransaction)?.memo;
+        case "deploy":
+          return (json as DeployTransaction)?.memo;
         case "info":
           return (json as TokenInfo)?.symbol;
         default:
@@ -256,7 +263,7 @@ export function apiHandler<T, V>(params: {
         const checked = Date.now();
         if (DEBUG)
           console.log("Rate limiting checked in", checked - start, "ms");
-        const { status, json } = await handler(req.body);
+        const { status, json } = await handler(req.body, userKey);
         const handled = Date.now();
         if (DEBUG) console.log("Handler executed in", handled - checked, "ms");
         return await reply(status, json);

@@ -9,7 +9,8 @@ const chain = getChain();
 const DEBUG = debug();
 
 export async function jobResult(
-  params: JobId
+  params: JobId,
+  apiKeyAddress: string
 ): Promise<ApiResponse<TransactionResult>> {
   const { jobId } = params;
 

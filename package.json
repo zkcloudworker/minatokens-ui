@@ -60,7 +60,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-custom-groups": "^1.1.2",
     "tippy.js": "^6.3.7",
-    "zkcloudworker": "^0.16.10"
+    "zkcloudworker": "^0.16.12"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

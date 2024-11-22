@@ -32,17 +32,38 @@ const DEBUG = debug();
 const ISSUE_FEE = 1e9;
 
 export async function deployToken(
-  params: DeployTokenParams
+  params: DeployTokenParams,
+  apiKeyAddress: string
 ): Promise<ApiResponse<DeployTransaction>> {
   const { adminAddress, symbol, decimals, uri } = params;
   if (DEBUG) console.log("Deploying token", params);
   console.log("chain", chain);
   await initBlockchain();
 
+  if (params.nonce && typeof params.nonce !== "number") {
+    return {
+      status: 400,
+      json: { error: "Invalid nonce" },
+    };
+  }
+
+  if (params.developerFee && typeof params.developerFee !== "number") {
+    return {
+      status: 400,
+      json: { error: "Invalid developer fee" },
+    };
+  }
+
   if (!checkAddress(adminAddress)) {
     return {
       status: 400,
       json: { error: "Invalid admin address" },
+    };
+  }
+  if (!checkAddress(apiKeyAddress)) {
+    return {
+      status: 400,
+      json: { error: "Invalid API key address" },
     };
   }
   if (
@@ -91,6 +112,10 @@ export async function deployToken(
   const zkToken = new FungibleToken(contractAddress);
   const zkAdmin = new FungibleTokenAdmin(adminContractPublicKey);
   const memo = `deploy token ${symbol}`.substring(0, 30);
+  const developerFee = params.developerFee
+    ? UInt64.from(params.developerFee)
+    : undefined;
+  const developerFeeAddress = PublicKey.fromBase58(apiKeyAddress);
 
   await fetchMinaAccount({
     publicKey: sender,
@@ -121,7 +146,7 @@ export async function deployToken(
     };
   }
 
-  const nonce = await getAccountNonce(sender.toBase58());
+  const nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
 
   const vk =
     fungibleTokenVerificationKeys[chain === "mainnet" ? "mainnet" : "testnet"];
@@ -143,11 +168,17 @@ export async function deployToken(
 
   const tx = await Mina.transaction({ sender, fee, memo, nonce }, async () => {
     AccountUpdate.fundNewAccount(sender, 3);
-    const provingFee = AccountUpdate.createSigned(sender);
-    provingFee.send({
+    const feeAccountUpdate = AccountUpdate.createSigned(sender);
+    feeAccountUpdate.send({
       to: PublicKey.fromBase58(WALLET),
       amount: UInt64.from(ISSUE_FEE),
     });
+    if (developerFee) {
+      feeAccountUpdate.send({
+        to: developerFeeAddress,
+        amount: developerFee,
+      });
+    }
     await zkAdmin.deploy({ adminPublicKey: sender });
     zkAdmin.account.zkappUri.set(uri);
     await zkToken.deploy({
@@ -168,7 +199,7 @@ export async function deployToken(
   const serializedTransaction = serializeTransaction(tx);
   const transaction = tx.toJSON();
 
-  const payload = {
+  const wallet_payload = {
     transaction,
     nonce,
     onlySign: true,
@@ -177,19 +208,35 @@ export async function deployToken(
       memo: memo,
     },
   };
+
+  const mina_signer_payload = {
+    zkappCommand: JSON.parse(transaction),
+    feePayer: {
+      feePayer: sender.toBase58(),
+      fee: fee,
+      nonce: nonce,
+      memo: memo,
+    },
+  };
   console.timeEnd("prepared tx");
 
   return {
     status: 200,
     json: {
-      serializedTransaction,
-      transaction,
-      payload,
-      uri,
-      tokenContractPrivateKey: tokenContractPrivateKey.toBase58(),
-      adminContractPrivateKey: adminContractPrivateKey.toBase58(),
+      txType: "deploy",
+      senderAddress: sender.toBase58(),
       tokenAddress: contractAddress.toBase58(),
       adminContractAddress: adminContractPublicKey.toBase58(),
+      tokenContractPrivateKey: tokenContractPrivateKey.toBase58(),
+      adminContractPrivateKey: adminContractPrivateKey.toBase58(),
+      symbol,
+      serializedTransaction,
+      transaction,
+      wallet_payload,
+      mina_signer_payload,
+      uri,
+      developerAddress: apiKeyAddress,
+      developerFee: params.developerFee,
     } satisfies DeployTransaction,
   };
 }

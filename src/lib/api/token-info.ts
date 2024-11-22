@@ -19,7 +19,8 @@ class FungibleTokenAdminState extends Struct({
 const FungibleTokenAdminStateSize = FungibleTokenAdminState.sizeInFields();
 
 export async function getTokenStateForApi(
-  params: TokenStateRequestParams
+  params: TokenStateRequestParams,
+  apiKeyAddress: string
 ): Promise<ApiResponse<TokenState>> {
   const { tokenAddress } = params;
   try {

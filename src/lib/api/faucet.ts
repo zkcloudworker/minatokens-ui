@@ -5,7 +5,8 @@ import { getChain } from "@/lib/chain";
 const chain = getChain();
 
 export async function faucet(
-  params: FaucetParams
+  params: FaucetParams,
+  apiKeyAddress: string
 ): Promise<ApiResponse<FaucetResponse>> {
   const { address } = params;
   try {

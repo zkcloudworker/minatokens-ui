@@ -14,28 +14,23 @@ const chain = getChain();
 const DEBUG = debug();
 
 export async function proveToken(
-  params: ProveTokenTransaction
+  params: ProveTokenTransaction,
+  apiKeyAddress: string
 ): Promise<ApiResponse<JobId>> {
-  const {
-    txType,
-    serializedTransaction,
-    signedData,
-    senderAddress,
-    tokenAddress,
-    uri,
-    sendTransaction,
-    to,
-    amount,
-  } = params;
+  const { signedData, tx, sendTransaction = true } = params;
   if (DEBUG)
     console.log("Proving token tx", {
-      txType,
-      tokenAddress,
-      symbol: params.symbol,
+      txType: tx.txType,
+      tokenAddress: tx.tokenAddress,
+      symbol: tx.symbol,
     });
   console.log("chain", chain);
 
-  if (txType !== "deploy" && txType !== "transfer" && txType !== "mint") {
+  if (
+    tx.txType !== "deploy" &&
+    tx.txType !== "transfer" &&
+    tx.txType !== "mint"
+  ) {
     return {
       status: 400,
       json: { error: "Invalid txType" },
@@ -49,90 +44,51 @@ export async function proveToken(
     };
   }
 
-  if (!serializedTransaction || typeof serializedTransaction !== "string") {
+  if (
+    !tx.serializedTransaction ||
+    typeof tx.serializedTransaction !== "string"
+  ) {
     return {
       status: 400,
       json: { error: "Invalid serializedTransaction" },
     };
   }
-  if (!signedData || typeof signedData !== "string") {
+  if (!signedData || typeof signedData !== "object") {
     return {
       status: 400,
       json: { error: "Invalid signedData" },
     };
   }
 
-  if (!checkAddress(senderAddress)) {
+  if (!checkAddress(tx.senderAddress)) {
     return {
       status: 400,
       json: { error: "Invalid sender address" },
     };
   }
-  if (!checkAddress(tokenAddress)) {
+  if (!checkAddress(tx.tokenAddress)) {
     return {
       status: 400,
       json: { error: "Invalid token address" },
     };
   }
-  if (
-    params.adminContractAddress &&
-    !checkAddress(params.adminContractAddress)
-  ) {
+  if (tx.adminContractAddress && !checkAddress(tx.adminContractAddress)) {
     return {
       status: 400,
       json: { error: "Invalid admin contract address" },
     };
   }
-  if (to && !checkAddress(to)) {
-    return {
-      status: 400,
-      json: { error: "Invalid to address" },
-    };
+
+  const symbolResponse = await getTokenSymbolAndAdmin({
+    tokenAddress: tx.tokenAddress,
+  });
+  if (symbolResponse.status !== 200) {
+    return symbolResponse;
   }
 
-  if (amount && typeof amount !== "number") {
-    return {
-      status: 400,
-      json: { error: "Invalid amount" },
-    };
-  }
+  const symbol = symbolResponse.json.tokenSymbol;
+  const adminContractAddress = symbolResponse.json.adminContractAddress;
 
-  if (txType === "deploy" && !uri) {
-    return {
-      status: 400,
-      json: { error: "Invalid uri" },
-    };
-  }
-
-  if ((txType === "mint" || txType === "transfer") && !to) {
-    return {
-      status: 400,
-      json: { error: "Invalid to address" },
-    };
-  }
-
-  if ((txType === "mint" || txType === "transfer") && !amount) {
-    return {
-      status: 400,
-      json: { error: "Invalid amount" },
-    };
-  }
-
-  let adminContractAddress: string | undefined = params.adminContractAddress;
-  let symbol: string | undefined = params.symbol;
-
-  if (txType !== "deploy" && (!symbol || !adminContractAddress)) {
-    const symbolResponse = await getTokenSymbolAndAdmin({
-      tokenAddress,
-    });
-    if (symbolResponse.status !== 200) {
-      return symbolResponse;
-    }
-
-    symbol = params.symbol ?? symbolResponse.json.tokenSymbol;
-    adminContractAddress =
-      adminContractAddress ?? symbolResponse.json.adminContractAddress;
-  }
   if (!adminContractAddress || !checkAddress(adminContractAddress)) {
     return {
       status: 400,
@@ -140,7 +96,7 @@ export async function proveToken(
     };
   }
 
-  if (!symbol || typeof params.symbol !== "string") {
+  if (!symbol || typeof symbol !== "string") {
     return {
       status: 400,
       json: { error: "Invalid symbol" },
@@ -148,41 +104,47 @@ export async function proveToken(
   }
 
   const jobId =
-    txType === "deploy"
+    tx.txType === "deploy"
       ? await sendDeployTransaction({
-          serializedTransaction,
-          signedData,
+          serializedTransaction: tx.serializedTransaction,
+          signedData: JSON.stringify(signedData),
           adminContractPublicKey: adminContractAddress,
-          tokenPublicKey: tokenAddress,
-          adminPublicKey: senderAddress,
+          tokenPublicKey: tx.tokenAddress,
+          adminPublicKey: tx.senderAddress,
           chain,
           symbol,
-          uri: uri!,
+          uri: tx.uri!,
           sendTransaction,
+          developerFee: tx.developerFee,
+          developerAddress: tx.developerAddress,
         })
-      : txType === "mint"
+      : tx.txType === "mint"
       ? await sendMintTransaction({
-          serializedTransaction,
-          signedData,
+          serializedTransaction: tx.serializedTransaction,
+          signedData: JSON.stringify(signedData),
           adminContractPublicKey: adminContractAddress,
-          tokenPublicKey: tokenAddress,
-          adminPublicKey: senderAddress,
-          to: to!,
-          amount: amount!,
+          tokenPublicKey: tx.tokenAddress,
+          adminPublicKey: tx.senderAddress,
+          to: tx.to,
+          amount: tx.amount,
           chain,
           symbol,
           sendTransaction,
+          developerFee: tx.developerFee,
+          developerAddress: tx.developerAddress,
         })
       : await sendTransferTransaction({
-          serializedTransaction,
-          signedData,
-          tokenPublicKey: tokenAddress,
-          from: senderAddress,
-          to: to!,
-          amount: amount!,
+          serializedTransaction: tx.serializedTransaction,
+          signedData: JSON.stringify(signedData),
+          tokenPublicKey: tx.tokenAddress,
+          from: tx.senderAddress,
+          to: tx.to,
+          amount: tx.amount,
           chain,
           symbol,
           sendTransaction,
+          developerFee: tx.developerFee,
+          developerAddress: tx.developerAddress,
         });
 
   if (!jobId) {

@@ -24,7 +24,8 @@ const NFT_ALGOLIA_PROJECT = process.env.NFT_ALGOLIA_PROJECT;
 const NFT_ALGOLIA_KEY = process.env.NFT_ALGOLIA_KEY;
 
 export async function getNFTState(
-  params: NFTRequestParams
+  params: NFTRequestParams,
+  apiKeyAddress: string
 ): Promise<ApiResponse<NFTRequestAnswer>> {
   console.log("getNFTState", params);
   const { contractAddress, nftAddress } = params;
