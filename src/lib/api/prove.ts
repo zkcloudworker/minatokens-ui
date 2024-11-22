@@ -62,7 +62,7 @@ export async function proveToken(
 
   try {
     const signedDataJson = JSON.parse(signedData);
-    console.log("signedDataJson", signedDataJson);
+    //console.log("signedDataJson", signedDataJson);
     /*
 signedDataJson {
   zkappCommand: {
