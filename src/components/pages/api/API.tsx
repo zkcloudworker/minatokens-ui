@@ -146,6 +146,8 @@ function showResult(params: {
         {result ?? "None"}
       </span>
     );
+  if ((endpoint === "deploy" || endpoint === "transaction") && result)
+    return <span className="text-sm font-medium tracking-tight">{result}</span>;
   if (endpoint === "prove" && result)
     return (
       <span>
