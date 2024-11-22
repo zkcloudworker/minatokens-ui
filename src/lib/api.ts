@@ -136,6 +136,17 @@ export function apiHandler<T, V>(params: {
     });
 
     function getResult(json: any): string | undefined {
+      console.log("getResult", name, {
+        txType: (json as any)?.txType,
+        tokenAddress: (json as any)?.tokenAddress,
+        adminContractAddress: (json as any)?.adminContractAddress,
+        symbol: (json as any)?.symbol,
+        memo: (json as any)?.memo,
+        hash: (json as any)?.hash,
+        status: (json as any)?.status,
+        jobId: (json as any)?.jobId,
+        jobStatus: (json as any)?.jobStatus,
+      });
       switch (name) {
         case "result":
           return (
