@@ -14,7 +14,11 @@ export async function jobResult(
 ): Promise<ApiResponse<TransactionResult>> {
   const { jobId } = params;
 
-  if (!jobId || typeof jobId !== "string") {
+  if (
+    !jobId ||
+    typeof jobId !== "string" ||
+    jobId.startsWith("zkCW") === false
+  ) {
     return {
       status: 400,
       json: { error: "Invalid jobId" },
@@ -41,7 +45,7 @@ export async function jobResult(
   } else {
     return {
       status: 500,
-      json: { error: result?.error ?? "Unknown error" },
+      json: { error: result?.error ?? "Cannot get job result" },
     };
   }
 }
