@@ -53,7 +53,7 @@ export async function proveToken(
       json: { error: "Invalid serializedTransaction" },
     };
   }
-  if (!signedData || typeof signedData !== "object") {
+  if (!signedData || typeof signedData !== "string") {
     return {
       status: 400,
       json: { error: "Invalid signedData" },
