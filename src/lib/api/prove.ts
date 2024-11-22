@@ -107,7 +107,7 @@ export async function proveToken(
     tx.txType === "deploy"
       ? await sendDeployTransaction({
           serializedTransaction: tx.serializedTransaction,
-          signedData: JSON.stringify(signedData),
+          signedData,
           adminContractPublicKey: adminContractAddress,
           tokenPublicKey: tx.tokenAddress,
           adminPublicKey: tx.senderAddress,
@@ -121,7 +121,7 @@ export async function proveToken(
       : tx.txType === "mint"
       ? await sendMintTransaction({
           serializedTransaction: tx.serializedTransaction,
-          signedData: JSON.stringify(signedData),
+          signedData,
           adminContractPublicKey: adminContractAddress,
           tokenPublicKey: tx.tokenAddress,
           adminPublicKey: tx.senderAddress,
@@ -135,7 +135,7 @@ export async function proveToken(
         })
       : await sendTransferTransaction({
           serializedTransaction: tx.serializedTransaction,
-          signedData: JSON.stringify(signedData),
+          signedData,
           tokenPublicKey: tx.tokenAddress,
           from: tx.senderAddress,
           to: tx.to,
