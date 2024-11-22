@@ -13,12 +13,12 @@ import {
   DeployTransaction,
   FaucetResponse,
   TokenTransaction,
+  TokenState,
 } from "./api/types";
 import { debug } from "./debug";
 import { getChain } from "@/lib/chain";
 import { JobId, TransactionResult, TransactionStatus } from "@/lib/api/types";
 import { readmeApi } from "./api/readme";
-import { TokenInfo } from "./token";
 const chain = getChain();
 const DEBUG = debug();
 const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY, README_DOCS_SECRET } =
@@ -141,6 +141,7 @@ export function apiHandler<T, V>(params: {
         tokenAddress: (json as any)?.tokenAddress,
         adminContractAddress: (json as any)?.adminContractAddress,
         symbol: (json as any)?.symbol,
+        tokenSymbol: (json as any)?.tokenSymbol,
         memo: (json as any)?.memo,
         hash: (json as any)?.hash,
         status: (json as any)?.status,
@@ -164,7 +165,7 @@ export function apiHandler<T, V>(params: {
         case "deploy":
           return (json as DeployTransaction)?.memo;
         case "info":
-          return (json as TokenInfo)?.symbol;
+          return (json as TokenState)?.tokenSymbol;
         default:
           return undefined;
       }
