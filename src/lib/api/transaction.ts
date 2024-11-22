@@ -228,8 +228,9 @@ export async function tokenTransaction(
   const nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
   if (DEBUG) console.log("nonce:", nonce);
   const tx = await Mina.transaction({ sender, fee, memo, nonce }, async () => {
-    if (isNewAccount) AccountUpdate.fundNewAccount(sender, 1);
+    // if (isNewAccount) AccountUpdate.fundNewAccount(sender, 1);
     const feeAccountUpdate = AccountUpdate.createSigned(sender);
+    if (isNewAccount) feeAccountUpdate.balance.subInPlace(1_000_000_000);
     feeAccountUpdate.send({
       to: PublicKey.fromBase58(WALLET),
       amount: UInt64.from(MINT_FEE),

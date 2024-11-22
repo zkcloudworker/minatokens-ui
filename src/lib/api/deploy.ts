@@ -167,8 +167,9 @@ export async function deployToken(
   };
 
   const tx = await Mina.transaction({ sender, fee, memo, nonce }, async () => {
-    AccountUpdate.fundNewAccount(sender, 3);
+    // AccountUpdate.fundNewAccount(sender, 3);
     const feeAccountUpdate = AccountUpdate.createSigned(sender);
+    feeAccountUpdate.balance.subInPlace(3_000_000_000);
     feeAccountUpdate.send({
       to: PublicKey.fromBase58(WALLET),
       amount: UInt64.from(ISSUE_FEE),
