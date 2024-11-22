@@ -237,6 +237,8 @@ function showResponseTime(endpoint: string, responseTimeMs: number) {
   );
 }
 
+const initialStatusList: number[] = [200, 400, 401, 403, 429, 500, 503];
+
 const API: React.FC = () => {
   const [activeBlockchainOption, setActiveBlockchainOption] = useState<{
     name: string;
@@ -246,6 +248,13 @@ const API: React.FC = () => {
   const [activeTimeOption, setActiveTimeOption] = useState(timeOptions[3]);
   const [apiCalls, setApiCalls] = useState<APIKeyCalls[]>([]);
   const [page, setPage] = useState<number>(1);
+  const [statusFilter, setStatusFilter] = useState<number | undefined>(
+    undefined
+  );
+  const [statusList, setStatusList] = useState<string[]>([
+    "All statuses",
+    ...initialStatusList.map((elm) => elm.toString()),
+  ]);
   const [totalPages, setTotalPages] = useState<number>(1);
   const { address, setAddress } = useContext(AddressContext);
 
@@ -276,6 +285,14 @@ const API: React.FC = () => {
         page,
         itemsPerPage: 10,
       });
+
+      const allStatuses: string[] = [
+        "All statuses",
+        ...Array.from(new Set(data.map((elm) => elm.status)))
+          .sort((a, b) => a - b)
+          .map((elm) => elm.toString()),
+      ];
+      setStatusList(allStatuses);
       setApiCalls(data);
       setTotalPages(totalPages);
     }
@@ -476,6 +493,71 @@ const API: React.FC = () => {
                 </ul>
               </div>
             </div>
+            <div className="dropdown relative cursor-pointer ml-2">
+              <button
+                className="dropdown-toggle group inline-flex items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
+                id="statusFilter"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
+                >
+                  <path fill="none" d="M0 0h24v24H0z" />
+                  <path d="M13 10h5l-6 6-6-6h5V3h2v7zm-9 9h16v-7h2v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8h2v7z" />
+                </svg>
+                <span>
+                  {statusFilter ? `Status ${statusFilter}` : "All statuses"}
+                </span>
+              </button>
+              <div
+                className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
+                aria-labelledby="statusFilter"
+              >
+                <ul className="flex flex-col flex-wrap">
+                  {statusList.map((status, i) => (
+                    <li
+                      onClick={() => {
+                        setStatusFilter(
+                          status === "All statuses"
+                            ? undefined
+                            : parseInt(status)
+                        );
+                      }}
+                      key={i}
+                      className="cursor-pointer"
+                    >
+                      {(statusFilter === undefined &&
+                        status === "All statuses") ||
+                      (statusFilter !== undefined &&
+                        status === statusFilter.toString()) ? (
+                        <div className="dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                          <span>{status}</span>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            className="mb-[3px] h-4 w-4 fill-accent"
+                          >
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                          </svg>
+                        </div>
+                      ) : (
+                        <div className="dropdown-item flex w-full items-center rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                          {status}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 my-1">
@@ -597,61 +679,65 @@ const API: React.FC = () => {
               </div>
             </div>
 
-            {apiCalls.map((elm, i) => (
-              <div key={i} className="flex">
-                <div
-                  className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                  role="cell"
-                >
-                  <span className="text-sm font-medium tracking-tight">
-                    {timeString(elm.time)}
-                  </span>
-                </div>
-                <div
-                  className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                  role="cell"
-                >
-                  <span className="text-sm font-medium tracking-tight">
-                    {elm.endpoint}
-                  </span>
-                </div>
-                <div
-                  className="flex w-[10%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                  role="cell"
-                >
-                  <span className="text-sm font-medium tracking-tight">
-                    {getChainName(elm.chain)}
-                  </span>
-                </div>
-                <div
-                  className="flex w-[5%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                  role="cell"
-                >
-                  <span
-                    className={`text-${elm.status === 200 ? "green" : "red"}`}
+            {apiCalls
+              .filter(
+                (elm) => !statusFilter || elm.status === Number(statusFilter)
+              )
+              .map((elm, i) => (
+                <div key={i} className="flex">
+                  <div
+                    className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                    role="cell"
                   >
-                    {elm.status}
-                  </span>
+                    <span className="text-sm font-medium tracking-tight">
+                      {timeString(elm.time)}
+                    </span>
+                  </div>
+                  <div
+                    className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                    role="cell"
+                  >
+                    <span className="text-sm font-medium tracking-tight">
+                      {elm.endpoint}
+                    </span>
+                  </div>
+                  <div
+                    className="flex w-[10%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                    role="cell"
+                  >
+                    <span className="text-sm font-medium tracking-tight">
+                      {getChainName(elm.chain)}
+                    </span>
+                  </div>
+                  <div
+                    className="flex w-[5%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                    role="cell"
+                  >
+                    <span
+                      className={`text-${elm.status === 200 ? "green" : "red"}`}
+                    >
+                      {elm.status}
+                    </span>
+                  </div>
+                  <div
+                    className="flex w-[15%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                    role="cell"
+                  >
+                    {showResponseTime(elm.endpoint, elm.responseTimeMs)}
+                  </div>
+                  <div
+                    className="flex w-[50%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                    role="cell"
+                  >
+                    {showResult({
+                      endpoint: elm.endpoint,
+                      chain: elm.chain,
+                      result: elm.result,
+                      error: elm.error,
+                    })}
+                  </div>
                 </div>
-                <div
-                  className="flex w-[15%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                  role="cell"
-                >
-                  {showResponseTime(elm.endpoint, elm.responseTimeMs)}
-                </div>
-                <div
-                  className="flex w-[50%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                  role="cell"
-                >
-                  {showResult({
-                    endpoint: elm.endpoint,
-                    chain: elm.chain,
-                    result: elm.result,
-                    error: elm.error,
-                  })}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
           {/* Pagination */}
           <div className="flex items-center justify-center space-x-3 py-8">
