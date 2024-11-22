@@ -9,6 +9,7 @@ import { FungibleToken, serializeTransaction } from "./zkcloudworker";
 import { TransactionTokenParams, ApiResponse, TokenTransaction } from "./types";
 import { getTokenSymbolAndAdmin } from "./symbol";
 import { checkAddress } from "./address";
+import { accountExists } from "@/lib/account";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
 import { getAccountNonce } from "../nonce";
@@ -60,6 +61,13 @@ export async function tokenTransaction(
     return {
       status: 400,
       json: { error: "Invalid admin address" },
+    };
+  }
+
+  if (params.developerFee && !(await accountExists(apiKeyAddress))) {
+    return {
+      status: 400,
+      json: { error: "Developer address is not activated" },
     };
   }
 

@@ -9,6 +9,7 @@ import { debug } from "./debug";
 const DEBUG = debug();
 const chain = getChain();
 const chainId = getChainId();
+
 export async function getTokenState(params: {
   tokenAddress: string;
   info?: DeployedTokenInfo;
