@@ -4,7 +4,14 @@ import {
   accountBalanceMina,
   fetchMinaAccount,
 } from "@/lib/blockchain";
-import { PublicKey, UInt64, Mina, AccountUpdate, TokenId } from "o1js";
+import {
+  PublicKey,
+  UInt64,
+  Mina,
+  AccountUpdate,
+  TokenId,
+  PrivateKey,
+} from "o1js";
 import {
   serializeTransaction,
   buildTokenTransaction,
@@ -75,10 +82,24 @@ export async function tokenTransaction(
     };
   }
 
-  if (!checkAddress(params.to)) {
+  if (params.to && !checkAddress(params.to)) {
     return {
       status: 400,
       json: { error: "Invalid to address" },
+    };
+  }
+
+  if (txType === "transfer" && !params.to) {
+    return {
+      status: 400,
+      json: { error: "To address is required for transfer" },
+    };
+  }
+
+  if (txType === "mint" && !params.to) {
+    return {
+      status: 400,
+      json: { error: "To address is required for mint" },
     };
   }
 
@@ -135,8 +156,10 @@ export async function tokenTransaction(
   const adminContractPublicKey = PublicKey.fromBase58(adminContractAddress);
   if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
   const wallet = PublicKey.fromBase58(WALLET);
+  const newKey = PrivateKey.random();
+  const newAddress = newKey.toPublicKey();
 
-  const to = PublicKey.fromBase58(params.to);
+  const to = params.to ? PublicKey.fromBase58(params.to) : newAddress;
   if (DEBUG) console.log("to:", to.toBase58());
   const amount = params.amount ? UInt64.from(params.amount) : UInt64.from(0);
   const developerFee = params.developerFee
@@ -248,6 +271,7 @@ export async function tokenTransaction(
     provingKey: wallet,
     provingFee: UInt64.from(TRANSACTION_FEE),
   });
+  if (!params.to) tx.sign([newKey]);
 
   const serializedTransaction = serializeTransaction(tx);
   const transaction = tx.toJSON();
@@ -284,6 +308,7 @@ export async function tokenTransaction(
       serializedTransaction,
       transaction,
       to: to.toBase58(),
+      toPrivateKey: params.to ? undefined : newKey.toBase58(),
       amount: Number(amount.toBigInt()),
       memo,
       nonce,
