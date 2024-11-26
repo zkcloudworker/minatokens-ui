@@ -4,8 +4,12 @@ import {
   accountBalanceMina,
   fetchMinaAccount,
 } from "@/lib/blockchain";
-import { PublicKey, UInt64, Mina, AccountUpdate } from "o1js";
-import { FungibleToken, serializeTransaction } from "zkcloudworker";
+import { PublicKey, UInt64, Mina, AccountUpdate, TokenId } from "o1js";
+import {
+  serializeTransaction,
+  buildTokenTransaction,
+  TRANSACTION_FEE,
+} from "zkcloudworker";
 import { TransactionTokenParams, ApiResponse, TokenTransaction } from "./types";
 import { getTokenSymbolAndAdmin } from "./symbol";
 import { checkAddress } from "./address";
@@ -23,11 +27,11 @@ export async function tokenTransaction(
   params: TransactionTokenParams,
   apiKeyAddress: string
 ): Promise<ApiResponse<TokenTransaction>> {
-  const { tokenAddress, senderAddress, txType: action } = params;
+  const { tokenAddress, senderAddress, txType } = params;
   if (DEBUG) console.log("Token transaction", params);
   console.log("chain", chain);
   await initBlockchain();
-  const FEE = action === "mint" ? MINT_FEE : TRANSFER_FEE;
+  const FEE = txType === "mint" ? MINT_FEE : TRANSFER_FEE;
 
   if (params.nonce && typeof params.nonce !== "number") {
     return {
@@ -142,15 +146,14 @@ export async function tokenTransaction(
 
   if (DEBUG) console.log("amount:", amount.toBigInt());
 
-  const zkToken = new FungibleToken(contractAddress);
-  const tokenId = zkToken.deriveTokenId();
+  const tokenId = TokenId.derive(contractAddress);
 
   const memo =
     params.memo ??
-    `${action} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`.length >
+    `${txType} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`.length >
       30
-      ? `${action} ${symbol}`.substring(0, 30)
-      : `${action} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`;
+      ? `${txType} ${symbol}`.substring(0, 30)
+      : `${txType} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`;
   if (DEBUG) console.log("memo:", memo);
   try {
     await fetchMinaAccount({
@@ -163,26 +166,9 @@ export async function tokenTransaction(
       force: false,
     });
     await fetchMinaAccount({
-      publicKey: contractAddress,
-      force: true,
-    });
-    await fetchMinaAccount({
-      publicKey: adminContractPublicKey,
-      force: true,
-    });
-    await fetchMinaAccount({
-      publicKey: contractAddress,
-      tokenId,
-      force: true,
-    });
-    await fetchMinaAccount({
       publicKey: to,
       tokenId,
       force: false,
-    });
-    await fetchMinaAccount({
-      publicKey: wallet,
-      force: true,
     });
   } catch (error) {
     return {
@@ -201,7 +187,7 @@ export async function tokenTransaction(
     };
   }
 
-  if (action === "transfer") {
+  if (txType === "transfer") {
     if (!Mina.hasAccount(sender, tokenId)) {
       return {
         status: 400,
@@ -246,22 +232,21 @@ export async function tokenTransaction(
 
   const nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
   if (DEBUG) console.log("nonce:", nonce);
-  const tx = await Mina.transaction({ sender, fee, memo, nonce }, async () => {
-    // if (isNewAccount) AccountUpdate.fundNewAccount(sender, 1);
-    const feeAccountUpdate = AccountUpdate.createSigned(sender);
-    if (isNewAccount) feeAccountUpdate.balance.subInPlace(1_000_000_000);
-    feeAccountUpdate.send({
-      to: PublicKey.fromBase58(WALLET),
-      amount: UInt64.from(MINT_FEE),
-    });
-    if (developerFee) {
-      feeAccountUpdate.send({
-        to: developerFeeAddress,
-        amount: developerFee,
-      });
-    }
-    if (action === "mint") await zkToken.mint(to, amount);
-    else await zkToken.transfer(sender, to, amount);
+
+  const { tx, whitelist } = await buildTokenTransaction({
+    txType,
+    chain,
+    fee: UInt64.from(fee),
+    sender,
+    nonce,
+    memo,
+    tokenAddress: contractAddress,
+    from: sender,
+    to,
+    amount,
+    whitelist: params.whitelist,
+    provingKey: wallet,
+    provingFee: UInt64.from(TRANSACTION_FEE),
   });
 
   const serializedTransaction = serializeTransaction(tx);
@@ -290,7 +275,7 @@ export async function tokenTransaction(
   return {
     status: 200,
     json: {
-      txType: action,
+      txType,
       from: sender.toBase58(),
       tokenAddress,
       symbol,
@@ -302,6 +287,7 @@ export async function tokenTransaction(
       amount: Number(amount.toBigInt()),
       memo,
       nonce,
+      whitelist,
       developerAddress: apiKeyAddress,
       developerFee: params.developerFee,
     } satisfies TokenTransaction,
