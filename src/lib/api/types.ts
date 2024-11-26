@@ -79,6 +79,7 @@ export interface TokenTransaction {
     };
   };
   to: string;
+  toPrivateKey?: string;
   from: string;
   amount?: number;
   price?: number;
@@ -111,7 +112,7 @@ export interface TransactionTokenParams {
   txType: FungibleTokenTransactionType;
   senderAddress: string;
   tokenAddress: string;
-  to: string;
+  to?: string;
   amount?: number;
   whitelist?: { address: string; amount?: number }[];
   nonce?: number;
