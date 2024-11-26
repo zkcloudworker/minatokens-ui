@@ -1,10 +1,6 @@
 "use server";
 
-import {
-  sendDeployTransaction,
-  sendMintTransaction,
-  sendTransferTransaction,
-} from "@/lib/token-api";
+import { sendDeployTransaction, sendTokenTransaction } from "@/lib/token-api";
 import { debug } from "@/lib/debug";
 import { getChain } from "@/lib/chain";
 import { checkAddress } from "./address";
@@ -62,31 +58,7 @@ export async function proveToken(
 
   try {
     const signedDataJson = JSON.parse(signedData);
-    //console.log("signedDataJson", signedDataJson);
-    /*
-signedDataJson {
-  zkappCommand: {
-    feePayer: {
-      body: [Object],
-      authorization: '7mXSyamUMTh2XGK6nDRYPpjBeBCoprwdCz4d9LGcpv9hgbRmBVMUApsNHeZJ5GRWP11X9crf83DKWBvobPqRDauDnLk7Xdzp'
-    },
-    accountUpdates: [
-      [Object], [Object],
-      [Object], [Object],
-      [Object], [Object],
-      [Object]
-    ],
-    memo: 'E4Yo8nXTuaAttX7VpvMaZpeYAZkBov3WUK1RjT9nLtybrK8neebqV'
-  },
-  feePayer: {
-    feePayer: 'B62qjFmTAzmLvPXRhUn8H83BoqtQxFtqHe8DkYBrj44TP6uKWWNfa1a',
-    fee: '100000000',
-    nonce: '35',
-    memo: 'mint 100 TEST',
-    validUntil: null
-  }
-}
-    */
+
     if (!signedDataJson.feePayer) {
       return {
         status: 400,
@@ -106,10 +78,10 @@ signedDataJson {
     };
   }
 
-  if (!checkAddress(tx.senderAddress)) {
+  if ("from" in tx && !checkAddress(tx.from)) {
     return {
       status: 400,
-      json: { error: "Invalid sender address" },
+      json: { error: "Invalid from address" },
     };
   }
   if (!checkAddress(tx.tokenAddress)) {
@@ -118,15 +90,8 @@ signedDataJson {
       json: { error: "Invalid token address" },
     };
   }
-  if (tx.adminContractAddress && !checkAddress(tx.adminContractAddress)) {
-    return {
-      status: 400,
-      json: { error: "Invalid admin contract address" },
-    };
-  }
 
   let symbol = tx.symbol;
-  let adminContractAddress = tx.adminContractAddress;
 
   // const symbolResponse = await getTokenSymbolAndAdmin({
   //   tokenAddress: tx.tokenAddress,
@@ -137,8 +102,17 @@ signedDataJson {
 
   // const symbol = symbolResponse.json.tokenSymbol;
   // const adminContractAddress = symbolResponse.json.adminContractAddress;
+  const adminContractAddress =
+    "adminContractAddress" in tx ? tx.adminContractAddress : undefined;
 
-  if (!adminContractAddress || !checkAddress(adminContractAddress)) {
+  if (tx.txType === "deploy" && !adminContractAddress) {
+    return {
+      status: 400,
+      json: { error: "Admin contract address is required" },
+    };
+  }
+
+  if (adminContractAddress && !checkAddress(adminContractAddress)) {
     return {
       status: 400,
       json: { error: "Invalid admin contract address" },
@@ -155,42 +129,32 @@ signedDataJson {
   const jobId =
     tx.txType === "deploy"
       ? await sendDeployTransaction({
+          txType: "deploy",
           serializedTransaction: tx.serializedTransaction,
           signedData,
-          adminContractPublicKey: adminContractAddress,
-          tokenPublicKey: tx.tokenAddress,
-          adminPublicKey: tx.senderAddress,
+          adminContractAddress: adminContractAddress!,
+          tokenAddress: tx.tokenAddress,
+          senderAddress: tx.senderAddress,
           chain,
           symbol,
           uri: tx.uri!,
           sendTransaction,
           developerFee: tx.developerFee,
           developerAddress: tx.developerAddress,
+          whitelist: tx.whitelist,
         })
-      : tx.txType === "mint"
-      ? await sendMintTransaction({
+      : await sendTokenTransaction({
+          txType: tx.txType,
           serializedTransaction: tx.serializedTransaction,
           signedData,
-          adminContractPublicKey: adminContractAddress,
-          tokenPublicKey: tx.tokenAddress,
-          adminPublicKey: tx.senderAddress,
+          tokenAddress: tx.tokenAddress,
           to: tx.to,
+          from: tx.from,
+          price: tx.price,
           amount: tx.amount,
           chain,
           symbol,
-          sendTransaction,
-          developerFee: tx.developerFee,
-          developerAddress: tx.developerAddress,
-        })
-      : await sendTransferTransaction({
-          serializedTransaction: tx.serializedTransaction,
-          signedData,
-          tokenPublicKey: tx.tokenAddress,
-          from: tx.senderAddress,
-          to: tx.to,
-          amount: tx.amount,
-          chain,
-          symbol,
+          whitelist: tx.whitelist,
           sendTransaction,
           developerFee: tx.developerFee,
           developerAddress: tx.developerAddress,

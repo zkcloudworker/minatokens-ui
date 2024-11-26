@@ -29,6 +29,7 @@ export interface DeployTransaction {
   uri: string;
   memo: string;
   nonce: number;
+  whitelist?: string;
   developerAddress: string;
   developerFee?: number;
 }
@@ -36,18 +37,28 @@ export interface DeployTransaction {
 export interface DeployTokenParams {
   adminAddress: string;
   symbol: string;
-  decimals: number;
+  decimals?: number;
   uri: string;
+  whitelist?: { address: string; amount?: number }[];
   nonce?: number;
   memo?: string;
   developerFee?: number;
 }
-
+export type FungibleTokenTransactionType =
+  | "mint"
+  | "transfer"
+  | "bid"
+  | "offer"
+  | "buy"
+  | "sell"
+  | "withdrawBid"
+  | "withdrawOffer"
+  | "whitelistBid"
+  | "whitelistOffer"
+  | "whitelistAdmin";
 export interface TokenTransaction {
-  txType: "transfer" | "mint";
-  senderAddress: string;
+  txType: FungibleTokenTransactionType;
   tokenAddress: string;
-  adminContractAddress: string;
   symbol: string;
   wallet_payload: {
     nonce: number;
@@ -68,9 +79,12 @@ export interface TokenTransaction {
     };
   };
   to: string;
-  amount: number;
+  from: string;
+  amount?: number;
+  price?: number;
   memo: string;
   nonce: number;
+  whitelist?: string;
   serializedTransaction: string;
   transaction: string;
   developerAddress: string;
@@ -98,7 +112,8 @@ export interface TransactionTokenParams {
   senderAddress: string;
   tokenAddress: string;
   to: string;
-  amount: number;
+  amount?: number;
+  whitelist?: { address: string; amount?: number }[];
   nonce?: number;
   memo?: string;
   developerFee?: number;

@@ -1,6 +1,6 @@
 "use client";
 
-import { sendTransferTransaction } from "./token-api";
+import { sendTokenTransaction } from "./token-api";
 import { TimelineItem } from "../components/ui/timeline";
 import { getChain, getWallet } from "./chain";
 import { debug } from "./debug";
@@ -223,16 +223,17 @@ export async function transferToken(params: {
       description: "User signature received, starting cloud proving job",
       date: new Date(),
     });
-    const jobId = await sendTransferTransaction({
-      serializedTransaction,
-      signedData,
-      tokenPublicKey: contractAddress.toBase58(),
+    const jobId = await sendTokenTransaction({
+      txType: "transfer",
+      tokenAddress: contractAddress.toBase58(),
       from: sender.toBase58(),
       to: to.toBase58(),
       amount: Number(amount.toBigInt()),
       chain,
       symbol,
       sendTransaction: false,
+      serializedTransaction,
+      signedData,
     });
     console.timeEnd("sent transaction");
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
