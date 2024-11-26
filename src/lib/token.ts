@@ -16,6 +16,9 @@
     };
 */
 
+import { FungibleTokenTransactionType } from "./api/types";
+export type TokenAction = FungibleTokenTransactionType;
+
 export interface MintAddress {
   amount: number | "";
   address: string;
@@ -96,13 +99,3 @@ export interface TokenDeployParams {
   tokenId: string;
   adminContractPublicKey: string;
 }
-
-export type TokenAction =
-  | "mint"
-  | "burn"
-  | "pause"
-  | "unpause"
-  | "offer"
-  | "bid"
-  | "transfer"
-  | "changeAdmin";

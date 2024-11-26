@@ -3,8 +3,7 @@
 import {
   TokenAPI,
   FungibleTokenDeployParams,
-  FungibleTokenMintParams,
-  FungibleTokenTransferParams,
+  FungibleTokenTransactionParams,
   FungibleTokenJobResult,
 } from "zkcloudworker";
 import { getChain } from "./chain";
@@ -27,18 +26,11 @@ export async function sendDeployTransaction(
   return api.sendDeployTransaction(params);
 }
 
-export async function sendMintTransaction(
-  params: FungibleTokenMintParams
+export async function sendTokenTransaction(
+  params: FungibleTokenTransactionParams
 ): Promise<string | undefined> {
   const api = getAPI();
-  return api.sendMintTransaction(params);
-}
-
-export async function sendTransferTransaction(
-  params: FungibleTokenTransferParams
-): Promise<string | undefined> {
-  const api = getAPI();
-  return api.sendTransferTransaction(params);
+  return api.sendTransaction(params);
 }
 
 export async function getResult(

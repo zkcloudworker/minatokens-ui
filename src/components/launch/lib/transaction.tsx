@@ -1,6 +1,6 @@
 "use client";
 
-import { sendMintTransaction, sendTransferTransaction } from "@/lib/token-api";
+import { sendTokenTransaction } from "@/lib/token-api";
 import { UpdateTimelineItemFunction, messages } from "./messages";
 import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
@@ -306,31 +306,19 @@ export async function tokenTransaction(params: {
       groupId,
       update: messages.txProved,
     });
-    const jobId =
-      action === "mint"
-        ? await sendMintTransaction({
-            serializedTransaction,
-            signedData,
-            adminContractPublicKey: adminContractPublicKey.toBase58(),
-            tokenPublicKey: contractAddress.toBase58(),
-            adminPublicKey: sender.toBase58(),
-            to: to.toBase58(),
-            amount: Number(amount.toBigInt()),
-            chain,
-            symbol,
-            sendTransaction: false,
-          })
-        : await sendTransferTransaction({
-            serializedTransaction,
-            signedData,
-            tokenPublicKey: contractAddress.toBase58(),
-            from: sender.toBase58(),
-            to: to.toBase58(),
-            amount: Number(amount.toBigInt()),
-            chain,
-            symbol,
-            sendTransaction: false,
-          });
+    const jobId = await sendTokenTransaction({
+      txType: action,
+      tokenAddress: contractAddress.toBase58(),
+      from: sender.toBase58(),
+      to: to.toBase58(),
+      amount: Number(amount.toBigInt()),
+      chain,
+      symbol,
+      sendTransaction: false,
+      serializedTransaction,
+      signedData,
+    });
+
     console.timeEnd("sent transaction");
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {

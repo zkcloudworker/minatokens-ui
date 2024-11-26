@@ -5,7 +5,7 @@ import {
   fetchMinaAccount,
 } from "@/lib/blockchain";
 import { PublicKey, UInt64, Mina, AccountUpdate } from "o1js";
-import { FungibleToken, serializeTransaction } from "./zkcloudworker";
+import { FungibleToken, serializeTransaction } from "zkcloudworker";
 import { TransactionTokenParams, ApiResponse, TokenTransaction } from "./types";
 import { getTokenSymbolAndAdmin } from "./symbol";
 import { checkAddress } from "./address";
@@ -78,7 +78,7 @@ export async function tokenTransaction(
     };
   }
 
-  if (params.amount <= 0) {
+  if (params.amount && params.amount <= 0) {
     return {
       status: 400,
       json: { error: "Invalid amount" },
@@ -134,7 +134,7 @@ export async function tokenTransaction(
 
   const to = PublicKey.fromBase58(params.to);
   if (DEBUG) console.log("to:", to.toBase58());
-  const amount = UInt64.from(params.amount);
+  const amount = params.amount ? UInt64.from(params.amount) : UInt64.from(0);
   const developerFee = params.developerFee
     ? UInt64.from(params.developerFee)
     : undefined;
@@ -291,9 +291,8 @@ export async function tokenTransaction(
     status: 200,
     json: {
       txType: action,
-      senderAddress: sender.toBase58(),
+      from: sender.toBase58(),
       tokenAddress,
-      adminContractAddress,
       symbol,
       wallet_payload,
       mina_signer_payload,

@@ -270,11 +270,12 @@ export async function deployToken(params: {
     });
 
     const jobId = await sendDeployTransaction({
+      txType: "deploy",
       serializedTransaction,
       signedData,
-      adminContractPublicKey: adminContractPublicKey.toBase58(),
-      tokenPublicKey: contractAddress.toBase58(),
-      adminPublicKey: sender.toBase58(),
+      adminContractAddress: adminContractPublicKey.toBase58(),
+      tokenAddress: contractAddress.toBase58(),
+      senderAddress: sender.toBase58(),
       chain,
       symbol,
       uri,
