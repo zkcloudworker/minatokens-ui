@@ -110,10 +110,11 @@ export interface TransactionResult {
 
 export interface TransactionTokenParams {
   txType: FungibleTokenTransactionType;
-  senderAddress: string;
   tokenAddress: string;
+  from: string;
   to?: string;
   amount?: number;
+  price?: number;
   whitelist?: { address: string; amount?: number }[];
   nonce?: number;
   memo?: string;
