@@ -57,7 +57,11 @@ export type FungibleTokenTransactionType =
   | "whitelistOffer"
   | "whitelistAdmin";
 
-export const tokenTransactionTypes: FungibleTokenTransactionType[] = [
+export const tokenTransactionTypes: (
+  | FungibleTokenTransactionType
+  | "deploy"
+)[] = [
+  "deploy",
   "mint",
   "transfer",
   "bid",
