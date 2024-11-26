@@ -108,7 +108,7 @@ export interface TransactionResult {
 }
 
 export interface TransactionTokenParams {
-  txType: "transfer" | "mint";
+  txType: FungibleTokenTransactionType;
   senderAddress: string;
   tokenAddress: string;
   to: string;
