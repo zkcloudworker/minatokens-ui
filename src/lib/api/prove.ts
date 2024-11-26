@@ -4,7 +4,13 @@ import { sendDeployTransaction, sendTokenTransaction } from "@/lib/token-api";
 import { debug } from "@/lib/debug";
 import { getChain } from "@/lib/chain";
 import { checkAddress } from "./address";
-import { ProveTokenTransaction, JobId, ApiResponse } from "./types";
+import {
+  ProveTokenTransaction,
+  JobId,
+  ApiResponse,
+  tokenTransactionTypes,
+  FungibleTokenTransactionType,
+} from "./types";
 import { getTokenSymbolAndAdmin } from "./symbol";
 const chain = getChain();
 const DEBUG = debug();
@@ -23,13 +29,12 @@ export async function proveToken(
   console.log("chain", chain);
 
   if (
-    tx.txType !== "deploy" &&
-    tx.txType !== "transfer" &&
-    tx.txType !== "mint"
+    typeof tx.txType !== "string" ||
+    !tokenTransactionTypes.includes(tx.txType as FungibleTokenTransactionType)
   ) {
     return {
       status: 400,
-      json: { error: "Invalid txType" },
+      json: { error: "Invalid transaction type" },
     };
   }
 

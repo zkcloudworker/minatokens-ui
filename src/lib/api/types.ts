@@ -56,6 +56,20 @@ export type FungibleTokenTransactionType =
   | "whitelistBid"
   | "whitelistOffer"
   | "whitelistAdmin";
+
+export const tokenTransactionTypes: FungibleTokenTransactionType[] = [
+  "mint",
+  "transfer",
+  "bid",
+  "offer",
+  "buy",
+  "sell",
+  "withdrawBid",
+  "withdrawOffer",
+  "whitelistBid",
+  "whitelistOffer",
+  "whitelistAdmin",
+];
 export interface TokenTransaction {
   txType: FungibleTokenTransactionType;
   tokenAddress: string;
