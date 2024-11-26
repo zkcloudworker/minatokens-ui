@@ -158,9 +158,7 @@ export async function tokenTransaction(
       json: { error: "Invalid admin contract address" },
     };
   }
-
   console.time("prepared tx");
-
   const fee = 100_000_000;
   const tokenAddress = PublicKey.fromBase58(params.tokenAddress);
   if (DEBUG) console.log("Contract", tokenAddress.toBase58());
