@@ -282,6 +282,7 @@ export function apiHandler<T, V>(params: {
         if (DEBUG) console.log("Handler executed in", handled - checked, "ms");
         return await reply(status, json);
       } catch (error) {
+        console.error("apiHandler error", error);
         return await reply(500, { error: "Invalid request body" });
       }
     } catch (error) {

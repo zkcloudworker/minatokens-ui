@@ -55,6 +55,13 @@ export async function tokenTransaction(
     };
   }
 
+  if ((txType === "offer" || txType === "bid") && !params.price) {
+    return {
+      status: 400,
+      json: { error: "Price is required for offer and bid" },
+    };
+  }
+
   if (params.developerFee && typeof params.developerFee !== "number") {
     return {
       status: 400,
