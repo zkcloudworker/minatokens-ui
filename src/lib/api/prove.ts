@@ -30,7 +30,7 @@ export async function proveToken(
 
   if (
     typeof tx.txType !== "string" ||
-    !tokenTransactionTypes.includes(tx.txType as FungibleTokenTransactionType)
+    !tokenTransactionTypes.includes(tx.txType)
   ) {
     return {
       status: 400,
