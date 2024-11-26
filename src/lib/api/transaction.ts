@@ -219,16 +219,16 @@ export async function tokenTransaction(
   }
   if (DEBUG) console.log("Fetching accounts done");
 
-  if (!Mina.hasAccount(from)) {
+  if (!Mina.hasAccount(sender)) {
     return {
       status: 400,
       json: {
-        error: `Account ${from.toBase58()} not found. Please fund your account or try again later, after all the previous transactions are included in the block.`,
+        error: `Account ${sender.toBase58()} not found. Please fund your account or try again later, after all the previous transactions are included in the block.`,
       },
     };
   }
 
-  if (txType === "transfer") {
+  if (txType === "transfer" || txType === "offer") {
     if (!Mina.hasAccount(from, tokenId)) {
       return {
         status: 400,
