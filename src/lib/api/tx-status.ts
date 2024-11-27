@@ -6,7 +6,7 @@ import {
   TransactionStatus,
   TransactionStatusParams,
   TxStatus,
-} from "./types";
+} from "@minatokens/api";
 import { getChain } from "@/lib/chain";
 const chain = getChain();
 const BLOCKBERRY_API = process.env.BLOCKBERRY_API;

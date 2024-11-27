@@ -1,5 +1,5 @@
 "use server";
-import { ApiResponse } from "./types";
+import { ApiResponse } from "@minatokens/api";
 import { PrismaClient } from "@prisma/client";
 import { getBlockberryScamInfo } from "../blockberry-tokens";
 import { generateJWT } from "./key";

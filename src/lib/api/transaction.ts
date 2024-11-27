@@ -13,12 +13,16 @@ import {
   PrivateKey,
 } from "o1js";
 import {
-  serializeTransaction,
   buildTokenTransaction,
   TRANSACTION_FEE,
   getTokenTransactionSender,
-} from "zkcloudworker";
-import { TransactionTokenParams, ApiResponse, TokenTransaction } from "./types";
+} from "@minatokens/token";
+import { serializeTransaction } from "zkcloudworker";
+import {
+  TransactionTokenParams,
+  ApiResponse,
+  TokenTransaction,
+} from "@minatokens/api";
 import { getTokenSymbolAndAdmin } from "./symbol";
 import { checkAddress } from "./address";
 import { accountExists } from "@/lib/account";

@@ -17,12 +17,16 @@ import {
 import {
   FungibleToken,
   FungibleTokenAdmin,
-  serializeTransaction,
   fungibleTokenVerificationKeys,
   buildTokenDeployTransaction,
   LAUNCH_FEE,
-} from "zkcloudworker";
-import { DeployTransaction, DeployTokenParams, ApiResponse } from "./types";
+} from "@minatokens/token";
+import {
+  DeployTransaction,
+  DeployTokenParams,
+  ApiResponse,
+} from "@minatokens/api";
+import { serializeTransaction } from "zkcloudworker";
 
 import { checkAddress } from "./address";
 import { debug } from "@/lib/debug";

@@ -7,7 +7,7 @@ import {
   TokenStateRequestParams,
   BalanceRequestParams,
   BalanceResponse,
-} from "./types";
+} from "@minatokens/api";
 import { checkAddress } from "./address";
 
 export async function balance(

@@ -1,7 +1,7 @@
 "use server";
-import { Mina, PublicKey, Bool, TokenId, Struct, UInt8 } from "o1js";
+import { Mina, PublicKey, Bool, Struct, UInt8 } from "o1js";
 import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
-import { ApiResponse, TokenSymbolAndAdmin } from "./types";
+import { ApiResponse, TokenSymbolAndAdmin } from "@minatokens/api";
 import { checkAddress } from "./address";
 
 class FungibleTokenState extends Struct({

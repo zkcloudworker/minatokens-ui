@@ -1,5 +1,10 @@
 "use server";
-import { ApiResponse, FaucetParams, FaucetResponse, TxStatus } from "./types";
+import {
+  ApiResponse,
+  FaucetParams,
+  FaucetResponse,
+  TxStatus,
+} from "@minatokens/api";
 import { checkAddress } from "./address";
 import { getChain } from "@/lib/chain";
 const chain = getChain();

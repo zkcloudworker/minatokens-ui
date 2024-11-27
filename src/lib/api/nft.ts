@@ -13,7 +13,11 @@ import {
 } from "o1js";
 import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
 import { checkAddress } from "./address";
-import { ApiResponse, NFTRequestAnswer, NFTRequestParams } from "./types";
+import {
+  ApiResponse,
+  NFTRequestAnswer,
+  NFTRequestParams,
+} from "@minatokens/api";
 import { algoliasearch } from "algoliasearch";
 import { getChain } from "@/lib/chain";
 const chain = getChain();
