@@ -18,7 +18,7 @@ import {
   explorerAccountUrl,
 } from "@/lib/chain";
 import { sendTransaction } from "@/lib/send";
-import { getTokenBalance } from "@/lib/verify";
+import { balance } from "@/lib/api/token-info";
 const chain = getChain();
 const DEBUG = debug();
 
@@ -156,21 +156,26 @@ export async function waitForProveJob(params: {
     const start = Date.now();
     const TIMEOUT = 1000 * 60 * 30;
     let attempt = 1;
-    let balanceResult = await getTokenBalance({
-      tokenContractAddress,
-      address,
-    });
+    let balanceResult = await balance(
+      {
+        tokenAddress: tokenContractAddress,
+        address,
+      },
+      ""
+    );
     while (
-      (balanceResult.success === false ||
-        balanceResult.balance === undefined) &&
+      (balanceResult.status !== 200 || balanceResult.json.balance === null) &&
       Date.now() - start < TIMEOUT
     ) {
       attempt++;
-      await sleep(10000 * attempt);
-      balanceResult = await getTokenBalance({
-        tokenContractAddress,
-        address,
-      });
+      balanceResult = await balance(
+        {
+          tokenAddress: tokenContractAddress,
+          address,
+        },
+        ""
+      );
+      await sleep(5000 * attempt);
     }
     console.log(
       "balanceResult",
@@ -180,15 +185,12 @@ export async function waitForProveJob(params: {
       "ms in attempt:",
       attempt
     );
-    if (
-      balanceResult.success === false ||
-      balanceResult.balance === undefined
-    ) {
+    if (balanceResult.status !== 200 || balanceResult.json.balance === null) {
       updateTimelineItem({
         groupId,
         update: {
           lineId: "mintBalance",
-          content: balanceResult.error ?? "Failed to get token balance",
+          content: "Failed to get token balance",
           status: "error",
         },
       });
@@ -199,7 +201,7 @@ export async function waitForProveJob(params: {
       update: {
         lineId: "mintBalance",
         content: `Token balance of ${address} is ${
-          balanceResult.balance / 1_000_000_000
+          balanceResult.json.balance / 1_000_000_000
         }`,
         status: "success",
       },
