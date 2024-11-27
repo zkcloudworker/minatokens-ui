@@ -1,12 +1,11 @@
 "use server";
-import { fetchMinaAccount, initBlockchain, FungibleToken } from "zkcloudworker";
+import { fetchMinaAccount, FungibleToken } from "zkcloudworker";
+import { initBlockchain } from "./blockchain";
 import { Mina, PublicKey, TokenId, fetchAccount } from "o1js";
 import { TokenInfo, DeployedTokenInfo } from "./token";
 import { getTokenState } from "./state";
 import { algoliaWriteToken } from "./algolia";
-import { getChain, getChainId } from "./chain";
-
-const chain = getChain();
+import { getChainId } from "./chain";
 const chainId = getChainId();
 
 export async function verifyFungibleTokenState(params: {
@@ -28,7 +27,7 @@ export async function verifyFungibleTokenState(params: {
     tokenId,
   } = params;
   try {
-    await initBlockchain(chain);
+    await initBlockchain();
     const tokenContractPublicKey = PublicKey.fromBase58(tokenContractAddress);
     const adminContractPublicKey = PublicKey.fromBase58(adminContractAddress);
     const adminPublicKey = PublicKey.fromBase58(adminAddress);
@@ -150,51 +149,51 @@ export async function verifyFungibleTokenState(params: {
   }
 }
 
-export async function getTokenBalance(params: {
-  tokenContractAddress: string;
-  address: string;
-}): Promise<{ success: boolean; balance?: number; error?: string }> {
-  const { tokenContractAddress, address } = params;
-  try {
-    await initBlockchain(chain);
-    const tokenContractPublicKey = PublicKey.fromBase58(tokenContractAddress);
-    const publicKey = PublicKey.fromBase58(address);
-    const tokenContract = new FungibleToken(tokenContractPublicKey);
-    const tokenId = tokenContract.deriveTokenId();
-    try {
-      await fetchAccount({
-        publicKey,
-        tokenId,
-      });
-    } catch (error) {
-      console.error("getTokenBalance: fetchAccount failed", {
-        error,
-        tokenContractAddress,
-        address,
-        tokenId: TokenId.toBase58(tokenId),
-      });
-      return { success: false, error: "getTokenBalance: fetchAccount failed" };
-    }
-    if (!Mina.hasAccount(tokenContractPublicKey, tokenId)) {
-      console.error("getTokenBalance: Token contract user account not found", {
-        tokenContractAddress,
-        address,
-        tokenId: TokenId.toBase58(tokenId),
-      });
-      return {
-        success: false,
-        error: "getTokenBalance: Token contract user account not found",
-      };
-    }
-    const balance = Number(
-      Mina.getAccount(publicKey, tokenId).balance.toBigInt()
-    );
-    return { success: true, balance };
-  } catch (error: any) {
-    console.error("getTokenBalance: catch", error, {
-      tokenContractAddress,
-      address,
-    });
-    return { success: false, error: error?.message ?? "cannot fetch balance" };
-  }
-}
+// export async function getTokenBalance(params: {
+//   tokenContractAddress: string;
+//   address: string;
+// }): Promise<{ success: boolean; balance?: number; error?: string }> {
+//   const { tokenContractAddress, address } = params;
+//   try {
+//     await initBlockchain();
+//     const tokenContractPublicKey = PublicKey.fromBase58(tokenContractAddress);
+//     const publicKey = PublicKey.fromBase58(address);
+//     const tokenContract = new FungibleToken(tokenContractPublicKey);
+//     const tokenId = tokenContract.deriveTokenId();
+//     try {
+//       await fetchAccount({
+//         publicKey,
+//         tokenId,
+//       });
+//     } catch (error) {
+//       console.error("getTokenBalance: fetchAccount failed", {
+//         error,
+//         tokenContractAddress,
+//         address,
+//         tokenId: TokenId.toBase58(tokenId),
+//       });
+//       return { success: false, error: "getTokenBalance: fetchAccount failed" };
+//     }
+//     if (!Mina.hasAccount(tokenContractPublicKey, tokenId)) {
+//       console.error("getTokenBalance: Token contract user account not found", {
+//         tokenContractAddress,
+//         address,
+//         tokenId: TokenId.toBase58(tokenId),
+//       });
+//       return {
+//         success: false,
+//         error: "getTokenBalance: Token contract user account not found",
+//       };
+//     }
+//     const balance = Number(
+//       Mina.getAccount(publicKey, tokenId).balance.toBigInt()
+//     );
+//     return { success: true, balance };
+//   } catch (error: any) {
+//     console.error("getTokenBalance: catch", error, {
+//       tokenContractAddress,
+//       address,
+//     });
+//     return { success: false, error: error?.message ?? "cannot fetch balance" };
+//   }
+// }
