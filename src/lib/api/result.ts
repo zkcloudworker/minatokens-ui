@@ -1,7 +1,11 @@
 "use server";
 
-import { getResult } from "@/lib/api/aws-result";
 import { JobId, JobResult, ApiResponse } from "./types";
+import { TokenAPI } from "zkcloudworker";
+import { getChain } from "@/lib/chain";
+
+const ZKCW_JWT = process.env.ZKCW_JWT;
+const chain = getChain();
 
 export async function jobResult(
   params: JobId,
@@ -20,16 +24,20 @@ export async function jobResult(
     };
   }
 
-  const result = await getResult(jobId);
+  if (ZKCW_JWT === undefined) throw new Error("ZKCW_JWT is undefined");
+  const api = new TokenAPI({
+    jwt: ZKCW_JWT,
+    chain,
+  });
+
+  const result = await api.getResult(jobId);
   if (!result) {
     return {
       status: 500,
       json: { error: "Failed to get job result" },
     };
   }
-  if (!result.success) {
-    console.error("Failed job result", { jobId, result });
-  }
+
   return {
     status: 200,
     json: result,
