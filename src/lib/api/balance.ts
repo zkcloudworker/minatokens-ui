@@ -1,6 +1,7 @@
 "use server";
 
 import { tokenBalance } from "zkcloudworker";
+import { initBlockchain } from "../blockchain";
 import { checkAddress } from "@/lib/api/address";
 import { PublicKey, TokenId } from "o1js";
 import { BalanceRequestParams, BalanceResponse, ApiResponse } from "./types";
@@ -26,6 +27,7 @@ export async function balance(
   }
 
   try {
+    await initBlockchain();
     const tokenContractPublicKey = PublicKey.fromBase58(tokenAddress);
     const tokenHolderPublicKey = PublicKey.fromBase58(address);
     const tokenId = TokenId.derive(tokenContractPublicKey);

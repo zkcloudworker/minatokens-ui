@@ -286,13 +286,13 @@ const API: React.FC = () => {
         itemsPerPage: 10,
       });
 
-      const allStatuses: string[] = [
-        "All statuses",
-        ...Array.from(new Set(data.map((elm) => elm.status)))
-          .sort((a, b) => a - b)
-          .map((elm) => elm.toString()),
-      ];
-      setStatusList(allStatuses);
+      // const allStatuses: string[] = [
+      //   "All statuses",
+      //   ...Array.from(new Set(data.map((elm) => elm.status)))
+      //     .sort((a, b) => a - b)
+      //     .map((elm) => elm.toString()),
+      // ];
+      // setStatusList(allStatuses);
       setApiCalls(data);
       setTotalPages(totalPages);
     }
