@@ -1,8 +1,73 @@
 "use server";
 import { Mina, PublicKey, Bool, TokenId, Struct, UInt8 } from "o1js";
 import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
-import { ApiResponse, TokenState, TokenStateRequestParams } from "./types";
+import {
+  ApiResponse,
+  TokenState,
+  TokenStateRequestParams,
+  BalanceRequestParams,
+  BalanceResponse,
+} from "./types";
 import { checkAddress } from "./address";
+
+export async function balance(
+  params: BalanceRequestParams,
+  apiKeyAddress: string
+): Promise<ApiResponse<BalanceResponse>> {
+  const { tokenAddress, address } = params;
+
+  try {
+    await initBlockchain();
+
+    if (!address || !checkAddress(address)) {
+      return {
+        status: 400,
+        json: { error: "Invalid address" },
+      };
+    }
+
+    if (!tokenAddress || !checkAddress(tokenAddress)) {
+      return {
+        status: 400,
+        json: { error: "Invalid token address" },
+      };
+    }
+
+    const tokenContractPublicKey = PublicKey.fromBase58(tokenAddress);
+    const publicKey = PublicKey.fromBase58(address);
+    const tokenId = TokenId.derive(tokenContractPublicKey);
+
+    try {
+      await fetchMinaAccount({ publicKey, tokenId, force: false });
+      return {
+        status: 200,
+        json: {
+          tokenAddress,
+          address,
+          balance: Mina.hasAccount(publicKey, tokenId)
+            ? Number(Mina.getAccount(publicKey, tokenId).balance.toBigInt())
+            : null,
+        },
+      };
+    } catch (error) {
+      console.error("Cannot fetch account balance", params, error);
+      return {
+        status: 200,
+        json: {
+          tokenAddress,
+          address,
+          balance: null,
+        },
+      };
+    }
+  } catch (error) {
+    console.error("balance catch", params, error);
+    return {
+      status: 500,
+      json: { error: "Failed to get balance" },
+    };
+  }
+}
 
 class FungibleTokenState extends Struct({
   decimals: UInt8,
