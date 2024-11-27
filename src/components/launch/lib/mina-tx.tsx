@@ -108,6 +108,7 @@ export async function waitForProveJob(params: {
     Date.now() - start < TIMEOUT
   ) {
     attempt++;
+    console.log(`Sending transaction (${attempt})...`, sendResult);
     await sleep(10000 * attempt);
     sendResult = await sendTransaction(transaction);
   }
