@@ -11,6 +11,7 @@ import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
 import { sendDeployTransaction } from "@/lib/token-api";
+
 const DEBUG = debug();
 const chain = getChain();
 
@@ -61,14 +62,13 @@ export async function deployToken(params: {
         Field,
       },
       zkcloudworker: {
-        FungibleToken,
-        FungibleTokenAdmin,
         serializeTransaction,
         initBlockchain,
         accountBalanceMina,
         fee: getFee,
         fetchMinaAccount,
-        fungibleTokenVerificationKeys,
+        buildTokenDeployTransaction,
+        LAUNCH_FEE,
       },
     } = libraries;
 
@@ -104,18 +104,12 @@ export async function deployToken(params: {
     const adminContractPublicKey = adminContractPrivateKey.toPublicKey();
     if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
     const wallet = PublicKey.fromBase58(WALLET);
-    const zkToken = new FungibleToken(contractAddress);
-    const zkAdmin = new FungibleTokenAdmin(adminContractPublicKey);
 
     console.time("prepared tx");
     const memo = `deploy token ${symbol}`.substring(0, 30);
 
     await fetchMinaAccount({
       publicKey: sender,
-      force: true,
-    });
-    await fetchMinaAccount({
-      publicKey: wallet,
       force: true,
     });
 
@@ -153,50 +147,53 @@ export async function deployToken(params: {
 
     console.log("Sender balance:", await accountBalanceMina(sender));
     const nonce = await getAccountNonce(sender.toBase58());
+    const decimals = 9;
 
-    const vk =
-      fungibleTokenVerificationKeys[
-        chain === "mainnet" ? "mainnet" : "testnet"
-      ];
-    if (vk === undefined) {
-      throw new Error("Verification keys are undefined");
-    }
+    const { tx, whitelist } = await buildTokenDeployTransaction({
+      chain,
+      fee: UInt64.from(fee),
+      sender,
+      nonce,
+      memo,
+      adminContractAddress: adminContractPublicKey,
+      adminAddress: sender,
+      tokenAddress: contractAddress,
+      uri,
+      symbol,
+      whitelist: undefined,
+      provingKey: wallet,
+      provingFee: UInt64.from(LAUNCH_FEE),
+      decimals: UInt8.from(decimals),
+      developerAddress: undefined,
+      developerFee: undefined,
+    });
 
-    FungibleTokenAdmin._verificationKey = {
-      hash: Field(vk.admin.hash),
-      data: vk.admin.data,
-    };
-    FungibleToken._verificationKey = {
-      hash: Field(vk.token.hash),
-      data: vk.token.data,
-    };
-
-    const tx = await Mina.transaction(
-      { sender, fee, memo, nonce },
-      async () => {
-        AccountUpdate.fundNewAccount(sender, 3);
-        const provingFee = AccountUpdate.createSigned(sender);
-        provingFee.send({
-          to: PublicKey.fromBase58(WALLET),
-          amount: UInt64.from(ISSUE_FEE),
-        });
-        await zkAdmin.deploy({ adminPublicKey: sender });
-        zkAdmin.account.zkappUri.set(uri);
-        await zkToken.deploy({
-          symbol: symbol,
-          src: uri,
-        });
-        await zkToken.initialize(
-          adminContractPublicKey,
-          UInt8.from(9), // TODO: set decimals
-          // We can set `startPaused` to `Bool(false)` here, because we are doing an atomic deployment
-          // If you are not deploying the admin and token contracts in the same transaction,
-          // it is safer to start the tokens paused, and resume them only after verifying that
-          // the admin contract has been deployed
-          Bool(false)
-        );
-      }
-    );
+    // const tx = await Mina.transaction(
+    //   { sender, fee, memo, nonce },
+    //   async () => {
+    //     AccountUpdate.fundNewAccount(sender, 3);
+    //     const provingFee = AccountUpdate.createSigned(sender);
+    //     provingFee.send({
+    //       to: PublicKey.fromBase58(WALLET),
+    //       amount: UInt64.from(ISSUE_FEE),
+    //     });
+    //     await zkAdmin.deploy({ adminPublicKey: sender });
+    //     zkAdmin.account.zkappUri.set(uri);
+    //     await zkToken.deploy({
+    //       symbol: symbol,
+    //       src: uri,
+    //     });
+    //     await zkToken.initialize(
+    //       adminContractPublicKey,
+    //       UInt8.from(9), // TODO: set decimals
+    //       // We can set `startPaused` to `Bool(false)` here, because we are doing an atomic deployment
+    //       // If you are not deploying the admin and token contracts in the same transaction,
+    //       // it is safer to start the tokens paused, and resume them only after verifying that
+    //       // the admin contract has been deployed
+    //       Bool(false)
+    //     );
+    //   }
+    // );
     tx.sign(
       AURO_TEST
         ? [contractPrivateKey, adminContractPrivateKey, adminPrivateKey]
@@ -280,7 +277,23 @@ export async function deployToken(params: {
       symbol,
       uri,
       sendTransaction: false,
+      developerFee: undefined,
+      developerAddress: undefined,
+      whitelist,
     });
+
+    // const jobId = await sendDeployTransaction({
+    //   txType: "deploy",
+    //   serializedTransaction,
+    //   signedData,
+    //   adminContractAddress: adminContractPublicKey.toBase58(),
+    //   tokenAddress: contractAddress.toBase58(),
+    //   senderAddress: sender.toBase58(),
+    //   chain,
+    //   symbol,
+    //   uri,
+    //   sendTransaction: false,
+    // });
     console.timeEnd("sent transaction");
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {

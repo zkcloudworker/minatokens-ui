@@ -6,6 +6,7 @@ import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
 import { TokenAction } from "@/lib/token";
+
 const DEBUG = debug();
 const chain = getChain();
 const WALLET = getWallet();
@@ -60,15 +61,17 @@ export async function tokenTransaction(params: {
         UInt8,
         Bool,
         Field,
+        TokenId,
       },
       zkcloudworker: {
-        FungibleToken,
+        buildTokenTransaction,
         serializeTransaction,
         initBlockchain,
         accountBalanceMina,
         accountBalance,
         fee: getFee,
         fetchMinaAccount,
+        TRANSACTION_FEE,
       },
     } = lib;
 
@@ -107,8 +110,7 @@ export async function tokenTransaction(params: {
     );
     if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
     const wallet = PublicKey.fromBase58(WALLET);
-    const zkToken = new FungibleToken(contractAddress);
-    const tokenId = zkToken.deriveTokenId();
+    const tokenId = TokenId.derive(contractAddress, undefined);
 
     if (DEBUG) console.log(`Sending tx...`);
     console.time("prepared tx");
@@ -129,26 +131,9 @@ export async function tokenTransaction(params: {
         force: false,
       });
       await fetchMinaAccount({
-        publicKey: contractAddress,
-        force: true,
-      });
-      await fetchMinaAccount({
-        publicKey: adminContractPublicKey,
-        force: true,
-      });
-      await fetchMinaAccount({
-        publicKey: contractAddress,
-        tokenId,
-        force: true,
-      });
-      await fetchMinaAccount({
         publicKey: to,
         tokenId,
         force: false,
-      });
-      await fetchMinaAccount({
-        publicKey: wallet,
-        force: true,
       });
     } catch (error) {
       console.error("Error fetching mina account", error);
@@ -218,19 +203,37 @@ export async function tokenTransaction(params: {
     console.log("Sender balance:", await accountBalanceMina(sender));
     await sleep(1000);
 
-    const tx = await Mina.transaction(
-      { sender, fee, memo, nonce },
-      async () => {
-        if (isNewAccount) AccountUpdate.fundNewAccount(sender, 1);
-        const provingFee = AccountUpdate.createSigned(sender);
-        provingFee.send({
-          to: PublicKey.fromBase58(WALLET),
-          amount: UInt64.from(MINT_FEE),
-        });
-        if (action === "mint") await zkToken.mint(to, amount);
-        else await zkToken.transfer(sender, to, amount);
-      }
-    );
+    const { tx, whitelist } = await buildTokenTransaction({
+      txType: action,
+      chain,
+      fee: UInt64.from(fee),
+      nonce,
+      memo,
+      tokenAddress: contractAddress,
+      from: sender,
+      to,
+      amount,
+      price: undefined,
+      developerFee: undefined,
+      developerAddress: undefined,
+      whitelist: undefined,
+      provingKey: wallet,
+      provingFee: UInt64.from(TRANSACTION_FEE),
+    });
+
+    // const tx = await Mina.transaction(
+    //   { sender, fee, memo, nonce },
+    //   async () => {
+    //     if (isNewAccount) AccountUpdate.fundNewAccount(sender, 1);
+    //     const provingFee = AccountUpdate.createSigned(sender);
+    //     provingFee.send({
+    //       to: PublicKey.fromBase58(WALLET),
+    //       amount: UInt64.from(MINT_FEE),
+    //     });
+    //     if (action === "mint") await zkToken.mint(to, amount);
+    //     else await zkToken.transfer(sender, to, amount);
+    //   }
+    // );
     if (AURO_TEST) tx.sign([adminPrivateKey]);
 
     const serializedTransaction = serializeTransaction(tx);
@@ -306,18 +309,35 @@ export async function tokenTransaction(params: {
       groupId,
       update: messages.txProved,
     });
+
     const jobId = await sendTokenTransaction({
       txType: action,
+      serializedTransaction,
+      signedData,
       tokenAddress: contractAddress.toBase58(),
-      from: sender.toBase58(),
       to: to.toBase58(),
+      from: sender.toBase58(),
+      price: undefined,
       amount: Number(amount.toBigInt()),
       chain,
       symbol,
+      whitelist,
       sendTransaction: false,
-      serializedTransaction,
-      signedData,
+      developerFee: undefined,
+      developerAddress: undefined,
     });
+    // const jobId = await sendTokenTransaction({
+    //   txType: action,
+    //   tokenAddress: contractAddress.toBase58(),
+    //   from: sender.toBase58(),
+    //   to: to.toBase58(),
+    //   amount: Number(amount.toBigInt()),
+    //   chain,
+    //   symbol,
+    //   sendTransaction: false,
+    //   serializedTransaction,
+    //   signedData,
+    // });
 
     console.timeEnd("sent transaction");
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
