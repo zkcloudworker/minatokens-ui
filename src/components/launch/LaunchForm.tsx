@@ -44,6 +44,14 @@ export function LaunchForm({
   const { address, setAddress } = useContext(AddressContext);
 
   useEffect(() => {
+    if (address) {
+      setAdminAddress(address);
+      if (DEBUG)
+        console.log("adminAddress updated from address change:", address);
+    }
+  }, [address]);
+
+  useEffect(() => {
     const text = mintAddresses
       .map((mintAddress) => `${mintAddress.address}`)
       .join(", ");

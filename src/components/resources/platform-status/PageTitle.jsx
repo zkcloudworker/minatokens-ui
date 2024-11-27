@@ -8,7 +8,7 @@ export default function PageTitle() {
     >
       <div className="container relative z-10">
         <h1 className="text-center font-display text-4xl font-medium text-white">
-          Xhibiter System Status
+          MinaTokens API System Status
         </h1>
       </div>
     </section>

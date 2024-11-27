@@ -1,5 +1,4 @@
 "use client";
-import { explore, homes, pages, resources } from "@/data/menu";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 

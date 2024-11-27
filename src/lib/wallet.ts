@@ -99,7 +99,12 @@ export async function connectWallet(
       }
       if (DEBUG) console.log("mina login network", network);
 
-      if (account.length > 0 && network?.networkID === chainId)
+      if (
+        account &&
+        Array.isArray(account) &&
+        account.length > 0 &&
+        network?.networkID === chainId
+      )
         address = account[0];
       else {
         console.error("mina login account error", { account, network });
