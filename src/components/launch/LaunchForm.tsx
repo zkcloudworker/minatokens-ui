@@ -43,12 +43,16 @@ export function LaunchForm({
 
   const { address, setAddress } = useContext(AddressContext);
 
-  useEffect(() => {
+  async function addressChanged(address: string | undefined) {
     if (address) {
       setAdminAddress(address);
       if (DEBUG)
         console.log("adminAddress updated from address change:", address);
     }
+    setAddressValid(address ? await checkAddress(address) : false);
+  }
+  useEffect(() => {
+    addressChanged(address);
   }, [address]);
 
   useEffect(() => {
