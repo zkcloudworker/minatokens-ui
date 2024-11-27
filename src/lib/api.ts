@@ -17,7 +17,12 @@ import {
 } from "./api/types";
 import { debug } from "./debug";
 import { getChain } from "@/lib/chain";
-import { JobId, TransactionResult, TransactionStatus } from "@/lib/api/types";
+import {
+  JobId,
+  JobResult,
+  TransactionStatus,
+  BalanceResponse,
+} from "@/lib/api/types";
 import { readmeApi } from "./api/readme";
 const chain = getChain();
 const DEBUG = debug();
@@ -147,13 +152,11 @@ export function apiHandler<T, V>(params: {
         status: (json as any)?.status,
         jobId: (json as any)?.jobId,
         jobStatus: (json as any)?.jobStatus,
+        balance: (json as any)?.balance,
       });
       switch (name) {
         case "result":
-          return (
-            (json as TransactionResult)?.hash ??
-            (json as TransactionResult)?.jobStatus
-          );
+          return (json as JobResult)?.hash ?? (json as JobResult)?.jobStatus;
         case "tx-status":
           return (json as TransactionStatus)?.status;
         case "faucet":
@@ -166,6 +169,8 @@ export function apiHandler<T, V>(params: {
           return (json as DeployTransaction)?.memo;
         case "info":
           return (json as TokenState)?.tokenSymbol;
+        case "balance":
+          return (json as BalanceResponse)?.balance?.toString();
         default:
           return undefined;
       }
