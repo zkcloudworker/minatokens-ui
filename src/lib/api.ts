@@ -141,7 +141,7 @@ export function apiHandler<T, V>(params: {
     });
 
     function getResult(json: any): string | undefined {
-      console.log("getResult", name, {
+      const result = {
         txType: (json as any)?.txType,
         tokenAddress: (json as any)?.tokenAddress,
         adminContractAddress: (json as any)?.adminContractAddress,
@@ -153,7 +153,12 @@ export function apiHandler<T, V>(params: {
         jobId: (json as any)?.jobId,
         jobStatus: (json as any)?.jobStatus,
         balance: (json as any)?.balance,
-      });
+      };
+      const filtered = Object.fromEntries(
+        Object.entries(result).filter(([, value]) => value !== undefined)
+      );
+      console.log("getResult", name, filtered);
+
       switch (name) {
         case "result":
           return (json as JobResult)?.hash ?? (json as JobResult)?.jobStatus;
