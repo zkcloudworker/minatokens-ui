@@ -14,15 +14,14 @@ import {
   FaucetResponse,
   TokenTransaction,
   TokenState,
-} from "./api/types";
-import { debug } from "./debug";
-import { getChain } from "@/lib/chain";
-import {
   JobId,
   JobResult,
   TransactionStatus,
   BalanceResponse,
-} from "@/lib/api/types";
+} from "@minatokens/api";
+import { debug } from "./debug";
+import { getChain } from "@/lib/chain";
+
 import { readmeApi } from "./api/readme";
 const chain = getChain();
 const DEBUG = debug();

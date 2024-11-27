@@ -1,5 +1,5 @@
 "use server";
-import { ApiResponse } from "./types";
+import { ApiResponse } from "@minatokens/api";
 import { APIKey, PrismaClient } from "@prisma/client";
 import { SignJWT } from "jose";
 import formData from "form-data";

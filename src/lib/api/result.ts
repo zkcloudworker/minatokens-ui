@@ -1,6 +1,6 @@
 "use server";
 
-import { JobId, JobResult, ApiResponse } from "./types";
+import { JobId, JobResult, ApiResponse } from "@minatokens/api";
 import { TokenAPI } from "zkcloudworker";
 import { getChain } from "@/lib/chain";
 

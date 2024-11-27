@@ -16,7 +16,7 @@
     };
 */
 
-import { FungibleTokenTransactionType } from "./api/types";
+import { FungibleTokenTransactionType } from "@minatokens/api";
 export type TokenAction = FungibleTokenTransactionType;
 
 export interface MintAddress {

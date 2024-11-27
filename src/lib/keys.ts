@@ -10,7 +10,7 @@ export async function deployTokenParams(
   lib: Libraries
 ): Promise<TokenDeployParams> {
   const { PrivateKey, TokenId } = lib.o1js;
-  const { FungibleToken } = lib.zkcloudworker;
+  const { FungibleToken } = lib.tokens;
   const token: {
     privateKey: PrivateKey;
     publicKey: PublicKey;

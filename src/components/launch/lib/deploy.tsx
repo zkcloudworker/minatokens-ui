@@ -61,14 +61,13 @@ export async function deployToken(params: {
         Bool,
         Field,
       },
+      tokens: { buildTokenDeployTransaction, LAUNCH_FEE },
       zkcloudworker: {
         serializeTransaction,
         initBlockchain,
         accountBalanceMina,
         fee: getFee,
         fetchMinaAccount,
-        buildTokenDeployTransaction,
-        LAUNCH_FEE,
       },
     } = libraries;
 

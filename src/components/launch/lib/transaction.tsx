@@ -63,15 +63,14 @@ export async function tokenTransaction(params: {
         Field,
         TokenId,
       },
+      tokens: { buildTokenTransaction, TRANSACTION_FEE },
       zkcloudworker: {
-        buildTokenTransaction,
         serializeTransaction,
         initBlockchain,
         accountBalanceMina,
         accountBalance,
         fee: getFee,
         fetchMinaAccount,
-        TRANSACTION_FEE,
       },
     } = lib;
 

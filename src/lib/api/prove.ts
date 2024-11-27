@@ -9,9 +9,7 @@ import {
   JobId,
   ApiResponse,
   tokenTransactionTypes,
-  FungibleTokenTransactionType,
-} from "./types";
-import { getTokenSymbolAndAdmin } from "./symbol";
+} from "@minatokens/api";
 const chain = getChain();
 const DEBUG = debug();
 
