@@ -1,4 +1,4 @@
-import HomeToken from "./(homes)/home-token/page";
+import HomeToken from "@/home/page";
 import { getSiteName } from "@/lib/chain";
 
 export const metadata = {

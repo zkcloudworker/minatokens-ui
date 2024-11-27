@@ -1,16 +1,11 @@
 "use client";
 
-import WalletModal from "@/components/modals/WalletModal";
 import "@/public/styles/style.css";
 import "swiper/css";
 // import "swiper/css/pagination";
-//import { MetaMaskProvider } from "metamask-react";
 import "tippy.js/dist/tippy.css";
 import "react-modal-video/css/modal-video.css";
-import BuyModal from "@/components/modals/BuyModal";
-import BidModal from "@/components/modals/BidModal";
 import { MintAddressesModal } from "@/components/modals/MintAddressesModal";
-import LevelsModal from "@/components/modals/LevelsModal";
 import ModeChanger from "@/components/common/ModeChanger";
 import { LaunchTokenProvider } from "@/context/launch";
 import { TokenDetailsProvider } from "@/context/details";
@@ -42,9 +37,6 @@ export default function RootLayout({ children }) {
                 <TokenActionProvider>
                   <ModeChanger />
                   {children}
-                  <WalletModal />
-                  <BuyModal />
-                  <BidModal />
                   <MintAddressesModal />
                 </TokenActionProvider>
               </TokenDetailsProvider>
