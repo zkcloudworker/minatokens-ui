@@ -159,7 +159,7 @@ export function apiHandler<T, V>(params: {
       console.log("getResult", name, filtered);
 
       switch (name) {
-        case "result":
+        case "proof":
           return (json as JobResult)?.hash ?? (json as JobResult)?.jobStatus;
         case "tx-status":
           return (json as TransactionStatus)?.status;

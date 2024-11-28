@@ -4,10 +4,9 @@ import { FungibleToken } from "@minatokens/token";
 import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo } from "./token";
 import { algoliaGetToken, algoliaWriteToken } from "./algolia";
-import { getChain, getChainId } from "./chain";
+import { getChainId } from "./chain";
 import { debug } from "./debug";
 const DEBUG = debug();
-const chain = getChain();
 const chainId = getChainId();
 
 export async function getTokenState(params: {
@@ -182,51 +181,12 @@ export async function getTokenState(params: {
       adminVerificationKeyHash,
       adminVersion,
     };
-    let tokenInfo = info;
-    let isStateUpdated = false;
-    if (tokenInfo === undefined) {
-      tokenInfo = await algoliaGetToken({
-        tokenAddress: tokenContractPublicKey.toBase58(),
-      });
-    }
-    if (tokenInfo === undefined) {
-      console.error("getTokenState: Token info not found", {
-        tokenAddress,
-      });
-    } else {
-      if (
-        tokenInfo.adminContractAddress !== tokenState.adminContractAddress ||
-        tokenInfo.adminAddress !== tokenState.adminAddress ||
-        tokenInfo.totalSupply !== tokenState.totalSupply ||
-        tokenInfo.isPaused !== tokenState.isPaused ||
-        tokenInfo.decimals !== tokenState.decimals ||
-        tokenInfo.chain === undefined ||
-        tokenInfo.created === undefined ||
-        tokenInfo.updated === undefined ||
-        tokenInfo.tokenId !== tokenState.tokenId
-      ) {
-        console.error("getTokenState: Token info mismatch, updating the info", {
-          tokenAddress,
-          tokenInfo,
-          tokenState,
-        });
-        tokenInfo.tokenId = tokenState.tokenId;
-        tokenInfo.adminContractAddress = tokenState.adminContractAddress;
-        tokenInfo.adminAddress = tokenState.adminAddress;
-        tokenInfo.totalSupply = tokenState.totalSupply;
-        tokenInfo.isPaused = tokenState.isPaused;
-        tokenInfo.decimals = tokenState.decimals;
-        tokenInfo.updated = Date.now();
-        if (!tokenInfo.created) tokenInfo.created = tokenInfo.updated;
-        if (!tokenInfo.chain) tokenInfo.chain = chainId;
-        console.log("Updating token info", { tokenInfo });
-        await algoliaWriteToken({
-          tokenAddress: tokenContractPublicKey.toBase58(),
-          info: tokenInfo,
-        });
-        isStateUpdated = true;
-      }
-    }
+    const isStateUpdated = await updateTokenInfo({
+      tokenAddress,
+      tokenState,
+      info,
+    });
+
     return {
       success: true,
       tokenState,
@@ -239,4 +199,86 @@ export async function getTokenState(params: {
       error: "getTokenState catch:" + (error?.message ?? String(error)),
     };
   }
+}
+
+export async function updateTokenInfo(params: {
+  tokenAddress: string;
+  tokenState: TokenState;
+  info?: DeployedTokenInfo;
+}): Promise<boolean> {
+  const { tokenAddress, tokenState, info } = params;
+  let tokenInfo = info;
+  let isStateUpdated = false;
+  let needUpdateState = false;
+  if (tokenInfo === undefined) {
+    tokenInfo = await algoliaGetToken({
+      tokenAddress,
+    });
+  }
+  if (tokenInfo === undefined) {
+    console.log("getTokenState: Token info not found", {
+      tokenAddress,
+    });
+    tokenInfo = restoreDeployedTokenInfo({ tokenState });
+    needUpdateState = true;
+  }
+
+  if (
+    needUpdateState ||
+    tokenInfo.adminContractAddress !== tokenState.adminContractAddress ||
+    tokenInfo.adminAddress !== tokenState.adminAddress ||
+    tokenInfo.totalSupply !== tokenState.totalSupply ||
+    tokenInfo.isPaused !== tokenState.isPaused ||
+    tokenInfo.decimals !== tokenState.decimals ||
+    tokenInfo.chain === undefined ||
+    tokenInfo.created === undefined ||
+    tokenInfo.updated === undefined ||
+    tokenInfo.tokenId !== tokenState.tokenId
+  ) {
+    console.error("getTokenState: Token info mismatch, updating the info", {
+      tokenAddress,
+      tokenInfo,
+      tokenState,
+    });
+    tokenInfo.tokenId = tokenState.tokenId;
+    tokenInfo.adminContractAddress = tokenState.adminContractAddress;
+    tokenInfo.adminAddress = tokenState.adminAddress;
+    tokenInfo.totalSupply = tokenState.totalSupply;
+    tokenInfo.isPaused = tokenState.isPaused;
+    tokenInfo.decimals = tokenState.decimals;
+    tokenInfo.updated = Date.now();
+    if (!tokenInfo.created) tokenInfo.created = tokenInfo.updated;
+    if (!tokenInfo.chain) tokenInfo.chain = chainId;
+    console.log("Updating token info", { tokenInfo });
+    await algoliaWriteToken({
+      tokenAddress,
+      info: tokenInfo,
+    });
+    isStateUpdated = true;
+  }
+
+  return isStateUpdated;
+}
+
+// TODO: fetch the metadata from uri
+function restoreDeployedTokenInfo(params: {
+  tokenState: TokenState;
+}): DeployedTokenInfo {
+  const { tokenState } = params;
+  const time = Date.now();
+  const info: DeployedTokenInfo = {
+    ...tokenState,
+    symbol: tokenState.tokenSymbol,
+    name: tokenState.tokenSymbol,
+    twitter: "",
+    discord: "",
+    telegram: "",
+    instagram: "",
+    facebook: "",
+    website: "",
+    created: time,
+    updated: time,
+    chain: chainId,
+  };
+  return info;
 }
