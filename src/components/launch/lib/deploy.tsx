@@ -63,7 +63,7 @@ export async function deployToken(params: {
       },
       tokens: { buildTokenDeployTransaction, LAUNCH_FEE },
       zkcloudworker: {
-        serializeTransaction,
+        createTransactionPayloads,
         initBlockchain,
         accountBalanceMina,
         fee: getFee,
@@ -199,18 +199,8 @@ export async function deployToken(params: {
         : [contractPrivateKey, adminContractPrivateKey]
     );
 
-    const serializedTransaction = serializeTransaction(tx);
-    const transaction = tx.toJSON();
-    const txJSON = JSON.parse(transaction);
+    const payloads = createTransactionPayloads(tx);
 
-    const payload = {
-      transaction,
-      onlySign: true,
-      feePayer: {
-        fee: fee,
-        memo: memo,
-      },
-    };
     console.timeEnd("prepared tx");
     console.timeEnd("ready to sign");
 
@@ -227,14 +217,12 @@ export async function deployToken(params: {
       update: messages.txSigned,
     });
     console.time("sent transaction");
-    if (DEBUG) console.log("txJSON", txJSON);
-    let signedData = JSON.stringify({ zkappCommand: txJSON });
 
     if (!AURO_TEST) {
-      const txResult = await mina?.sendTransaction(payload);
+      const txResult = await mina?.sendTransaction(payloads.walletPayload);
       if (DEBUG) console.log("Transaction result", txResult);
-      signedData = txResult?.signedData;
-      if (signedData === undefined) {
+      payloads.signedData = txResult?.signedData;
+      if (payloads.signedData === undefined) {
         if (DEBUG) console.log("No signed data");
         updateTimelineItem({
           groupId,
@@ -267,12 +255,10 @@ export async function deployToken(params: {
 
     const jobId = await sendDeployTransaction({
       txType: "deploy",
-      serializedTransaction,
-      signedData,
+      ...payloads,
       adminContractAddress: adminContractPublicKey.toBase58(),
       tokenAddress: contractAddress.toBase58(),
-      senderAddress: sender.toBase58(),
-      chain,
+      sender: sender.toBase58(),
       symbol,
       uri,
       sendTransaction: false,

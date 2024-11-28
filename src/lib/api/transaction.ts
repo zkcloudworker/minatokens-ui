@@ -17,7 +17,7 @@ import {
   TRANSACTION_FEE,
   getTokenTransactionSender,
 } from "@minatokens/token";
-import { serializeTransaction } from "zkcloudworker";
+import { createTransactionPayloads } from "zkcloudworker";
 import {
   TransactionTokenParams,
   ApiResponse,
@@ -295,40 +295,16 @@ export async function tokenTransaction(
     provingFee: UInt64.from(TRANSACTION_FEE),
   });
   if (!params.to) tx.sign([newKey]);
-
-  const serializedTransaction = serializeTransaction(tx);
-  const transaction = tx.toJSON();
-  const wallet_payload = {
-    transaction,
-    nonce,
-    onlySign: true,
-    feePayer: {
-      fee: fee,
-      memo: memo,
-    },
-  };
-
-  const mina_signer_payload = {
-    zkappCommand: JSON.parse(transaction),
-    feePayer: {
-      feePayer: sender.toBase58(),
-      fee: fee,
-      nonce: nonce,
-      memo: memo,
-    },
-  };
+  const payloads = createTransactionPayloads(tx);
   console.timeEnd("prepared tx");
 
   return {
     status: 200,
     json: {
       txType,
+      ...payloads,
       tokenAddress: tokenAddress.toBase58(),
       symbol,
-      wallet_payload,
-      mina_signer_payload,
-      serializedTransaction,
-      transaction,
       to: to.toBase58(),
       from: from.toBase58(),
       toPrivateKey: params.to ? undefined : newKey.toBase58(),

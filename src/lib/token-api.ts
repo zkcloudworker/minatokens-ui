@@ -1,11 +1,11 @@
 "use server";
 
+import { TokenAPI } from "zkcloudworker";
 import {
-  TokenAPI,
-  FungibleTokenDeployParams,
-  FungibleTokenTransactionParams,
-  FungibleTokenJobResult,
-} from "zkcloudworker";
+  DeployTransaction,
+  JobResult,
+  TokenTransaction,
+} from "@minatokens/api";
 import { getChain } from "./chain";
 
 const ZKCW_JWT = process.env.ZKCW_JWT;
@@ -20,22 +20,20 @@ function getAPI(): TokenAPI {
 }
 
 export async function sendDeployTransaction(
-  params: FungibleTokenDeployParams
+  params: DeployTransaction
 ): Promise<string | undefined> {
   const api = getAPI();
   return api.sendDeployTransaction(params);
 }
 
 export async function sendTokenTransaction(
-  params: FungibleTokenTransactionParams
+  params: TokenTransaction
 ): Promise<string | undefined> {
   const api = getAPI();
   return api.sendTransaction(params);
 }
 
-export async function getResult(
-  jobId: string
-): Promise<FungibleTokenJobResult> {
+export async function getResult(jobId: string): Promise<JobResult> {
   const api = getAPI();
   return await api.getResult(jobId);
 }

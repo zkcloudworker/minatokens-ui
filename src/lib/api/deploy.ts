@@ -4,30 +4,14 @@ import {
   accountBalanceMina,
   fetchMinaAccount,
 } from "@/lib/blockchain";
-import {
-  PrivateKey,
-  PublicKey,
-  UInt64,
-  Mina,
-  AccountUpdate,
-  UInt8,
-  Bool,
-  Field,
-} from "o1js";
-import {
-  FungibleToken,
-  FungibleTokenAdmin,
-  fungibleTokenVerificationKeys,
-  buildTokenDeployTransaction,
-  LAUNCH_FEE,
-} from "@minatokens/token";
+import { PrivateKey, PublicKey, UInt64, Mina, UInt8 } from "o1js";
+import { buildTokenDeployTransaction, LAUNCH_FEE } from "@minatokens/token";
 import {
   DeployTransaction,
   DeployTokenParams,
   ApiResponse,
 } from "@minatokens/api";
-import { serializeTransaction } from "zkcloudworker";
-
+import { createTransactionPayloads } from "zkcloudworker";
 import { checkAddress } from "./address";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
@@ -133,7 +117,7 @@ export async function deployToken(
       json: { error: "Invalid whitelist" },
     };
   }
-  if (params.whitelist) {
+  if (params.whitelist && Array.isArray(params.whitelist)) {
     for (const whitelist of params.whitelist) {
       if (!checkAddress(whitelist.address)) {
         return { status: 400, json: { error: "Invalid whitelist address" } };
@@ -212,44 +196,21 @@ export async function deployToken(
   });
 
   tx.sign([tokenContractPrivateKey, adminContractPrivateKey]);
-  const serializedTransaction = serializeTransaction(tx);
-  const transaction = tx.toJSON();
+  const payloads = createTransactionPayloads(tx);
 
-  const wallet_payload = {
-    transaction,
-    nonce,
-    onlySign: true,
-    feePayer: {
-      fee: fee,
-      memo: memo,
-    },
-  };
-
-  const mina_signer_payload = {
-    zkappCommand: JSON.parse(transaction),
-    feePayer: {
-      feePayer: sender.toBase58(),
-      fee: fee,
-      nonce: nonce,
-      memo: memo,
-    },
-  };
   console.timeEnd("prepared tx");
 
   return {
     status: 200,
     json: {
       txType: "deploy",
-      senderAddress: sender.toBase58(),
+      ...payloads,
+      sender: sender.toBase58(),
       tokenAddress: contractAddress.toBase58(),
       adminContractAddress: adminContractPublicKey.toBase58(),
       tokenContractPrivateKey: tokenContractPrivateKey.toBase58(),
       adminContractPrivateKey: adminContractPrivateKey.toBase58(),
       symbol,
-      serializedTransaction,
-      transaction,
-      wallet_payload,
-      mina_signer_payload,
       uri,
       memo,
       nonce,

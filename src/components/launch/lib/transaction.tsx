@@ -65,7 +65,7 @@ export async function tokenTransaction(params: {
       },
       tokens: { buildTokenTransaction, TRANSACTION_FEE },
       zkcloudworker: {
-        serializeTransaction,
+        createTransactionPayloads,
         initBlockchain,
         accountBalanceMina,
         accountBalance,
@@ -235,19 +235,7 @@ export async function tokenTransaction(params: {
     // );
     if (AURO_TEST) tx.sign([adminPrivateKey]);
 
-    const serializedTransaction = serializeTransaction(tx);
-    const transaction = tx.toJSON();
-    const txJSON = JSON.parse(transaction);
-    if (DEBUG) console.log("Transaction", tx.toPretty());
-    const payload = {
-      transaction,
-      onlySign: true,
-      nonce,
-      feePayer: {
-        fee: fee,
-        memo: memo,
-      },
-    };
+    const payloads = createTransactionPayloads(tx);
     console.timeEnd("prepared tx");
     console.timeEnd("ready to sign");
     await sleep(1000);
@@ -271,14 +259,12 @@ export async function tokenTransaction(params: {
     });
 
     console.time("sent transaction");
-    if (DEBUG) console.log("txJSON", txJSON);
-    let signedData = JSON.stringify({ zkappCommand: txJSON });
 
     if (!AURO_TEST) {
-      const txResult = await mina?.sendTransaction(payload);
+      const txResult = await mina?.sendTransaction(payloads.walletPayload);
       if (DEBUG) console.log("Transaction result", txResult);
-      signedData = txResult?.signedData;
-      if (signedData === undefined) {
+      payloads.signedData = txResult?.signedData;
+      if (payloads.signedData === undefined) {
         if (DEBUG) console.log("No signed data");
         updateTimelineItem({
           groupId,
@@ -311,14 +297,12 @@ export async function tokenTransaction(params: {
 
     const jobId = await sendTokenTransaction({
       txType: action,
-      serializedTransaction,
-      signedData,
+      ...payloads,
       tokenAddress: contractAddress.toBase58(),
       to: to.toBase58(),
       from: sender.toBase58(),
       price: undefined,
       amount: Number(amount.toBigInt()),
-      chain,
       symbol,
       whitelist,
       sendTransaction: false,
