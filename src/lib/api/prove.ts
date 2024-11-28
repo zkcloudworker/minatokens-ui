@@ -43,10 +43,7 @@ export async function proveToken(
     };
   }
 
-  if (
-    !tx.serializedTransaction ||
-    typeof tx.serializedTransaction !== "string"
-  ) {
+  if (!tx.proverPayload || typeof tx.proverPayload !== "string") {
     return {
       status: 400,
       json: { error: "Invalid serializedTransaction" },
@@ -129,39 +126,13 @@ export async function proveToken(
     };
   }
 
+  tx.signedData = signedData;
+  tx.sendTransaction = sendTransaction;
+
   const jobId =
     tx.txType === "deploy"
-      ? await sendDeployTransaction({
-          txType: "deploy",
-          serializedTransaction: tx.serializedTransaction,
-          signedData,
-          adminContractAddress: adminContractAddress!,
-          tokenAddress: tx.tokenAddress,
-          senderAddress: tx.senderAddress,
-          chain,
-          symbol,
-          uri: tx.uri!,
-          sendTransaction,
-          developerFee: tx.developerFee,
-          developerAddress: tx.developerAddress,
-          whitelist: tx.whitelist,
-        })
-      : await sendTokenTransaction({
-          txType: tx.txType,
-          serializedTransaction: tx.serializedTransaction,
-          signedData,
-          tokenAddress: tx.tokenAddress,
-          to: tx.to,
-          from: tx.from,
-          price: tx.price,
-          amount: tx.amount,
-          chain,
-          symbol,
-          whitelist: tx.whitelist,
-          sendTransaction,
-          developerFee: tx.developerFee,
-          developerAddress: tx.developerAddress,
-        });
+      ? await sendDeployTransaction(tx)
+      : await sendTokenTransaction(tx);
 
   if (!jobId) {
     return {
