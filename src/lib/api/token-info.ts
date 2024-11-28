@@ -9,6 +9,7 @@ import {
   BalanceResponse,
 } from "@minatokens/api";
 import { checkAddress } from "./address";
+import { updateTokenInfo } from "../state";
 
 export async function balance(
   params: BalanceRequestParams,
@@ -257,6 +258,16 @@ export async function getTokenStateForApi(
       adminVersion,
     };
 
+    const updated = await updateTokenInfo({
+      tokenAddress,
+      tokenState,
+    });
+    if (updated) {
+      console.log("getTokenState: Updated token info", {
+        tokenAddress,
+        symbol: tokenState.tokenSymbol,
+      });
+    }
     return {
       status: 200,
       json: tokenState,

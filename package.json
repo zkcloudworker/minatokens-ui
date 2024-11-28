@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@algolia/client-search": "^5.15.0",
-    "@minatokens/api": "^0.2.2",
+    "@minatokens/api": "^0.2.3",
     "@minatokens/storage": "^0.1.0",
     "@minatokens/token": "^0.2.3",
     "@popperjs/core": "^2.11.8",
@@ -62,7 +62,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-custom-groups": "^1.1.2",
     "tippy.js": "^6.3.7",
-    "zkcloudworker": "^0.20.2"
+    "zkcloudworker": "^0.20.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
