@@ -235,7 +235,7 @@ export async function updateTokenInfo(params: {
     tokenInfo.updated === undefined ||
     tokenInfo.tokenId !== tokenState.tokenId
   ) {
-    console.error("getTokenState: Token info mismatch, updating the info", {
+    console.log("getTokenState: Token info mismatch, updating the info", {
       tokenAddress,
       tokenInfo,
       tokenState,
