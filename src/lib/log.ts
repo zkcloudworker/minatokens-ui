@@ -2,6 +2,8 @@
 import { getWalletInfo } from "./wallet";
 import { getSystemInfo } from "./system-info";
 import { log as logtail, Logger } from "@logtail/next";
+import { getChainId } from "./chain";
+const chainId = getChainId();
 
 export let wallet: {
   address: string | undefined;
@@ -24,4 +26,5 @@ getInfo();
 export const log = logtail.with({
   wallet,
   system,
+  chainId,
 });

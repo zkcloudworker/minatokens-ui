@@ -9,10 +9,11 @@ import { algoliaWriteToken } from "./algolia";
 import { getChainId } from "./chain";
 import { log as logtail } from "@logtail/next";
 import { headers } from "next/headers";
+const chainId = getChainId();
 const log = logtail.with({
   headers: headers(),
+  chainId,
 });
-const chainId = getChainId();
 
 export async function verifyFungibleTokenState(params: {
   tokenContractAddress: string;

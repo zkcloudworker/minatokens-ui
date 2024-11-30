@@ -6,11 +6,12 @@ import { getChain } from "./chain";
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
 import { headers } from "next/headers";
+const chain = getChain();
 const log = logtail.with({
   headers: headers(),
+  chain,
 });
 const DEBUG = debug();
-const chain = getChain();
 
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 

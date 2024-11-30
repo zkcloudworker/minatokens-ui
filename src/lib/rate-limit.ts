@@ -3,8 +3,11 @@ import { RateLimiterMemory, RateLimiterRedis } from "rate-limiter-flexible";
 import Redis from "ioredis";
 import { log as logtail } from "@logtail/next";
 import { headers } from "next/headers";
+import { getChain } from "./chain";
+const chain = getChain();
 const log = logtail.with({
   headers: headers(),
+  chain,
 });
 
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;

@@ -6,6 +6,7 @@ import { log as logtail } from "@logtail/next";
 import { headers } from "next/headers";
 const log = logtail.with({
   headers: headers(),
+  chain,
 });
 
 /*
