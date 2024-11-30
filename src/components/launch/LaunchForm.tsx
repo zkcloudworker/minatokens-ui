@@ -11,6 +11,8 @@ import { checkAddress } from "@/lib/address";
 import { shortenString } from "@/lib/short";
 import { LaunchTokenData, MintAddress, TokenLinks } from "@/lib/token";
 import { MintAddressesModal } from "../modals/MintAddressesModal";
+import { checkAvailability, isAvailable } from "@/lib/availability";
+import { log } from "@/lib/log";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 export function LaunchForm({
@@ -122,10 +124,19 @@ export function LaunchForm({
       await getAddress();
       return;
     }
-    if (DEBUG) console.log("Launching token for", adminAddress);
+    if ((await checkAvailability()) === false) {
+      log.info("LaunchForm: not available", { adminAddress });
+      window.location.href = "/notavailable";
+      return;
+    }
+    log.info("LaunchForm: launching token", { adminAddress, symbol, name });
+    if (!symbol) {
+      log.error("LaunchForm: no symbol", { adminAddress });
+      return;
+    }
     onLaunch({
-      symbol: symbol ?? "",
-      name: name ?? "",
+      symbol,
+      name: name,
       description: description ?? "",
       links,
       image,

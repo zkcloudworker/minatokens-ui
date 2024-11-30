@@ -1,6 +1,11 @@
 "use server";
 import { RateLimiterMemory, RateLimiterRedis } from "rate-limiter-flexible";
 import Redis from "ioredis";
+import { log as logtail } from "@logtail/next";
+import { headers } from "next/headers";
+const log = logtail.with({
+  headers: headers(),
+});
 
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;
 
@@ -41,23 +46,23 @@ export function initializeRedisRateLimiter(params: {
   const redisClient = new Redis(RATE_LIMIT_KV_URL, {
     enableOfflineQueue: true,
     reconnectOnError: function (err) {
-      console.error("Redis reconnectOnError:", { name, err });
+      log.error("Redis reconnectOnError:", { name, err });
       return true;
     },
     retryStrategy: function (times) {
       const delay = Math.min(times * 50, 2000);
-      if (verbose) console.log(`Redis retry attempt ${times} after ${delay}ms`);
+      if (verbose) log.info(`Redis retry attempt ${times} after ${delay}ms`);
       return delay;
     },
   });
 
   redisClient.on("error", (error) => {
-    console.error("Redis error:", { name, error });
+    log.error("Redis error:", { name, error });
   });
 
   redisClient.on("connect", () => {
     if (!verbose) return;
-    console.log(`Redis connected for rate limiter: ${name}`);
+    log.info(`Redis connected for rate limiter: ${name}`);
   });
 
   const rateLimiter = new RateLimiterRedis({
@@ -83,7 +88,7 @@ export async function rateLimit(params: {
   try {
     const rateLimiter = limiters[name];
     if (!rateLimiter) {
-      console.error(`Rate limiter ${name} not initialized`);
+      log.error(`Rate limiter ${name} not initialized`);
       return false;
     }
 
@@ -92,7 +97,7 @@ export async function rateLimit(params: {
   } catch (error) {
     if (error instanceof Error) {
       // Store/DB error or timeout error
-      console.error("Rate limiter error:", params, error);
+      log.error("Rate limiter error:", { params, error });
       return false;
     } else {
       // RateLimiterRes error - either no points or blocked
@@ -101,11 +106,11 @@ export async function rateLimit(params: {
       if (limited[key] === undefined || limited[key] < Date.now()) {
         limited[key] = Date.now() + 1000 * 60 * 60;
         if (rejRes?.msBeforeNext) {
-          console.error(
+          log.error(
             `Rate limit blocked for ${name}:${key}, retry after ${rejRes.msBeforeNext}ms`
           );
         } else {
-          console.error(
+          log.error(
             `Rate limit exceeded for ${name}:${key}, no points remaining`
           );
         }
@@ -128,12 +133,10 @@ export async function penalizeRateLimit(params: {
       console.error(`Rate limiter ${name} not initialized`);
       return;
     }
-    console.error(
-      `Penalizing rate limit for ${name} : ${key} (${points} points)`
-    );
+    log.error(`Penalizing rate limit for ${name} : ${key} (${points} points)`);
 
     await rateLimiter.penalty(key, points);
   } catch (error) {
-    console.error("penalizeRateLimit error", params, error);
+    log.error("penalizeRateLimit error", { params, error });
   }
 }

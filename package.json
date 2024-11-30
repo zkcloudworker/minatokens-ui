@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "@algolia/client-search": "^5.15.0",
+    "@logtail/next": "^0.1.7",
+    "@logtail/types": "^0.5.2",
     "@minatokens/api": "^0.2.3",
     "@minatokens/storage": "^0.1.0",
     "@minatokens/token": "^0.2.3",

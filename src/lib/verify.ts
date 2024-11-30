@@ -7,6 +7,11 @@ import { TokenInfo, DeployedTokenInfo } from "./token";
 import { getTokenState } from "./state";
 import { algoliaWriteToken } from "./algolia";
 import { getChainId } from "./chain";
+import { log as logtail } from "@logtail/next";
+import { headers } from "next/headers";
+const log = logtail.with({
+  headers: headers(),
+});
 const chainId = getChainId();
 
 export async function verifyFungibleTokenState(params: {
@@ -35,7 +40,7 @@ export async function verifyFungibleTokenState(params: {
     const tokenContract = new FungibleToken(tokenContractPublicKey);
     const tokenIdCheck = tokenContract.deriveTokenId();
     if (TokenId.toBase58(tokenIdCheck) !== tokenId) {
-      console.error("verifyFungibleTokenState: Token ID does not match", {
+      log.error("verifyFungibleTokenState: Token ID does not match", {
         tokenIdCheck: TokenId.toBase58(tokenIdCheck),
         tokenId,
       });
@@ -50,29 +55,23 @@ export async function verifyFungibleTokenState(params: {
     await fetchMinaAccount({ publicKey: adminContractPublicKey, force: false });
     await fetchMinaAccount({ publicKey: adminPublicKey, force: false });
     if (!Mina.hasAccount(adminPublicKey)) {
-      console.error("verifyFungibleTokenState: Admin account not found");
+      log.error("verifyFungibleTokenState: Admin account not found");
       return false;
     }
     if (!Mina.hasAccount(adminContractPublicKey)) {
-      console.error(
-        "verifyFungibleTokenState: Admin contract account not found",
-        {
-          adminContractAddress,
-        }
-      );
+      log.error("verifyFungibleTokenState: Admin contract account not found", {
+        adminContractAddress,
+      });
       return false;
     }
     if (!Mina.hasAccount(tokenContractPublicKey)) {
-      console.error(
-        "verifyFungibleTokenState: Token contract account not found",
-        {
-          tokenContractAddress,
-        }
-      );
+      log.error("verifyFungibleTokenState: Token contract account not found", {
+        tokenContractAddress,
+      });
       return false;
     }
     if (!Mina.hasAccount(tokenContractPublicKey, tokenIdCheck)) {
-      console.error(
+      log.error(
         "verifyFungibleTokenState: Token contract totalSupply account not found",
         {
           tokenContractAddress,
@@ -82,7 +81,7 @@ export async function verifyFungibleTokenState(params: {
     }
     const adminContractAccount = tokenContract.admin.get();
     if (adminContractAccount.toBase58() !== adminContractAddress) {
-      console.error(
+      log.error(
         "verifyFungibleTokenState: Admin contract address does not match",
         {
           adminContractAddress,
@@ -95,7 +94,7 @@ export async function verifyFungibleTokenState(params: {
     const adminAddressCheck0 = adminContract.zkapp?.appState[0];
     const adminAddressCheck1 = adminContract.zkapp?.appState[1];
     if (adminAddressCheck0 === undefined || adminAddressCheck1 === undefined) {
-      console.error(
+      log.error(
         "verifyFungibleTokenState: Cannot fetch admin address from admin contract",
         {
           adminContractAddress,
@@ -109,7 +108,7 @@ export async function verifyFungibleTokenState(params: {
       adminAddressCheck1,
     ]);
     if (adminAddressCheck.toBase58() !== adminAddress) {
-      console.error("verifyFungibleTokenState: Admin address does not match", {
+      log.error("verifyFungibleTokenState: Admin address does not match", {
         adminAddressCheck: adminAddressCheck.toBase58(),
         adminAddress: adminAddress,
       });
@@ -119,7 +118,7 @@ export async function verifyFungibleTokenState(params: {
       tokenAddress: tokenContractPublicKey.toBase58(),
     });
     if (!tokenState.success) {
-      console.error("verifyFungibleTokenState: getTokenState failed", {
+      log.error("verifyFungibleTokenState: getTokenState failed", {
         tokenState,
       });
       return false;
@@ -138,14 +137,14 @@ export async function verifyFungibleTokenState(params: {
       info: deployedTokenInfo,
     });
     if (!writeResult) {
-      console.error("verifyFungibleTokenState: algoliaWriteToken failed", {
+      log.error("verifyFungibleTokenState: algoliaWriteToken failed", {
         tokenAddress: tokenContractPublicKey.toBase58(),
         info,
       });
     }
     return true;
   } catch (error) {
-    console.error("verifyFungibleTokenState: catch", error);
+    log.error("verifyFungibleTokenState: catch", { error });
     return false;
   }
 }

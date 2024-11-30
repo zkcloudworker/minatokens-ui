@@ -1,5 +1,10 @@
 "use server";
 import { getChain } from "./chain";
+import { log as logtail } from "@logtail/next";
+import { headers } from "next/headers";
+const log = logtail.with({
+  headers: headers(),
+});
 const chain = getChain();
 const BLOCKBERRY_API = process.env.BLOCKBERRY_API;
 

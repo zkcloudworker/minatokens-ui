@@ -19,6 +19,7 @@ import {
 } from "@/lib/chain";
 import { sendTransaction } from "@/lib/send";
 import { balance } from "@/lib/api/token-info";
+import { log } from "@/lib/log";
 const chain = getChain();
 const DEBUG = debug();
 
@@ -39,6 +40,9 @@ export async function waitForProveJob(params: {
     address,
   } = params;
   if (type === "mint" && !address) {
+    log.error("waitForProveJob: Address is required for minting", {
+      address,
+    });
     throw new Error("Address is required for minting");
   }
 
@@ -61,6 +65,9 @@ export async function waitForProveJob(params: {
         content: result?.error ?? "Failed to prove transaction",
         status: "error",
       },
+    });
+    log.error("waitForProveJob: Transaction prove job failed", {
+      result,
     });
     return false;
   }
@@ -96,6 +103,7 @@ export async function waitForProveJob(params: {
 
   if (DEBUG) console.log("Transaction proved:", transaction?.slice(0, 50));
   if (!transaction) {
+    log.error("waitForProveJob: Transaction is undefined");
     return false;
   }
 
@@ -133,6 +141,12 @@ export async function waitForProveJob(params: {
         status: "error",
       },
     });
+    log.error(
+      "waitForProveJob: Failed to send transaction to Mina blockchain",
+      {
+        sendResult,
+      }
+    );
     return false;
   }
 
@@ -151,6 +165,9 @@ export async function waitForProveJob(params: {
     return true;
   } else {
     if (!address) {
+      log.error("waitForProveJob: Address is required for minting", {
+        address,
+      });
       throw new Error("Address is required for minting");
     }
     const start = Date.now();
@@ -193,6 +210,9 @@ export async function waitForProveJob(params: {
           content: "Failed to get token balance",
           status: "error",
         },
+      });
+      log.error("waitForProveJob: Failed to get token balance", {
+        balanceResult,
       });
       return false;
     }
@@ -272,6 +292,9 @@ export async function waitForMinaTx(params: {
         content: "Transaction is not included in the block",
         status: "error",
       },
+    });
+    log.error("waitForProveJob: Transaction is not included in the block", {
+      hash,
     });
     return false;
   }
@@ -362,6 +385,12 @@ export async function waitForContractVerification(params: {
         status: "error",
       },
     });
+    log.error(
+      "waitForContractVerification: Failed to verify token contract state",
+      {
+        verified,
+      }
+    );
     return false;
   }
 

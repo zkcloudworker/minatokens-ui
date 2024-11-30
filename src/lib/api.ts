@@ -1,5 +1,6 @@
 "use server";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { withLogtail, LogtailAPIRequest } from "@logtail/next";
 import {
   rateLimit,
   initializeMemoryRateLimiter,
@@ -77,9 +78,18 @@ export function apiHandler<T, V>(params: {
   isInternal?: boolean;
   isReadme?: boolean;
 }) {
+  return withLogtail(apiHandlerInternal(params));
+}
+
+function apiHandlerInternal<T, V>(params: {
+  name: string;
+  handler: (params: T, apiKeyAddress: string) => Promise<ApiResponse<V>>;
+  isInternal?: boolean;
+  isReadme?: boolean;
+}) {
   const { name, handler, isInternal = false, isReadme = false } = params;
 
-  return async (req: NextApiRequest & { body: T }, res: NextApiResponse) => {
+  return async (req: LogtailAPIRequest & { body: T }, res: NextApiResponse) => {
     const start = Date.now();
     if (req.method === "OPTIONS") {
       res.setHeader("Access-Control-Allow-Origin", "*");
@@ -187,6 +197,7 @@ export function apiHandler<T, V>(params: {
     }
 
     async function reply(status: number, json: { error: string } | V) {
+      if (status !== 200) req.log.error("api reply", { status, json });
       if (!isInternal) {
         if (!README_API_KEY) {
           console.error("README API key not set");
@@ -207,9 +218,12 @@ export function apiHandler<T, V>(params: {
 
           if (DEBUG) console.log("README log", log);
         } else {
+          req.log.error("No user info found for API key", { userKey });
           console.error("No user info found for API key", userKey);
         }
         if ((json as any)?.error) {
+          if (status === 200)
+            req.log.error("api reply", { status, error: (json as any)?.error });
           console.error("api reply", { status, error: (json as any)?.error });
         }
         const end = Date.now();
@@ -278,17 +292,24 @@ export function apiHandler<T, V>(params: {
       }
       if (name === "launch" && req.body.uri?.imageBase64) {
         if (typeof req.body.uri?.imageBase64 !== "string") {
+          req.log.error("Invalid image, should be base64 string", {
+            imageBase64: req.body.uri?.imageBase64,
+          });
           return await reply(400, {
             error: "Invalid image, should be base64 string",
           });
         }
         if (req.body.uri.imageBase64.length > 2000000) {
+          req.log.error("Image too large", {
+            imageLength: req.body.uri.imageBase64.length,
+          });
           return await reply(400, {
             error: "Image too large, the maximum size is 1MB",
           });
         }
         if (await rateLimit({ name: "apiRedis", key: userKey })) {
           console.error("Too many launch with image requests", userKey);
+          req.log.error("Too many launch with image requests", { userKey });
           return await reply(429, {
             error: "Too many launch with image requests",
           });
@@ -315,11 +336,13 @@ export function apiHandler<T, V>(params: {
         if (DEBUG) console.log("Handler executed in", handled - checked, "ms");
         return await reply(status, json);
       } catch (error) {
+        req.log.error("apiHandler error", { error });
         console.error("apiHandler error", error);
         return await reply(500, { error: "Invalid request body" });
       }
     } catch (error) {
-      console.error(error);
+      req.log.error("apiHandler error", { error });
+      console.error("apiHandler error", error);
       return res.status(500).json({ error: "Internal server error" });
     }
   };

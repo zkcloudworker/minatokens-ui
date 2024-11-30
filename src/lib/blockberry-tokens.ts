@@ -2,6 +2,11 @@
 import { getChain } from "./chain";
 const { BLOCKBERRY_API } = process.env;
 const chain = getChain();
+import { log as logtail } from "@logtail/next";
+import { headers } from "next/headers";
+const log = logtail.with({
+  headers: headers(),
+});
 
 /*
 {
@@ -92,7 +97,9 @@ export async function getAllTokensByAddress(params: {
       totalPages = result.totalPages;
       page++;
     } else {
-      console.error("error getting tokens by address", { account });
+      log.error("getAllTokensByAddress: error getting tokens by address", {
+        account,
+      });
       return allTokens;
     }
   }
@@ -124,13 +131,13 @@ export async function getTokensByAddress(params: {
       options
     );
     if (!response.ok) {
-      console.error("response:", response);
+      log.error("getTokensByAddress: response", { response });
       return undefined;
     }
     const result = await response.json();
     return result as unknown as BlockberryTokens;
   } catch (err) {
-    console.error(err);
+    log.error("getTokensByAddress: error", { error: err });
     return undefined;
   }
 }
@@ -206,13 +213,13 @@ export async function getTokenHoldersByTokenId(params: {
       options
     );
     if (!response.ok) {
-      console.error("response:", response);
+      log.error("getTokenHoldersByTokenId: response", { response });
       return undefined;
     }
     const result = await response.json();
     return result as unknown as BlockberryTokenHolders;
   } catch (err) {
-    console.error(err);
+    log.error("getTokenHoldersByTokenId: error", { error: err });
     return undefined;
   }
 }
@@ -327,13 +334,13 @@ export async function getTransactionsByToken(params: {
       options
     );
     if (!response.ok) {
-      console.error("response:", response);
+      log.error("getTransactionsByToken: response", { response });
       return undefined;
     }
     const result = await response.json();
     return result as unknown as BlockberryTokenTransactions;
   } catch (err) {
-    console.error(err);
+    log.error("getTransactionsByToken: error", { error: err });
     return undefined;
   }
 }
@@ -368,13 +375,13 @@ export async function getBlockberryScamInfo(params: {
       options
     );
     if (!response.ok) {
-      console.error("response:", response);
+      log.error("getBlockberryScamInfo: response", { response });
       return undefined;
     }
     const result = await response.json();
     return result as unknown as BlockberryScamInfo[];
   } catch (err) {
-    console.error(err);
+    log.error("getBlockberryScamInfo: error", { error: err });
     return undefined;
   }
 }

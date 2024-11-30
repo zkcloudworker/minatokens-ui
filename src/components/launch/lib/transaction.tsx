@@ -6,7 +6,7 @@ import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
 import { TokenAction } from "@/lib/token";
-
+import { log } from "@/lib/log";
 const DEBUG = debug();
 const chain = getChain();
 const WALLET = getWallet();
@@ -87,6 +87,10 @@ export async function tokenTransaction(params: {
       adminPrivateKey = PrivateKey.fromBase58(process.env.NEXT_PUBLIC_ADMIN_SK);
       const adminPublicKeyTmp = adminPrivateKey.toPublicKey();
       if (adminPublicKeyTmp.toBase58() !== process.env.NEXT_PUBLIC_ADMIN_PK) {
+        log.error("tokenTransaction: NEXT_PUBLIC_ADMIN_PK is invalid", {
+          adminPublicKeyTmp,
+          adminPublicKey: process.env.NEXT_PUBLIC_ADMIN_PK,
+        });
         throw new Error("NEXT_PUBLIC_ADMIN_PK is invalid");
       }
     }
@@ -135,10 +139,12 @@ export async function tokenTransaction(params: {
         force: false,
       });
     } catch (error) {
+      log.error("tokenTransaction: Error fetching mina account", { error });
       console.error("Error fetching mina account", error);
     }
 
     if (!Mina.hasAccount(sender)) {
+      log.error("tokenTransaction: Sender does not have account", { sender });
       console.error("Sender does not have account");
 
       updateTimelineItem({
@@ -162,6 +168,10 @@ export async function tokenTransaction(params: {
       action === "transfer" &&
       senderTokenBalance.toBigInt() < amount.toBigInt()
     ) {
+      log.error("tokenTransaction: Sender does not have enough tokens", {
+        senderTokenBalance,
+        amount,
+      });
       console.error("Sender does not have enough tokens");
 
       updateTimelineItem({
@@ -185,6 +195,10 @@ export async function tokenTransaction(params: {
     const isNewAccount = Mina.hasAccount(to, tokenId) === false;
     const requiredBalance = isNewAccount ? 1 : 0 + (FEE + fee) / 1_000_000_000;
     if (requiredBalance > balance) {
+      log.error("tokenTransaction: Insufficient balance of the sender", {
+        balance,
+        requiredBalance,
+      });
       updateTimelineItem({
         groupId,
         update: {
@@ -275,6 +289,9 @@ export async function tokenTransaction(params: {
             status: "error",
           },
         });
+        log.error("tokenTransaction: No user signature", {
+          sender: payloads.sender,
+        });
         return {
           success: false,
           error: "No user signature",
@@ -334,6 +351,7 @@ export async function tokenTransaction(params: {
           status: "error",
         },
       });
+      log.error("tokenTransaction: JobId is undefined", { jobId });
 
       return {
         success: false,
@@ -376,6 +394,7 @@ export async function tokenTransaction(params: {
         status: "error",
       },
     });
+    log.error("tokenTransaction: Error while minting token", { error });
     return {
       success: false,
       error: String(error) ?? `Error while ${action}ing token`,

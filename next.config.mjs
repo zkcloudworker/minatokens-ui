@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "url";
+import { withLogtail } from "@logtail/next";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,4 +72,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withLogtail(nextConfig);
