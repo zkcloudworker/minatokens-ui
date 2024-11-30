@@ -110,8 +110,8 @@ export default function BidModal() {
                   htmlFor="terms"
                   className="text-sm dark:text-jacarta-200"
                 >
-                  By checking this box, I agree to Xhibiter's{" "}
-                  <a href="#" className="text-accent">
+                  By checking this box, I agree to MinaTokens's{" "}
+                  <a href="/terms" className="text-accent">
                     Terms of Service
                   </a>
                 </label>

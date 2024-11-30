@@ -40,6 +40,12 @@ initializeRedisRateLimiter({
   duration: 60,
 });
 
+initializeRedisRateLimiter({
+  name: "base64",
+  points: 20,
+  duration: 60 * 60 * 24, // 1 day
+});
+
 initializeMemoryRateLimiter({
   name: "apiMemory",
   points: 120,
@@ -269,6 +275,24 @@ export function apiHandler<T, V>(params: {
       }
       if (await rateLimit({ name: "apiRedis", key: userKey })) {
         return await reply(429, { error: "Too many requests" });
+      }
+      if (name === "launch" && req.body.uri?.imageBase64) {
+        if (typeof req.body.uri?.imageBase64 !== "string") {
+          return await reply(400, {
+            error: "Invalid image, should be base64 string",
+          });
+        }
+        if (req.body.uri.imageBase64.length > 2000000) {
+          return await reply(400, {
+            error: "Image too large, the maximum size is 1MB",
+          });
+        }
+        if (await rateLimit({ name: "apiRedis", key: userKey })) {
+          console.error("Too many launch with image requests", userKey);
+          return await reply(429, {
+            error: "Too many launch with image requests",
+          });
+        }
       }
 
       if (!isInternal) {

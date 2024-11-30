@@ -17,6 +17,7 @@ import tippy from "tippy.js";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
 import Highlight from "./Highlight";
+import Pagination from "../common/Pagination";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 /*
@@ -39,7 +40,6 @@ interface Item {
 }
   */
 
-const sortingOptions: string[] = ["Price: Low to High", "Price: High to Low"];
 type categoriesTypes = "issued" | "owned" | "favorites";
 interface Category {
   id: categoriesTypes;
@@ -78,22 +78,25 @@ const initialCategories: Category[] = [
 export type TokenListProps = {
   title: string;
   showIcon: boolean;
-  numberOfItems: number;
+  initialNumberOfItems?: number;
 };
+
+const numberOfItemsOptions = [20, 50, 100];
 
 export default function TokenList({
   title,
   showIcon,
-  numberOfItems,
+  initialNumberOfItems,
 }: TokenListProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [items, setItems] = useState<DeployedTokenInfo[]>([]);
   const [tokensFetched, setTokensFetched] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [activeSort, setActiveSort] = useState<string>(sortingOptions[0]);
-  const [onlyVarified, setOnlyVarified] = useState<boolean>(false);
-  const [onlyNFSW, setOnlyNFSW] = useState<boolean>(false);
-  const [onlyLazyMinted, setOnlyLazyMinted] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [numberOfItems, setNumberOfItems] = useState<number>(
+    initialNumberOfItems ?? numberOfItemsOptions[0]
+  );
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
   useEffect(() => {
@@ -142,118 +145,97 @@ export default function TokenList({
     return favorites.includes(tokenAddress);
   };
 
-  useEffect(() => {
-    const fetchTokenList = async () => {
-      let userAddress = address;
-      let onlyFavorites = categories[categoriesIndexes.favorites].selected;
-      let onlyOwned = categories[categoriesIndexes.owned].selected;
-      let onlyIssued = categories[categoriesIndexes.issued].selected;
-      if (userAddress === undefined) {
-        userAddress = (await getWalletInfo()).address;
-        if (
-          userAddress === undefined &&
-          (onlyFavorites || onlyOwned || onlyIssued)
-        ) {
-          userAddress = (await connectWallet())?.address;
-          if (userAddress === undefined) {
-            console.error("Cannot connect wallet");
-            onlyFavorites = false;
-            onlyOwned = false;
-            onlyIssued = false;
-            setCategories(initialCategories);
-          }
+  const fetchTokenList = async () => {
+    let userAddress = address;
+    let onlyFavorites = categories[categoriesIndexes.favorites].selected;
+    let onlyOwned = categories[categoriesIndexes.owned].selected;
+    let onlyIssued = categories[categoriesIndexes.issued].selected;
+    if (userAddress === undefined) {
+      userAddress = (await getWalletInfo()).address;
+      if (
+        userAddress === undefined &&
+        (onlyFavorites || onlyOwned || onlyIssued)
+      ) {
+        userAddress = (await connectWallet())?.address;
+        if (userAddress === undefined) {
+          console.error("Cannot connect wallet");
+          onlyFavorites = false;
+          onlyOwned = false;
+          onlyIssued = false;
+          setCategories(initialCategories);
         }
       }
-      if (address !== userAddress) {
-        setAddress(userAddress);
-        if (DEBUG) console.log("address", userAddress);
-      }
-      let newItems: DeployedTokenInfo[] =
-        (
-          await algoliaGetTokenList({
-            query: search,
-            page: 0,
-            hitsPerPage: numberOfItems,
-            favoritesOfAddress: onlyFavorites ? userAddress : undefined,
-            ownedByAddress: onlyOwned ? userAddress : undefined,
-            issuedByAddress: onlyIssued ? userAddress : undefined,
-          })
-        )?.hits ?? [];
-      setItems(newItems);
+    }
+    if (address !== userAddress) {
+      setAddress(userAddress);
+      if (DEBUG) console.log("address", userAddress);
+    }
+    console.time("fetchTokenList");
+    const searchResult = await algoliaGetTokenList({
+      query: search,
+      page: page - 1,
+      hitsPerPage: numberOfItems,
+      favoritesOfAddress: onlyFavorites ? userAddress : undefined,
+      ownedByAddress: onlyOwned ? userAddress : undefined,
+      issuedByAddress: onlyIssued ? userAddress : undefined,
+    });
+    let newItems: DeployedTokenInfo[] = searchResult?.hits ?? [];
+    setItems(newItems);
+    setTotalPages(searchResult?.nbPages ?? 1);
+    console.timeEnd("fetchTokenList");
+    let likedTokens: string[] = [];
+    if (onlyFavorites && userAddress) {
+      likedTokens = newItems.map((elm) => elm.tokenAddress);
+    } else if (userAddress) {
+      likedTokens = await algoliaGetUsersLikes({ userAddress });
+    }
+    setFavorites(likedTokens);
+    if (DEBUG)
+      console.log("Search results:", {
+        userAddress,
+        categories,
+        newItems,
+        likedTokens,
+      });
 
-      let likedTokens: string[] = [];
-      if (onlyFavorites && userAddress) {
-        likedTokens = newItems.map((elm) => elm.tokenAddress);
-      } else if (userAddress) {
-        likedTokens = await algoliaGetUsersLikes({ userAddress });
-      }
-      setFavorites(likedTokens);
-      if (DEBUG)
-        console.log("Search results:", {
-          userAddress,
-          categories,
-          newItems,
-          likedTokens,
+    for (const item of newItems) {
+      const index = tokensFetched.findIndex((elm) => elm === item.tokenAddress);
+      if (index === -1) {
+        const state = await getTokenState({
+          tokenAddress: item.tokenAddress,
+          info: item,
         });
-
-      for (const item of newItems) {
-        const index = tokensFetched.findIndex(
-          (elm) => elm === item.tokenAddress
-        );
-        if (index === -1) {
-          const state = await getTokenState({
-            tokenAddress: item.tokenAddress,
-            info: item,
-          });
-          if (state.success) {
-            setTokensFetched((prev) => [...prev, item.tokenAddress]);
-            if (state.isStateUpdated) {
-              const index = newItems.findIndex(
-                (elm) => elm.tokenAddress === item.tokenAddress
-              );
-              if (index !== -1) {
-                const newItem = newItems[index];
-                Object.keys(state.tokenState).forEach((key) => {
-                  (newItem as any)[key] = (state.tokenState as any)[key];
-                });
-                setItems((prev) => {
-                  const prevItems = [...prev];
-                  const index = prevItems.findIndex(
-                    (elm) => elm.tokenAddress === item.tokenAddress
-                  );
-                  if (index !== -1) {
-                    prevItems[index] = newItem;
-                  }
-                  return prevItems;
-                });
-              }
+        if (state.success) {
+          setTokensFetched((prev) => [...prev, item.tokenAddress]);
+          if (state.isStateUpdated) {
+            const index = newItems.findIndex(
+              (elm) => elm.tokenAddress === item.tokenAddress
+            );
+            if (index !== -1) {
+              const newItem = newItems[index];
+              Object.keys(state.tokenState).forEach((key) => {
+                (newItem as any)[key] = (state.tokenState as any)[key];
+              });
+              setItems((prev) => {
+                const prevItems = [...prev];
+                const index = prevItems.findIndex(
+                  (elm) => elm.tokenAddress === item.tokenAddress
+                );
+                if (index !== -1) {
+                  prevItems[index] = newItem;
+                }
+                return prevItems;
+              });
             }
           }
         }
       }
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchTokenList();
-    // if (activeCategory == "all") {
-    //   tempitems = allItems;
-    // } else {
-    //   tempitems = allItems.filter((elm) => elm.category == activeCategory);
-    // }
-    // if (activeSort == "Price: Low to High") {
-    //   tempitems = [...tempitems.sort((a, b) => a.price - b.price)];
-    // }
-    // if (activeSort == "Price: High to Low") {
-    //   tempitems = [...tempitems.sort((a, b) => b.price - a.price)];
-    // }
-    // if (onlyVarified) {
-    //   tempitems = [...tempitems.filter((elm) => elm.varified)];
-    // }
-    // if (onlyNFSW) {
-    //   tempitems = [...tempitems.filter((elm) => elm.NFSW)];
-    // }
-    // if (onlyLazyMinted) {
-    //   tempitems = [...tempitems.filter((elm) => elm.LazyMinted)];
-    // }
-  }, [categories, activeSort, onlyVarified, onlyNFSW, onlyLazyMinted, search]);
+  }, [categories, numberOfItems, page, search]);
 
   return (
     <section className="py-32">
@@ -329,103 +311,76 @@ export default function TokenList({
               </li>
             ))}
           </ul>
-          <div className="dropdown my-1 cursor-pointer">
-            <div
-              className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
-              role="button"
-              id="categoriesSort"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
+          <div className="flex items-center gap-2 my-1">
+            <button
+              onClick={fetchTokenList}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-jacarta-100 bg-white hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
             >
-              <span className="font-display">{activeSort}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 width="24"
                 height="24"
-                className="h-4 w-4 fill-jacarta-500 dark:fill-white"
+                className="h-4 w-4 fill-jacarta-700 group-hover:fill-white dark:fill-jacarta-100"
               >
                 <path fill="none" d="M0 0h24v24H0z" />
-                <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
+                <path d="M5.463 4.433A9.961 9.961 0 0 1 12 2c5.523 0 10 4.477 10 10 0 2.136-.67 4.116-1.81 5.74L17 12h3A8 8 0 0 0 6.46 6.228l-.997-1.795zm13.074 15.134A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12c0-2.136.67-4.116 1.81-5.74L7 12H4a8 8 0 0 0 13.54 5.772l.997 1.795z" />
               </svg>
-            </div>
+            </button>
 
-            <div
-              className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
-              aria-labelledby="categoriesSort"
-            >
-              <span className="block px-5 py-2 font-display text-sm font-semibold text-jacarta-300">
-                Sort By
-              </span>
-              {sortingOptions.map((elm, i) => (
-                <button
-                  onClick={() => setActiveSort(elm)}
-                  key={i}
-                  className={
-                    activeSort == elm
-                      ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                      : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                  }
+            <div className="dropdown my-1 cursor-pointer">
+              <div
+                className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
+                role="button"
+                id="numberOfItems"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <span className="font-display">{numberOfItems}</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  className="h-4 w-4 fill-jacarta-500 dark:fill-white"
                 >
-                  {elm}
-                  {activeSort == elm && (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      height="24"
-                      className="mb-[3px] h-4 w-4 fill-accent"
-                    >
-                      <path fill="none" d="M0 0h24v24H0z" />
-                      <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
-                    </svg>
-                  )}
-                </button>
-              ))}
-              <span className="block px-5 py-2 font-display text-sm font-semibold text-jacarta-300">
-                Options
-              </span>
-              <div className="dropdown-item block w-full rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                <span className="flex items-center justify-between">
-                  <span>Verified Only</span>
-                  <input
-                    type="checkbox"
-                    name="check"
-                    checked={onlyVarified}
-                    onChange={(e) => {
-                      setOnlyVarified((pre) => !pre);
-                    }}
-                    className="relative h-4 w-7 cursor-pointer appearance-none rounded-lg border-none bg-jacarta-100 shadow-none after:absolute after:top-0.5 after:left-0.5 after:h-3 after:w-3 after:rounded-full after:bg-jacarta-400 after:transition-all checked:bg-accent checked:bg-none checked:after:left-3.5 checked:after:bg-white checked:hover:bg-accent focus:ring-transparent focus:ring-offset-0 checked:focus:bg-accent"
-                  />
-                </span>
+                  <path fill="none" d="M0 0h24v24H0z" />
+                  <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
+                </svg>
               </div>
-              <div className="dropdown-item block w-full rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                <span className="flex items-center justify-between">
-                  <span>NFSW Only</span>
-                  <input
-                    type="checkbox"
-                    checked={onlyNFSW}
-                    onChange={(e) => {
-                      setOnlyNFSW((pre) => !pre);
-                    }}
-                    name="check"
-                    className="relative h-4 w-7 cursor-pointer appearance-none rounded-lg border-none bg-jacarta-100 shadow-none after:absolute after:top-0.5 after:left-0.5 after:h-3 after:w-3 after:rounded-full after:bg-jacarta-400 after:transition-all checked:bg-accent checked:bg-none checked:after:left-3.5 checked:after:bg-white checked:hover:bg-accent focus:ring-transparent focus:ring-offset-0 checked:focus:bg-accent"
-                  />
+
+              <div
+                className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
+                aria-labelledby="numberOfItems"
+              >
+                <span className="block px-5 py-2 font-display text-sm font-semibold text-jacarta-300">
+                  Number of items
                 </span>
-              </div>
-              <div className="dropdown-item block w-full rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                <span className="flex items-center justify-between">
-                  <span>Show Lazy Minted</span>
-                  <input
-                    type="checkbox"
-                    checked={onlyLazyMinted}
-                    onChange={(e) => {
-                      setOnlyLazyMinted((pre) => !pre);
-                    }}
-                    name="check"
-                    className="relative h-4 w-7 cursor-pointer appearance-none rounded-lg border-none bg-jacarta-100 shadow-none after:absolute after:top-0.5 after:left-0.5 after:h-3 after:w-3 after:rounded-full after:bg-jacarta-400 after:transition-all checked:bg-accent checked:bg-none checked:after:left-3.5 checked:after:bg-white checked:hover:bg-accent focus:ring-transparent focus:ring-offset-0 checked:focus:bg-accent"
-                  />
-                </span>
+                {numberOfItemsOptions.map((elm, i) => (
+                  <button
+                    onClick={() => setNumberOfItems(elm)}
+                    key={i}
+                    className={
+                      numberOfItems == elm
+                        ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                        : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                    }
+                  >
+                    {elm}
+                    {numberOfItems == elm && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="24"
+                        height="24"
+                        className="mb-[3px] h-4 w-4 fill-accent"
+                      >
+                        <path fill="none" d="M0 0h24v24H0z" />
+                        <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -565,6 +520,7 @@ export default function TokenList({
             </article>
           ))}
         </div>
+        <Pagination page={page} setPage={setPage} totalPages={totalPages} />
       </div>
     </section>
   );

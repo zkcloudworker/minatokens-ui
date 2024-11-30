@@ -8,6 +8,7 @@ import { Chain, APIKeyCalls } from "@prisma/client";
 import { getApiCalls } from "@/lib/api-calls";
 import Image from "next/image";
 import Link from "next/link";
+import Pagination from "@/components/common/Pagination";
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
@@ -350,7 +351,7 @@ const API: React.FC = () => {
         </h1>
 
         <div className="flex items-center justify-between mb-10 gap-20">
-          <p className="text-lg leading-normal dark:text-jacarta-300">
+          <p className="text-md leading-normal dark:text-jacarta-300">
             Explore our comprehensive API documentation and try out live API
             endpoints at{" "}
             <a
@@ -360,6 +361,15 @@ const API: React.FC = () => {
               rel="noreferrer noopener"
             >
               https://docs.minatokens.com
+            </a>
+            . Explore proof generation jobs at{" "}
+            <a
+              href="https://jobs.minatokens.com"
+              className="text-accent"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              https://jobs.minatokens.com
             </a>
           </p>
 
@@ -739,88 +749,7 @@ const API: React.FC = () => {
                 </div>
               ))}
           </div>
-          {/* Pagination */}
-          <div className="flex items-center justify-center space-x-3 py-8">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page === 1}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-jacarta-100 bg-white text-sm font-semibold dark:border-jacarta-600 dark:bg-jacarta-700 disabled:opacity-50"
-            >
-              <span className="sr-only">Previous</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                className="h-4 w-4 fill-jacarta-700 dark:fill-white"
-              >
-                <path fill="none" d="M0 0h24v24H0z" />
-                <path d="M10.828 12l4.95 4.95-1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
-              </svg>
-            </button>
-
-            <div className="flex items-center justify-center space-x-1">
-              {[...Array(totalPages)].map((_, i) => {
-                const pageNum = i + 1;
-
-                // Always show first page, current page, and last page
-                // Show up to 5 pages before and after current page
-                if (
-                  pageNum === 1 ||
-                  pageNum === totalPages ||
-                  pageNum === page ||
-                  (pageNum >= page - 5 && pageNum <= page + 5)
-                ) {
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setPage(pageNum)}
-                      className={`flex h-8 w-8 items-center justify-center rounded text-sm font-semibold
-                      ${
-                        page === pageNum
-                          ? "bg-accent text-white"
-                          : "border border-jacarta-100 bg-white dark:border-jacarta-600 dark:bg-jacarta-700"
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                }
-
-                // Show ellipsis for gaps in page numbers
-                if (
-                  (pageNum === page - 6 && pageNum > 1) ||
-                  (pageNum === page + 6 && pageNum < totalPages)
-                ) {
-                  return (
-                    <span key={i} className="px-1">
-                      ...
-                    </span>
-                  );
-                }
-
-                return null;
-              })}
-            </div>
-
-            <button
-              onClick={() => setPage(Math.min(totalPages, page + 1))}
-              disabled={page === totalPages}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-jacarta-100 bg-white text-sm font-semibold dark:border-jacarta-600 dark:bg-jacarta-700 disabled:opacity-50"
-            >
-              <span className="sr-only">Next</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                className="h-4 w-4 fill-jacarta-700 dark:fill-white"
-              >
-                <path fill="none" d="M0 0h24v24H0z" />
-                <path d="M13.172 12l-4.95-4.95 1.414-1.414L16 12l-6.364 6.364-1.414-1.414z" />
-              </svg>
-            </button>
-          </div>
+          <Pagination page={page} setPage={setPage} totalPages={totalPages} />
         </div>
       </div>
     </section>

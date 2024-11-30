@@ -4,9 +4,7 @@ import { APIKey, PrismaClient } from "@prisma/client";
 import { SignJWT } from "jose";
 import formData from "form-data";
 import { checkAddress } from "./address";
-import { getChain } from "@/lib/chain";
 import { getBlockberryScamInfo } from "../blockberry-tokens";
-const chain = getChain();
 
 const {
   MAILGUN_API_ENDPOINT,
@@ -195,6 +193,97 @@ export async function generateApiKey(
   }
 }
 
+export interface SubscriptionResponse {
+  status: "success";
+}
+
+export async function generateSubscription(
+  email: string
+): Promise<ApiResponse<SubscriptionResponse>> {
+  console.log("Generating subscription", email);
+  try {
+    if (
+      !API_SECRET ||
+      !MAILGUN_API_ENDPOINT ||
+      !MAILGUN_API_SEND_KEY ||
+      !SLACK_WEBHOOK_URL
+    ) {
+      return {
+        status: 500,
+        json: { error: "Internal server error (env not set)" },
+      };
+    }
+
+    if (!email) {
+      return {
+        status: 400,
+        json: { error: "Missing email" },
+      };
+    }
+
+    if (!validateEmail(email)) {
+      return {
+        status: 400,
+        json: { error: "Invalid email" },
+      };
+    }
+
+    const prisma = new PrismaClient({
+      datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+    });
+
+    const emailBlacklist = await prisma.emailBlacklist.findUnique({
+      where: { email },
+    });
+    if (emailBlacklist) {
+      await sendSlackNotification(
+        generateSubscriptionMessage({
+          email,
+          isNew: false,
+          isBlacklisted: true,
+        })
+      );
+      return {
+        status: 400,
+        json: { error: "Email is not accepted" },
+      };
+    }
+
+    const subscription = await prisma.emailSubscriptions.findUnique({
+      where: { email },
+    });
+    await sendSlackNotification(
+      generateSubscriptionMessage({
+        email,
+        isNew: subscription === null,
+        isBlacklisted: false,
+      })
+    );
+
+    await prisma.emailSubscriptions.upsert({
+      where: { email },
+      update: {
+        email,
+      },
+      create: {
+        email,
+      },
+    });
+    await sendSubscriptionEmail({ email });
+
+    return {
+      status: 200,
+      json: { status: "success" },
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      status: 500,
+      json: { error: "Internal server error" },
+    };
+  }
+}
+
 function validateEmail(email: string): boolean {
   const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return regex.test(email);
@@ -291,6 +380,35 @@ function generateErrorMessage(params: KeyParams, existingKey: APIKey): object {
   return message;
 }
 
+function generateSubscriptionMessage(params: {
+  email: string;
+  isNew: boolean;
+  isBlacklisted: boolean;
+}): object {
+  const { email, isNew, isBlacklisted } = params;
+  const message = {
+    blocks: [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: `Subscription to MinaTokens news${isNew ? "" : " (repeated)"}${
+            isBlacklisted ? " (blacklisted)" : ""
+          }`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Email:* ${email}`,
+        },
+      },
+    ],
+  };
+  return message;
+}
+
 function generateBlackListMessage(
   params: KeyParams,
   key: string,
@@ -378,6 +496,34 @@ async function sendEmail(params: { email: string; jwt: string }) {
   }
 }
 
+async function sendSubscriptionEmail(params: { email: string }) {
+  if (!MAILGUN_API_ENDPOINT || !MAILGUN_API_SEND_KEY) {
+    throw new Error("MAILGUN_API_ENDPOINT or MAILGUN_API_SEND_KEY not set");
+  }
+  const { email } = params;
+  const form = new formData();
+  form.append("from", "MinaTokens <news@minatokens.com>");
+  form.append("to", email);
+  form.append("subject", "Thank you for subscribing to MinaTokens news");
+  form.append("template", "subscription");
+
+  const response = await fetch(MAILGUN_API_ENDPOINT, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(
+        `api:${MAILGUN_API_SEND_KEY}`
+      ).toString("base64")}`,
+      ...form.getHeaders(),
+    },
+    body: Uint8Array.from(form.getBuffer()),
+  });
+  if (!response.ok) {
+    console.error(`Failed to send subscription email: ${response.statusText}`);
+  } else {
+    console.log("Subscription email sent:", await response.text());
+  }
+}
+
 async function sendErrorEmail(params: { email: string; address: string }) {
   if (!MAILGUN_API_ENDPOINT || !MAILGUN_API_SEND_KEY) {
     throw new Error("MAILGUN_API_ENDPOINT or MAILGUN_API_SEND_KEY not set");
@@ -401,9 +547,9 @@ async function sendErrorEmail(params: { email: string; address: string }) {
     body: Uint8Array.from(form.getBuffer()),
   });
   if (!response.ok) {
-    console.error(`Failed to send email: ${response.statusText}`);
+    console.error(`Failed to send error email: ${response.statusText}`);
   } else {
-    console.log("Email sent:", await response.text());
+    console.log("Error email sent:", await response.text());
   }
 }
 

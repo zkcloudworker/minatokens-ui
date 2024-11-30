@@ -13,7 +13,7 @@ const ExploreTokens: FC = () => {
     <>
       <TokenHeader />
       <main>
-        <TokenList title="Explore" showIcon={false} numberOfItems={100} />
+        <TokenList title="Explore" showIcon={false} />
       </main>
       <TokenFooter />
     </>
