@@ -4,7 +4,13 @@ export default function Socials() {
   return (
     <>
       {socials.map((elm, i) => (
-        <a key={i} href={elm.href} className="group rtl:ml-4 rtl:mr-0">
+        <a
+          key={i}
+          href={elm.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group rtl:ml-4 rtl:mr-0"
+        >
           <svg
             aria-hidden="true"
             focusable="false"
