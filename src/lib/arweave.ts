@@ -1,10 +1,9 @@
-"use client";
-// TODO: move to server
+"use server";
 import Arweave from "arweave";
 import { debug } from "@/lib/debug";
 const DEBUG = debug();
-const ARWEAVE_KEY_STRING = process.env.NEXT_PUBLIC_ARWEAVE_KEY_STRING;
-const ARWEAVE_TEST = process.env.NEXT_PUBLIC_ARWEAVE_TEST;
+const ARWEAVE_KEY_STRING = process.env.ARWEAVE_KEY_STRING;
+const ARWEAVE_TEST = process.env.ARWEAVE_TEST;
 
 export async function arweaveHashToUrl(hash: string): Promise<string> {
   return ArweaveService.hashToUrl(hash);
@@ -45,6 +44,21 @@ export async function arweaveTxStatus(hash: string): Promise<{
   };
 }
 
+async function checkArweaveBalance(
+  arweave: ArweaveService
+): Promise<number | undefined> {
+  const balance = await arweave.balance();
+  if (balance === undefined) {
+    console.error("Cannot get arweave balance");
+    return undefined;
+  }
+  const arBalance = Number(balance);
+  if (arBalance < 0.25) {
+    console.error("Insufficient arweave balance", arBalance);
+  }
+  return arBalance;
+}
+
 export async function pinStringToArweave(
   data: string
 ): Promise<string | undefined> {
@@ -56,6 +70,8 @@ export async function pinStringToArweave(
   const arweave = new ArweaveService(
     ARWEAVE_TEST === "true" ? "" : ARWEAVE_KEY_STRING
   );
+  const arBalance = await checkArweaveBalance(arweave);
+  if (arBalance === undefined) return undefined;
 
   const hash = await arweave.pinString({
     data,
@@ -70,41 +86,70 @@ export async function pinStringToArweave(
   return hash;
 }
 
-export async function pinImageToArweave(
-  file: File
+// export async function pinImageToArweave(
+//   file: File
+// ): Promise<string | undefined> {
+//   if (ARWEAVE_KEY_STRING === undefined) {
+//     console.error("ARWEAVE_KEY_STRING is undefined");
+//     return undefined;
+//   }
+
+//   async function readFileAsync(file: File): Promise<Uint8Array> {
+//     return new Promise((resolve, reject) => {
+//       const reader = new FileReader();
+
+//       reader.onload = () => {
+//         if (reader.result) {
+//           resolve(new Uint8Array(reader.result as ArrayBuffer));
+//         } else {
+//           reject(new Error("File reading failed"));
+//         }
+//       };
+
+//       reader.onerror = () => reject(new Error("File reading error"));
+
+//       reader.readAsArrayBuffer(file);
+//     });
+//   }
+
+//   try {
+//     const arweave = new ArweaveService(ARWEAVE_KEY_STRING);
+
+//     const binary = await readFileAsync(file);
+//     const hash = await arweave.pinFile({
+//       data: binary,
+//       filename: file.name,
+//       size: file.size,
+//       mimeType: file.type,
+//       waitForConfirmation: false,
+//     });
+
+//     if (hash === undefined) throw new Error(`Arweave pin failed`);
+//     if (DEBUG)
+//       console.log("pinImageToArweave url:", ArweaveService.hashToUrl(hash));
+//     return hash;
+//   } catch (err) {
+//     console.error(err);
+//     return undefined;
+//   }
+// }
+
+export async function pinBase64ImageToArweave(
+  imageBase64: string
 ): Promise<string | undefined> {
   if (ARWEAVE_KEY_STRING === undefined) {
     console.error("ARWEAVE_KEY_STRING is undefined");
     return undefined;
   }
 
-  async function readFileAsync(file: File): Promise<Uint8Array> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        if (reader.result) {
-          resolve(new Uint8Array(reader.result as ArrayBuffer));
-        } else {
-          reject(new Error("File reading failed"));
-        }
-      };
-
-      reader.onerror = () => reject(new Error("File reading error"));
-
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
   try {
     const arweave = new ArweaveService(ARWEAVE_KEY_STRING);
+    const arBalance = await checkArweaveBalance(arweave);
+    if (arBalance === undefined) return undefined;
 
-    const binary = await readFileAsync(file);
+    const binary = Buffer.from(imageBase64, "base64");
     const hash = await arweave.pinFile({
       data: binary,
-      filename: file.name,
-      size: file.size,
-      mimeType: file.type,
       waitForConfirmation: false,
     });
 
@@ -193,9 +238,9 @@ class ArweaveService {
 
   public async pinFile(params: {
     data: Uint8Array;
-    filename: string;
-    size: number;
-    mimeType: string;
+    filename?: string;
+    size?: number;
+    mimeType?: string;
     // eslint-disable-next-line @typescript-eslint/no-inferrable-types
     waitForConfirmation?: boolean;
   }): Promise<string | undefined> {
@@ -212,9 +257,9 @@ class ArweaveService {
         { data: data },
         this.key
       );
-      transaction.addTag("Content-Type", mimeType);
-      transaction.addTag("knownLength", size.toString());
-      transaction.addTag("filename", filename);
+      if (mimeType) transaction.addTag("Content-Type", mimeType);
+      if (size) transaction.addTag("knownLength", size.toString());
+      if (filename) transaction.addTag("filename", filename);
       await this.arweave.transactions.sign(transaction, this.key);
       const uploader = await this.arweave.transactions.getUploader(transaction);
 

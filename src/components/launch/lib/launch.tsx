@@ -23,7 +23,7 @@ import {
   IsErrorFunction,
   GetMintStatisticsFunction,
 } from "../TimeLine";
-import { pinImageToArweave, pinStringToArweave } from "@/lib/arweave";
+import { pinBase64ImageToArweave, pinStringToArweave } from "@/lib/arweave";
 import { arweaveHashToUrl } from "@/lib/arweave";
 import { TokenInfo } from "@/lib/token";
 import { sendTransaction } from "@/lib/send";
@@ -64,6 +64,26 @@ async function startProcessUpdateRequests(
     }
     await sleep(1000);
   }
+}
+
+async function readFileAsync(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (reader.result) {
+        // Remove data:image/* prefix from base64 string
+        const base64 = reader.result.toString().split(",")[1];
+        resolve(base64);
+      } else {
+        reject(new Error("File reading failed"));
+      }
+    };
+
+    reader.onerror = () => reject(new Error("File reading error"));
+
+    reader.readAsDataURL(file);
+  });
 }
 
 async function stopProcessUpdateRequests() {
@@ -330,7 +350,8 @@ export async function launchToken(params: {
         requiredForSuccess: ["pinningImage", "arweaveTx", "arweaveIncluded"],
       });
 
-      imageHash = await pinImageToArweave(image);
+      const base64 = await readFileAsync(image);
+      imageHash = await pinBase64ImageToArweave(base64);
       imageExtension = image?.name?.split(".")?.pop();
       if (imageHash) {
         const imageTxMessage = (
