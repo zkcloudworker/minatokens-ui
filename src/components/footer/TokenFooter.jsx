@@ -1,6 +1,4 @@
 import Socials from "./Socials";
-import CompanyLinks from "./CompanyLinks";
-import MyAccountKink from "./MyAccountLink";
 import Image from "next/image";
 import Link from "next/link";
 import { getSiteName } from "@/lib/chain";
