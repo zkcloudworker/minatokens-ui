@@ -103,6 +103,11 @@ export default function TokenList({
     tippy("[data-tippy-content]");
   }, []);
 
+  const listOfNumberOfItems =
+    initialNumberOfItems && !numberOfItemsOptions.includes(initialNumberOfItems)
+      ? [initialNumberOfItems, ...numberOfItemsOptions]
+      : numberOfItemsOptions;
+
   /*
   const addLike = (id: number) => {
     const items = [...allItems];
@@ -356,7 +361,7 @@ export default function TokenList({
                 <span className="block px-5 py-2 font-display text-sm font-semibold text-jacarta-300">
                   Number of items
                 </span>
-                {numberOfItemsOptions.map((elm, i) => (
+                {listOfNumberOfItems.map((elm, i) => (
                   <button
                     onClick={() => setNumberOfItems(elm)}
                     key={i}

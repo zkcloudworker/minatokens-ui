@@ -3,6 +3,8 @@ import TokenHeader from "@/components/headers/TokenHeader";
 import API from "@/components/pages/api/API";
 import { FC } from "react";
 import { getSiteName } from "@/lib/chain";
+import { isAvailable } from "@/lib/availability";
+import NotAvailable from "@/components/pages/NotAvailable";
 
 export const metadata = {
   title: `${getSiteName()} | API`,
@@ -13,7 +15,8 @@ const ApiPage: FC = () => {
     <>
       <TokenHeader showSearch={false} />
       <main>
-        <API />
+        {isAvailable && <API />}
+        {!isAvailable && <NotAvailable />}
       </main>
       <TokenFooter />
     </>

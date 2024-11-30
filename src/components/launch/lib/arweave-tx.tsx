@@ -4,6 +4,7 @@ import { UpdateTimelineItemFunction, LineId, GroupId } from "./messages";
 import { arweaveTxStatus } from "@/lib/arweave";
 import { sleep } from "@/lib/sleep";
 import { debug } from "@/lib/debug";
+import { log } from "@/lib/log";
 const DEBUG = debug();
 
 export async function waitForArweaveTx(params: {
@@ -47,6 +48,10 @@ export async function waitForArweaveTx(params: {
         content: txFailedMessage,
         status: "error",
       },
+    });
+    log.error("waitForArweaveTx: Arweave transaction failed", {
+      hash,
+      status,
     });
     return false;
   }

@@ -38,6 +38,7 @@ import { waitForArweaveTx } from "./arweave-tx";
 import { getAccountNonce } from "@/lib/nonce";
 import { waitForProveJob, waitForContractVerification } from "./mina-tx";
 import { deployTokenParams } from "@/lib/keys";
+import { log } from "@/lib/log";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
 const chain = getChain();
@@ -168,6 +169,10 @@ export async function launchToken(params: {
       isMintedShown = true;
     }
     if (statistics.error > 0 || isErrorShown) {
+      log.error("showMintStatistics: mint failed", {
+        statistics,
+        isErrorShown,
+      });
       updateTimelineItem({
         groupId: "mint",
         update: {
@@ -239,6 +244,7 @@ export async function launchToken(params: {
           status: "error",
         },
       });
+      log.error("launchToken: admin address is not set", { adminPublicKey });
       return;
     }
     if (adminPublicKey !== walletInfo.address) {
@@ -257,6 +263,10 @@ export async function launchToken(params: {
           content: "Data verification failed",
           status: "error",
         },
+      });
+      log.error("launchToken: admin address does not match", {
+        adminPublicKey,
+        walletInfo,
       });
       return;
     }
@@ -279,6 +289,7 @@ export async function launchToken(params: {
           status: "error",
         },
       });
+      log.error("launchToken: no Auro wallet", { walletInfo });
       return;
     }
     if (isError()) return;
@@ -311,6 +322,7 @@ export async function launchToken(params: {
               status: "error",
             },
           });
+          log.error("launchToken: mint data error", { item });
           return;
         }
       }
@@ -398,6 +410,7 @@ export async function launchToken(params: {
             status: "error",
           },
         });
+        log.error("launchToken: failed to pin image", { imageHash });
         return;
       }
     }
@@ -452,6 +465,7 @@ export async function launchToken(params: {
           status: "error",
         },
       });
+      log.error("launchToken: failed to pin metadata", { metadataHash });
       return;
     } else {
       const metadataTxMessage = (
@@ -644,6 +658,7 @@ export async function launchToken(params: {
           status: "error",
         },
       });
+      log.error("launchToken: failed to deploy token", { deployResult });
       return;
     }
     if (isError()) {
@@ -686,6 +701,7 @@ export async function launchToken(params: {
           },
         ],
       });
+      log.error("launchToken: transaction not included", { txIncluded });
       return;
     }
     setLikes((likes += 10));
@@ -711,6 +727,9 @@ export async function launchToken(params: {
           },
         ],
       });
+      log.error("launchToken: contract verification failed", {
+        contractVerified,
+      });
       await stopProcessUpdateRequests();
       return;
     }
@@ -728,6 +747,7 @@ export async function launchToken(params: {
           },
         ],
       });
+      log.error("launchToken: error launching token", { isErrorShown });
       await stopProcessUpdateRequests();
       return;
     }
@@ -939,6 +959,7 @@ export async function launchToken(params: {
         },
       ],
     });
+    log.error("launchToken: error launching token", { error });
     await stopProcessUpdateRequests();
   }
 }

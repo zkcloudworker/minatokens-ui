@@ -6,8 +6,14 @@ import { TokenState, DeployedTokenInfo, TokenInfo } from "./token";
 import { algoliaGetToken, algoliaWriteToken } from "./algolia";
 import { getChainId } from "./chain";
 import { debug } from "./debug";
-const DEBUG = debug();
+import { log as logtail } from "@logtail/next";
+import { headers } from "next/headers";
 const chainId = getChainId();
+const log = logtail.with({
+  headers: headers(),
+  chainId,
+});
+const DEBUG = debug();
 
 export async function getTokenState(params: {
   tokenAddress: string;
@@ -80,6 +86,9 @@ export async function getTokenState(params: {
       console.error("getTokenState: Token verification key hash not found", {
         tokenAddress,
       });
+      log.error("getTokenState: Token verification key hash not found", {
+        tokenAddress,
+      });
       return {
         success: false,
         error: "Token verification key hash not found",
@@ -115,12 +124,13 @@ export async function getTokenState(params: {
     const adminVerificationKeyHash =
       adminContract.zkapp?.verificationKey?.hash.toJSON();
     if (adminVerificationKeyHash === undefined) {
-      console.error(
+      log.error(
         "getTokenState: Admin contract verification key hash not found",
         {
           adminContractPublicKey: adminContractPublicKey.toBase58(),
         }
       );
+
       return {
         success: false,
         error: "Admin contract verification key hash not found",
@@ -193,7 +203,7 @@ export async function getTokenState(params: {
       isStateUpdated,
     };
   } catch (error: any) {
-    console.error("getTokenState catch", error);
+    log.error("getTokenState: catch", { error });
     return {
       success: false,
       error: "getTokenState catch:" + (error?.message ?? String(error)),
@@ -354,7 +364,7 @@ export async function restoreDeployedTokenInfo(params: {
       }
     }
   } catch (e) {
-    console.error("restoreDeployedTokenInfo catch", e);
+    log.error("restoreDeployedTokenInfo: catch", { error: e });
   }
   const deployedTokenInfo: DeployedTokenInfo = {
     ...info,

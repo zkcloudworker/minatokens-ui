@@ -3,6 +3,8 @@
 import { getChainId } from "./chain";
 import { debug } from "./debug";
 import { getSystemInfo } from "./system-info";
+import { wallet } from "./log";
+import { log } from "./log";
 const DEBUG = debug();
 const chainId = getChainId();
 
@@ -20,9 +22,11 @@ export async function connectWallet(
 
   let address = undefined;
   let network = undefined;
+  const isAuro = (window as any).mina?.isAuro;
+  const networkID = (window as any).mina?.chainInfo?.networkID;
   const logOptions = {
-    networkID: (window as any).mina?.chainInfo?.networkID,
-    isAuro: (window as any).mina?.isAuro,
+    networkID,
+    isAuro,
   };
 
   if (DEBUG)
@@ -39,6 +43,7 @@ export async function connectWallet(
       try {
         account = await (window as any).mina.requestAccounts();
       } catch (error: any) {
+        log.error("mina login requestAccounts catch", { error, logOptions });
         console.error("mina login requestAccounts catch", error);
         return {
           address: undefined,
@@ -53,6 +58,7 @@ export async function connectWallet(
       try {
         network = await (window as any).mina?.requestNetwork();
       } catch (error: any) {
+        log.error("mina login requestNetwork catch", { error, logOptions });
         console.error("mina login requestNetwork catch", error);
         return {
           address: undefined,
@@ -71,6 +77,7 @@ export async function connectWallet(
             networkID: chainId,
           });
         } catch (error: any) {
+          log.error("mina login switchChain catch", { error, logOptions });
           console.error("mina login switchChain catch", error);
           return {
             address: undefined,
@@ -86,6 +93,7 @@ export async function connectWallet(
         try {
           network = await (window as any).mina.requestNetwork();
         } catch (error: any) {
+          log.error("mina login requestNetwork 2 catch", { error, logOptions });
           console.error("mina login requestNetwork 2 catch", error);
           return {
             address: undefined,
@@ -107,6 +115,7 @@ export async function connectWallet(
       )
         address = account[0];
       else {
+        log.error("mina login account error", { account, network, logOptions });
         console.error("mina login account error", { account, network });
         return {
           address: undefined,
@@ -133,6 +142,7 @@ export async function connectWallet(
       }
     }
   } catch (error: any) {
+    log.error("mina login catch", { error, logOptions });
     console.error("mina login catch", error);
     return {
       address: undefined,
@@ -145,6 +155,7 @@ export async function connectWallet(
   }
   if (DEBUG) console.log("mina login address", address);
   if (!address) {
+    log.error("mina login no address", { address, network, logOptions });
     return {
       address: undefined,
       network: undefined,
@@ -152,17 +163,21 @@ export async function connectWallet(
       success: false,
     };
   }
-  return {
+  const result = {
     address,
     network: network?.networkID,
     error: undefined,
     success: true,
   };
+  wallet.address = result.address;
+  wallet.network = result.network;
+  return result;
 }
 
 export async function getWalletInfo(): Promise<{
   address: string | undefined;
   network: string | undefined;
+  isAuro: boolean | undefined;
 }> {
   let address: string | undefined;
   let network: string | undefined;
@@ -173,6 +188,7 @@ export async function getWalletInfo(): Promise<{
       return {
         address: undefined,
         network: undefined,
+        isAuro: undefined,
       };
     }
 
@@ -195,8 +211,13 @@ export async function getWalletInfo(): Promise<{
     console.error("getWalletInfo catch", error);
   }
 
-  return {
+  const info = {
     address,
     network,
+    isAuro: (window as any).mina?.isAuro === true,
   };
+  wallet.address = info.address;
+  wallet.network = info.network;
+  wallet.isAuro = info.isAuro;
+  return info;
 }

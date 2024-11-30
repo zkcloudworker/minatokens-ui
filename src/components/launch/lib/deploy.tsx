@@ -11,7 +11,7 @@ import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
 import { sendDeployTransaction } from "@/lib/token-api";
-
+import { log } from "@/lib/log";
 const DEBUG = debug();
 const chain = getChain();
 
@@ -47,6 +47,7 @@ export async function deployToken(params: {
   try {
     const mina = (window as any).mina;
     if (mina === undefined || mina?.isAuro !== true) {
+      log.error("deployToken: no Auro Wallet found");
       throw new Error("No Auro Wallet found");
     }
 
@@ -74,11 +75,13 @@ export async function deployToken(params: {
     let adminPrivateKey = PrivateKey.empty();
     if (AURO_TEST) {
       if (process.env.NEXT_PUBLIC_ADMIN_SK === undefined) {
+        log.error("deployToken: NEXT_PUBLIC_ADMIN_SK is undefined");
         throw new Error("NEXT_PUBLIC_ADMIN_SK is undefined");
       }
       adminPrivateKey = PrivateKey.fromBase58(process.env.NEXT_PUBLIC_ADMIN_SK);
       const adminPublicKeyTmp = adminPrivateKey.toPublicKey();
       if (adminPublicKeyTmp.toBase58() !== process.env.NEXT_PUBLIC_ADMIN_PK) {
+        log.error("deployToken: NEXT_PUBLIC_ADMIN_PK is invalid");
         throw new Error("NEXT_PUBLIC_ADMIN_PK is invalid");
       }
     }
@@ -113,7 +116,7 @@ export async function deployToken(params: {
     });
 
     if (!Mina.hasAccount(sender)) {
-      console.error("Sender does not have account");
+      log.error("deployToken: Sender does not have account");
       updateTimelineItem({
         groupId,
         update: {
@@ -232,6 +235,7 @@ export async function deployToken(params: {
             status: "error",
           },
         });
+        log.error("deployToken: No user signature received");
 
         return {
           success: false,
@@ -291,7 +295,7 @@ export async function deployToken(params: {
           status: "error",
         },
       });
-
+      log.error("deployToken: Deploy transaction prove job failed");
       return {
         success: false,
         error: "Deploy transaction prove job failed",
@@ -335,7 +339,7 @@ export async function deployToken(params: {
         status: "error",
       },
     });
-
+    log.error("deployToken: Error while deploying token", { error });
     return {
       success: false,
       error: "Error while deploying token",

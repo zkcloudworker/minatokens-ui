@@ -1,6 +1,11 @@
 "use server";
 import Arweave from "arweave";
 import { debug } from "@/lib/debug";
+import { log as logtail } from "@logtail/next";
+import { headers } from "next/headers";
+const log = logtail.with({
+  headers: headers(),
+});
 const DEBUG = debug();
 const ARWEAVE_KEY_STRING = process.env.ARWEAVE_KEY_STRING;
 const ARWEAVE_TEST = process.env.ARWEAVE_TEST;
@@ -15,7 +20,7 @@ export async function arweaveTxStatus(hash: string): Promise<{
   url: string;
 }> {
   if (ARWEAVE_KEY_STRING === undefined) {
-    console.error("ARWEAVE_KEY_STRING is undefined");
+    log.error("arweaveTxStatus: ARWEAVE_KEY_STRING is undefined");
     return {
       success: false,
       error: "ARWEAVE_KEY_STRING is undefined",
@@ -49,12 +54,14 @@ async function checkArweaveBalance(
 ): Promise<number | undefined> {
   const balance = await arweave.balance();
   if (balance === undefined) {
-    console.error("Cannot get arweave balance");
+    log.error("checkArweaveBalance: Cannot get arweave balance");
     return undefined;
   }
   const arBalance = Number(balance);
   if (arBalance < 0.25) {
-    console.error("Insufficient arweave balance", arBalance);
+    log.error("checkArweaveBalance: Insufficient arweave balance", {
+      balance: arBalance,
+    });
   }
   return arBalance;
 }
@@ -63,7 +70,7 @@ export async function pinStringToArweave(
   data: string
 ): Promise<string | undefined> {
   if (ARWEAVE_KEY_STRING === undefined) {
-    console.error("ARWEAVE_KEY_STRING is undefined");
+    log.error("pinStringToArweave: ARWEAVE_KEY_STRING is undefined");
     return undefined;
   }
 
@@ -78,7 +85,7 @@ export async function pinStringToArweave(
     waitForConfirmation: false,
   });
   if (hash === undefined) {
-    console.error(`Arweave pin failed`);
+    log.error("pinStringToArweave: Arweave pin failed");
     return undefined;
   }
   if (DEBUG)
@@ -193,7 +200,7 @@ class ArweaveService {
     const { data, waitForConfirmation } = params;
     try {
       if (this.key === undefined) {
-        console.error("no key");
+        log.error("pinString: no key");
         return undefined;
       }
       if (this.key?.test === true)
@@ -202,7 +209,7 @@ class ArweaveService {
       console.log("address", address);
       const balance = await this.arweave.wallets.getBalance(address);
       if (parseInt(balance) === 0) {
-        console.log("no balance");
+        log.error("pinString: no balance");
         return undefined;
       }
 
@@ -231,7 +238,7 @@ class ArweaveService {
 
       return hash;
     } catch (err) {
-      console.error(err);
+      log.error("pinString: error", { error: err });
       return undefined;
     }
   }
@@ -275,7 +282,7 @@ class ArweaveService {
       if (waitForConfirmation === true) await this.wait({ hash }); // wait for confirmation, can take a while
       return hash;
     } catch (err) {
-      console.error(err);
+      log.error("pinFile: error", { error: err });
       return undefined;
     }
   }
@@ -286,7 +293,7 @@ class ArweaveService {
       const status = await this.arweave.transactions.getStatus(hash);
       return { success: true, data: status };
     } catch (err) {
-      console.error(err);
+      log.error("status: error", { error: err });
       return { success: false, error: err };
     }
   }
@@ -313,6 +320,10 @@ class ArweaveService {
       if (result.success === false) {
         errors++;
         if (errors > maxErrors) {
+          log.error("arweave wait: Too many network errors", {
+            errors,
+            maxErrors,
+          });
           return {
             success: false,
             error: "Too many network errors",
@@ -331,6 +342,11 @@ class ArweaveService {
       }
       attempts++;
     }
+    log.error("arweave wait: Timeout", {
+      hash: data.hash,
+      maxAttempts,
+      interval,
+    });
     return {
       success: false,
       error: "Timeout",

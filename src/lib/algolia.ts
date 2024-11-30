@@ -3,8 +3,14 @@ import { algoliasearch } from "algoliasearch";
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 import { DeployedTokenInfo } from "./token";
 import { getChain } from "./chain";
-import { debug } from "./debug";
 const chain = getChain();
+import { debug } from "./debug";
+import { log as logtail } from "@logtail/next";
+import { headers } from "next/headers";
+const log = logtail.with({
+  headers: headers(),
+  chain,
+});
 const DEBUG = debug();
 
 export async function algoliaWriteToken(params: {
@@ -29,13 +35,13 @@ export async function algoliaWriteToken(params: {
       body: data,
     });
     if (result.taskID === undefined) {
-      console.error("algoliaWriteToken: Algolia write result is", result);
+      log.error("algoliaWriteToken: Algolia write result is", result);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("algoliaWriteToken error:", { error, params });
+    log.error("algoliaWriteToken error:", { error, params });
     return false;
   }
 }
@@ -54,10 +60,9 @@ export async function algoliaGetToken(params: {
       indexName,
       objectID: params.tokenAddress,
     });
-    console.log("algoliaGetToken result:", result);
     return result as unknown as DeployedTokenInfo | undefined;
   } catch (error: any) {
-    console.error("algoliaGetToken error:", {
+    log.error("algoliaGetToken error:", {
       error: error?.message ?? String(error),
       params,
     });

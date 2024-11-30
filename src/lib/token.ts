@@ -29,21 +29,21 @@ export interface MintAddressVerified {
   address: string;
 }
 export interface TokenLinks {
-  twitter: string;
-  discord: string;
-  telegram: string;
-  instagram: string;
-  facebook: string;
-  website: string;
+  twitter?: string;
+  discord?: string;
+  telegram?: string;
+  instagram?: string;
+  facebook?: string;
+  website?: string;
 }
 
 export interface LaunchTokenData {
   symbol: string;
-  name: string;
-  description: string;
+  name?: string;
+  description?: string;
   links: TokenLinks;
-  image: File | undefined;
-  imageURL: string | undefined;
+  image?: File;
+  imageURL?: string;
   adminAddress: string;
   mintAddresses: MintAddress[];
 }

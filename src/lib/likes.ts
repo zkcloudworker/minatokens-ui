@@ -4,8 +4,14 @@ import { searchClient } from "@algolia/client-search";
 import { algoliaGetToken, algoliaWriteToken } from "./algolia";
 import { getChain } from "./chain";
 import { debug } from "./debug";
-const DEBUG = debug();
+import { log as logtail } from "@logtail/next";
+import { headers } from "next/headers";
 const chain = getChain();
+const log = logtail.with({
+  headers: headers(),
+  chain,
+});
+const DEBUG = debug();
 
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 
@@ -39,7 +45,7 @@ export async function algoliaWriteLike(params: Like): Promise<boolean> {
         body: data,
       });
       if (result.taskID === undefined) {
-        console.error("algoliaWriteToken: Algolia write result is", result);
+        log.error("algoliaWriteLike: Algolia write result is", { result });
         return false;
       }
 
@@ -58,7 +64,7 @@ export async function algoliaWriteLike(params: Like): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error("algoliaWriteToken error:", { error, params });
+    log.error("algoliaWriteLike: error", { error, params });
     return false;
   }
 }
@@ -108,7 +114,7 @@ export async function algoliaLikesCount(params: {
     //if (DEBUG) console.log("algoliaLikesCount result:", result);
     return result?.facetHits[0]?.count ?? 0;
   } catch (error: any) {
-    console.error("algoliaLikesCount error:", {
+    log.error("algoliaLikesCount: error", {
       error: error?.message ?? String(error),
       params,
     });
@@ -145,7 +151,7 @@ export async function algoliaGetUsersLikes(params: {
       result?.hits?.map((elm) => (elm as unknown as Like).tokenAddress) ?? []
     );
   } catch (error: any) {
-    console.error("algoliaGetUsersLikes error:", {
+    log.error("algoliaGetUsersLikes: error", {
       error: error?.message ?? String(error),
       params,
     });

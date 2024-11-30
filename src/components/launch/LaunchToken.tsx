@@ -1,13 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, {
-  useEffect,
-  useState,
-  useContext,
-  useRef,
-  ReactNode,
-} from "react";
+import React, { useEffect } from "react";
 
 import { TokenProgress } from "./TokenProgress";
 import { LaunchForm } from "./LaunchForm";
@@ -148,7 +142,7 @@ const LaunchToken: React.FC = () => {
           tokenAddress={state.tokenAddress}
           image={state.tokenData.imageURL ?? "token.png"}
           likes={state.likes}
-          name={state.tokenData.name}
+          name={state.tokenData.name ?? state.tokenData.symbol}
           symbol={state.tokenData.symbol}
           totalSupply={state.totalSupply}
           isLiked={true}

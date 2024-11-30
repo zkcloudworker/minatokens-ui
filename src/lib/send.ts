@@ -3,8 +3,14 @@ import { initBlockchain } from "zkcloudworker";
 import { Mina } from "o1js";
 import { getChain } from "./chain";
 import { debug } from "./debug";
-const DEBUG = debug();
+import { log as logtail } from "@logtail/next";
+import { headers } from "next/headers";
 const chain = getChain();
+const log = logtail.with({
+  headers: headers(),
+  chain,
+});
+const DEBUG = debug();
 
 export async function sendTransaction(transaction: string): Promise<{
   hash?: string;
@@ -21,6 +27,11 @@ export async function sendTransaction(transaction: string): Promise<{
         console.log(`tx sent: hash: ${txSent.hash} status: ${txSent.status}`);
       return { hash: txSent.hash, status: txSent.status, success: true };
     } else {
+      log.error("sendTransaction: tx NOT sent", {
+        hash: txSent?.hash,
+        status: txSent?.status,
+        errors: txSent.errors,
+      });
       if (DEBUG)
         console.log(
           `tx NOT sent: hash: ${txSent?.hash} status: ${txSent?.status}`,
@@ -29,7 +40,7 @@ export async function sendTransaction(transaction: string): Promise<{
       return { success: false, status: txSent.status, error: txSent.errors };
     }
   } catch (error) {
-    console.error("sendTransaction catch", error);
+    log.error("sendTransaction: catch", { error });
     return { success: false, status: "error", error: error };
   }
 }

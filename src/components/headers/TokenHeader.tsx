@@ -15,6 +15,7 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { explorerAccountUrl } from "@/lib/chain";
 import { getSiteName } from "@/lib/chain";
+import { isAvailable } from "@/lib/availability";
 
 type TokenHeaderProps = {
   showSearch?: boolean;
@@ -94,11 +95,13 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
             </div>
           </Link>
 
-          <nav className="navbar w-full hidden lg:block xl:ml-[8%] --border">
-            <ul className="flex flex-col lg:flex-row">
-              <Nav />
-            </ul>
-          </nav>
+          {isAvailable && (
+            <nav className="navbar w-full hidden lg:block xl:ml-[8%] --border">
+              <ul className="flex flex-col lg:flex-row">
+                <Nav />
+              </ul>
+            </nav>
+          )}
 
           {/* Search */}
           {showSearch && (
@@ -282,26 +285,28 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
             {/* Actions */}
             <div className="ml-8  hidden lg:flex xl:ml-12">
               {/* Wallet */}
-              <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2 mr-6 flex items-center justify-center  transition-colors">
-                {address && (
-                  <a
-                    href={`${explorerAccountUrl()}${address}`}
-                    className="dark:hover:text-accent hover:text-accent"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {shortenString(address)}
-                  </a>
-                )}
-                {!address && (
-                  <button
-                    onClick={connect}
-                    className="rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
-                  >
-                    Connect
-                  </button>
-                )}
-              </div>
+              {isAvailable && (
+                <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2 mr-6 flex items-center justify-center  transition-colors">
+                  {address && (
+                    <a
+                      href={`${explorerAccountUrl()}${address}`}
+                      className="dark:hover:text-accent hover:text-accent"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {shortenString(address)}
+                    </a>
+                  )}
+                  {!address && (
+                    <button
+                      onClick={connect}
+                      className="rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                    >
+                      Connect
+                    </button>
+                  )}
+                </div>
+              )}
               {/* <Profile /> */}
               {/* Dark Mode */}
               <div
