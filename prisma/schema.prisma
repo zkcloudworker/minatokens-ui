@@ -158,3 +158,10 @@ model JobData {
   @@index([jobStatus])
   @@index([chain, jobStatus])
 }
+
+model EmailSubscriptions {
+  email String @id
+  subscribed Boolean @default(true)
+  added DateTime @default(now())
+  updated DateTime @updatedAt
+}

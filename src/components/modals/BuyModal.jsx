@@ -187,7 +187,7 @@ export default function BuyModal() {
                 htmlFor="buyNowTerms"
                 className="text-sm dark:text-jacarta-200"
               >
-                By checking this box, I agree to Xhibiter's{" "}
+                By checking this box, I agree to MinaTokens's{" "}
                 <a href="#" className="text-accent">
                   Terms of Service
                 </a>

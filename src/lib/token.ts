@@ -50,15 +50,15 @@ export interface LaunchTokenData {
 
 export interface TokenInfo {
   symbol: string;
-  name: string;
+  name?: string;
   description?: string;
   image?: string;
-  twitter: string;
-  discord: string;
-  telegram: string;
-  instagram: string;
-  facebook: string;
-  website: string;
+  twitter?: string;
+  discord?: string;
+  telegram?: string;
+  instagram?: string;
+  facebook?: string;
+  website?: string;
   tokenContractCode?: string;
   adminContractsCode?: string[];
   data?: object;

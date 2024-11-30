@@ -17,7 +17,7 @@ const HomeToken: FC = () => {
 
         {/* <Hotbids />
         <Collections /> */}
-        <TokenList title="Trending" showIcon={true} numberOfItems={8} />
+        <TokenList title="Trending" showIcon={true} initialNumberOfItems={8} />
         <Process />
       </main>
       <TokenFooter />

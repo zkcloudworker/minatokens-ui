@@ -1,6 +1,6 @@
 import TokenFooter from "@/components/footer/TokenFooter";
 import TokenHeader from "@/components/headers/TokenHeader";
-import Ranking from "@/components/pages/api/API";
+import API from "@/components/pages/api/API";
 import { FC } from "react";
 import { getSiteName } from "@/lib/chain";
 
@@ -13,7 +13,7 @@ const ApiPage: FC = () => {
     <>
       <TokenHeader showSearch={false} />
       <main>
-        <Ranking />
+        <API />
       </main>
       <TokenFooter />
     </>

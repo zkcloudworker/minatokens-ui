@@ -44,7 +44,7 @@ export const pages = [
   { id: 15, href: "/wallet", text: "Wallet" },
   { id: 16, href: "/login", text: "Login" },
   { id: 17, href: "/404", text: "Page 404" },
-  { id: 18, href: "/tos", text: "Terms of Service" },
+  { id: 18, href: "/terms", text: "Terms of Service" },
 ];
 export const resources = [
   { id: 1, href: "/help-center", text: "Frequent Questions" },

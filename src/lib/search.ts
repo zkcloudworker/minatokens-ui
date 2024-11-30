@@ -35,6 +35,7 @@ export async function algoliaGetTokenList(
     ownedByAddress?: string;
   } = {}
 ): Promise<TokenList | undefined> {
+  //console.log("algoliaGetTokenList", params);
   const { favoritesOfAddress, issuedByAddress, ownedByAddress } = params;
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
@@ -69,8 +70,6 @@ export async function algoliaGetTokenList(
 
   try {
     let tokenList: TokenList | undefined = undefined;
-    let blockberryTokensFilter: string | undefined = undefined;
-    // if (DEBUG) console.log("algoliaGetTokenList", params, indexName);
     const blockberryTokensPromise = ownedByAddress
       ? getAllTokensByAddress({
           account: ownedByAddress,
@@ -101,8 +100,8 @@ export async function algoliaGetTokenList(
           indexName,
           searchParams: {
             query,
-            hitsPerPage,
-            page,
+            hitsPerPage: 1000,
+            page: 0,
             facetFilters: [`adminAddress:${issuedByAddress}`],
             filters,
           },
@@ -140,8 +139,8 @@ export async function algoliaGetTokenList(
           indexName,
           searchParams: {
             query,
-            hitsPerPage,
-            page,
+            hitsPerPage: ownedByAddress ? 1000 : hitsPerPage,
+            page: ownedByAddress ? 0 : page,
             filters: likedTokens.length > 0 ? filters : undefined,
           },
         });
@@ -160,8 +159,8 @@ export async function algoliaGetTokenList(
         indexName,
         searchParams: {
           query,
-          hitsPerPage,
-          page,
+          hitsPerPage: ownedByAddress ? 1000 : hitsPerPage,
+          page: ownedByAddress ? 0 : page,
           facetFilters: [`adminAddress:${issuedByAddress}`],
         },
       });
