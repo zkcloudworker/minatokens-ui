@@ -8,7 +8,11 @@ import {
 } from "./blockberry-tokens";
 import { getChain } from "./chain";
 import { debug } from "./debug";
+import { log as logtail } from "@logtail/next";
 const chain = getChain();
+const log = logtail.with({
+  chain,
+});
 const DEBUG = debug();
 
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
@@ -35,7 +39,7 @@ export async function algoliaGetTokenList(
     ownedByAddress?: string;
   } = {}
 ): Promise<TokenList | undefined> {
-  //console.log("algoliaGetTokenList", params);
+  log.info("algoliaGetTokenList", params);
   const { favoritesOfAddress, issuedByAddress, ownedByAddress } = params;
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
