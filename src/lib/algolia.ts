@@ -6,9 +6,7 @@ import { getChain } from "./chain";
 const chain = getChain();
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
-import { headers } from "next/headers";
 const log = logtail.with({
-  headers: headers(),
   chain,
 });
 const DEBUG = debug();

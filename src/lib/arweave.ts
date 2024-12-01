@@ -1,10 +1,11 @@
 "use server";
 import Arweave from "arweave";
 import { debug } from "@/lib/debug";
+import { getChain } from "@/lib/chain";
+const chain = getChain();
 import { log as logtail } from "@logtail/next";
-import { headers } from "next/headers";
 const log = logtail.with({
-  headers: headers(),
+  chain,
 });
 const DEBUG = debug();
 const ARWEAVE_KEY_STRING = process.env.ARWEAVE_KEY_STRING;
