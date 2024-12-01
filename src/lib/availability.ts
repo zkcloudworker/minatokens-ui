@@ -6,6 +6,8 @@ interface Country {
 }
 export let geo: object | null = null;
 export let unavailableCountry: Country | null = null;
+let isChecked = false;
+export let isFetchedFailed = false;
 // ISO 3166 country codes are used
 export const countriesNotAvailable: Country[] = [
   { code: "US", name: "United States" },
@@ -30,22 +32,28 @@ export const countriesNotAvailable: Country[] = [
 ];
 
 export async function checkAvailability(): Promise<Country | null> {
-  if (unavailableCountry) return unavailableCountry;
+  if (unavailableCountry || isChecked) return unavailableCountry;
   try {
     const token = process.env.NEXT_PUBLIC_IPINFO_TOKEN;
     if (token === undefined) {
       log.error("NEXT_PUBLIC_IPINFO_TOKEN is not defined");
+      isFetchedFailed = true;
       return null;
     }
     const response = await fetch(`https://ipinfo.io?token=${token}`);
-    if (!response.ok) return null;
+    if (!response.ok) {
+      log.error(
+        `checkAvailability error: not ok : ${response.status} ${response.statusText}`
+      );
+      isFetchedFailed = true;
+      return null;
+    }
     const result = await response.json();
-    geo = result;
     const country = countriesNotAvailable.find(
       (country) => country.code === result?.country
     );
     if (country) {
-      log.error(`MinaTokens.com is not available in ${country.name}`, {
+      log.info(`checkAvailability: not available in ${country.name}`, {
         code: country.code,
         name: country.name,
         geo: result,
@@ -53,6 +61,13 @@ export async function checkAvailability(): Promise<Country | null> {
       });
       unavailableCountry = country;
     }
+
+    isChecked = result?.country !== undefined;
+    if (!isChecked)
+      log.error("checkAvailability: country is undefined", {
+        geo: result,
+      });
+    geo = isChecked ? result : geo;
     return unavailableCountry;
   } catch (error: any) {
     log.error(
@@ -61,6 +76,7 @@ export async function checkAvailability(): Promise<Country | null> {
       }`,
       { error }
     );
+    isFetchedFailed = true;
     return unavailableCountry;
   }
 }
