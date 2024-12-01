@@ -31,8 +31,10 @@ export let countriesNotAvailable: Country[] = [
 export async function checkAvailability(): Promise<Country | null | undefined> {
   try {
     const token = process.env.NEXT_PUBLIC_IPINFO_TOKEN;
-    if (token === undefined)
+    if (token === undefined) {
       log.error("NEXT_PUBLIC_IPINFO_TOKEN is not defined");
+      return undefined;
+    }
     const response = await fetch(`https://ipinfo.io?token=${token}`);
     if (!response.ok) return undefined;
     const result = await response.json();

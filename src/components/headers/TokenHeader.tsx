@@ -109,7 +109,7 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
           )}
 
           {/* Search */}
-          {showSearch && (
+          {showSearch && isAvailable && (
             <form
               onSubmit={(e) => e.preventDefault()}
               className="relative ml-12 hidden basis-3/12 lg:block xl:ml-[8%] --border"
@@ -159,60 +159,68 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
                   MinaTokens
                 </div>
               </Link>
-
-              {/* Mobile Menu Close */}
-              <button
-                className="js-mobile-close group ml-2 flex h-10 w-10 items-center justify-center rounded-full border border-jacarta-100 bg-white transition-colors hover:border-transparent hover:bg-accent focus:border-transparent focus:bg-accent dark:border-transparent dark:bg-white/[.15] dark:hover:bg-accent"
-                aria-label="close mobile menu"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  height="24"
-                  className="h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white group-focus:fill-white dark:fill-white"
-                >
-                  <path fill="none" d="M0 0h24v24H0z" />
-                  <path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z" />
-                </svg>
-              </button>
+              {isAvailable && (
+                <>
+                  {/* Mobile Menu Close */}
+                  <button
+                    className="js-mobile-close group ml-2 flex h-10 w-10 items-center justify-center rounded-full border border-jacarta-100 bg-white transition-colors hover:border-transparent hover:bg-accent focus:border-transparent focus:bg-accent dark:border-transparent dark:bg-white/[.15] dark:hover:bg-accent"
+                    aria-label="close mobile menu"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white group-focus:fill-white dark:fill-white"
+                    >
+                      <path fill="none" d="M0 0h24v24H0z" />
+                      <path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z" />
+                    </svg>
+                  </button>
+                </>
+              )}
             </div>
-
-            {/* Mobile Search */}
-            <form
-              onSubmit={(e) => e.preventDefault()}
-              className="relative mt-24 mb-8 w-full lg:hidden"
-            >
-              <input
-                type="search"
-                className="w-full rounded-2xl border border-jacarta-100 py-3 px-4 pl-10 text-jacarta-700 placeholder-jacarta-500 focus:ring-accent dark:border-transparent dark:bg-white/[.15] dark:text-white dark:placeholder-white"
-                placeholder="Search"
-              />
-              <span className="absolute left-0 top-0 flex h-full w-12 items-center justify-center rounded-2xl">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  height="24"
-                  className="h-4 w-4 fill-jacarta-500 dark:fill-white"
+            {isAvailable && showSearch && (
+              <>
+                {/* Mobile Search */}
+                <form
+                  onSubmit={(e) => e.preventDefault()}
+                  className="relative mt-24 mb-8 w-full lg:hidden"
                 >
-                  <path fill="none" d="M0 0h24v24H0z" />
-                  <path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z" />
-                </svg>
-              </span>
-            </form>
+                  <input
+                    type="search"
+                    className="w-full rounded-2xl border border-jacarta-100 py-3 px-4 pl-10 text-jacarta-700 placeholder-jacarta-500 focus:ring-accent dark:border-transparent dark:bg-white/[.15] dark:text-white dark:placeholder-white"
+                    placeholder="Search"
+                  />
+                  <span className="absolute left-0 top-0 flex h-full w-12 items-center justify-center rounded-2xl">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="h-4 w-4 fill-jacarta-500 dark:fill-white"
+                    >
+                      <path fill="none" d="M0 0h24v24H0z" />
+                      <path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z" />
+                    </svg>
+                  </span>
+                </form>
+              </>
+            )}
 
             {/* Primary Nav */}
-            <nav className="navbar w-full lg:hidden">
-              <ul className="flex flex-col lg:flex-row">
-                <Nav />
-              </ul>
-            </nav>
+            {isAvailable && (
+              <nav className="navbar w-full lg:hidden">
+                <ul className="flex flex-col lg:flex-row">
+                  <Nav />
+                </ul>
+              </nav>
+            )}
 
             <div className="mt-10 w-full lg:hidden">
               <hr className="my-5 h-px border-0 bg-jacarta-100 dark:bg-jacarta-600" />
 
-              {/* Socials */}
+              {/* Socials
               <div className="flex items-center justify-center space-x-5">
                 <a href="#" className="group">
                   <svg
@@ -284,7 +292,7 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
                     <path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z"></path>
                   </svg>
                 </a>
-              </div>
+              </div>*/}
             </div>
 
             {/* Actions */}
@@ -364,27 +372,29 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
             </Link> */}
 
             {/* Wallet */}
-            <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2  flex items-center justify-center  transition-colors">
-              {address && (
-                <a
-                  href={`${explorerAccountUrl()}${address}`}
-                  className="dark:hover:text-accent hover:text-accent"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={fetchWalletInfo}
-                >
-                  {shortenString(address)}
-                </a>
-              )}
-              {!address && (
-                <button
-                  onClick={connect}
-                  className="rounded-full bg-accent py-2 px-5 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
-                >
-                  Connect
-                </button>
-              )}
-            </div>
+            {isAvailable && (
+              <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2  flex items-center justify-center  transition-colors">
+                {address && (
+                  <a
+                    href={`${explorerAccountUrl()}${address}`}
+                    className="dark:hover:text-accent hover:text-accent"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={fetchWalletInfo}
+                  >
+                    {shortenString(address)}
+                  </a>
+                )}
+                {!address && (
+                  <button
+                    onClick={connect}
+                    className="rounded-full bg-accent py-2 px-5 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                  >
+                    Connect
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Dark Mode */}
             <div
