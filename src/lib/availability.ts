@@ -7,7 +7,7 @@ interface Country {
 export let geo: object | null = null;
 export let unavailableCountry: Country | null = null;
 // ISO 3166 country codes are used
-export let countriesNotAvailable: Country[] = [
+export const countriesNotAvailable: Country[] = [
   { code: "US", name: "United States" },
   { code: "CN", name: "China" },
   { code: "IN", name: "India" },
