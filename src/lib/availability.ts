@@ -6,6 +6,7 @@ interface Country {
 }
 export let geo: object | null = null;
 export let unavailableCountry: Country | null = null;
+// ISO 3166 country codes are used
 export let countriesNotAvailable: Country[] = [
   { code: "US", name: "United States" },
   { code: "CN", name: "China" },
@@ -29,6 +30,7 @@ export let countriesNotAvailable: Country[] = [
 ];
 
 export async function checkAvailability(): Promise<Country | null> {
+  if (unavailableCountry) return unavailableCountry;
   try {
     const token = process.env.NEXT_PUBLIC_IPINFO_TOKEN;
     if (token === undefined) {
