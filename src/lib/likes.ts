@@ -5,10 +5,9 @@ import { algoliaGetToken, algoliaWriteToken } from "./algolia";
 import { getChain } from "./chain";
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
-import { headers } from "next/headers";
+
 const chain = getChain();
 const log = logtail.with({
-  headers: headers(),
   chain,
 });
 const DEBUG = debug();

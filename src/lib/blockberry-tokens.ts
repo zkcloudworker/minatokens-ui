@@ -3,9 +3,7 @@ import { getChain } from "./chain";
 const { BLOCKBERRY_API } = process.env;
 const chain = getChain();
 import { log as logtail } from "@logtail/next";
-import { headers } from "next/headers";
 const log = logtail.with({
-  headers: headers(),
   chain,
 });
 

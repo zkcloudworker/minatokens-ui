@@ -7,10 +7,8 @@ import { algoliaGetToken, algoliaWriteToken } from "./algolia";
 import { getChainId } from "./chain";
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
-import { headers } from "next/headers";
 const chainId = getChainId();
 const log = logtail.with({
-  headers: headers(),
   chainId,
 });
 const DEBUG = debug();
