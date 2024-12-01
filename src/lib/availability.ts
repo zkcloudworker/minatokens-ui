@@ -1,10 +1,34 @@
 "use client";
 import { log } from "./log";
-
+interface Country {
+  code: string;
+  name: string;
+}
 export let geo: object | null = null;
-export let isAvailable: boolean = true;
+export let unavailableCountry: Country | null = null;
+export let countriesNotAvailable: Country[] = [
+  { code: "US", name: "United States" },
+  { code: "CN", name: "China" },
+  { code: "IN", name: "India" },
+  { code: "IR", name: "Iran" },
+  { code: "KP", name: "North Korea" },
+  { code: "CU", name: "Cuba" },
+  { code: "SY", name: "Syria" },
+  { code: "SD", name: "Sudan" },
+  { code: "BY", name: "Belarus" },
+  { code: "IQ", name: "Iraq" },
+  { code: "RU", name: "Russia" },
+  { code: "VE", name: "Venezuela" },
+  { code: "MM", name: "Myanmar" },
+  { code: "DZ", name: "Algeria" },
+  { code: "BO", name: "Bolivia" },
+  { code: "EC", name: "Ecuador" },
+  { code: "NP", name: "Nepal" },
+  { code: "BD", name: "Bangladesh" },
+  { code: "MA", name: "Morocco" },
+];
 
-export async function checkAvailability() {
+export async function checkAvailability(): Promise<Country | null | undefined> {
   try {
     const token = process.env.NEXT_PUBLIC_IPINFO_TOKEN;
     if (token === undefined)
@@ -13,17 +37,26 @@ export async function checkAvailability() {
     if (!response.ok) return undefined;
     const result = await response.json();
     geo = result;
-    isAvailable = isAvailable && result?.country !== "US";
-    if (!isAvailable) {
-      log.error("MinaTokens.com is not available", {
-        country: result?.country,
+    const country = countriesNotAvailable.find(
+      (country) => country.code === result?.country
+    );
+    if (country) {
+      log.error(`MinaTokens.com is not available in ${country.name}`, {
+        code: country.code,
+        name: country.name,
         geo: result,
-        isAvailable,
+        unavailableCountry,
       });
+      unavailableCountry = country;
     }
-    return isAvailable;
-  } catch (error) {
-    log.error("checkGeo error", { error });
+    return country ?? unavailableCountry;
+  } catch (error: any) {
+    log.error(
+      `checkAvailability error : ${
+        typeof error?.message === "string" ? error?.message : "unknown"
+      }`,
+      { error }
+    );
     return undefined;
   }
 }

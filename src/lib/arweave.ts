@@ -5,6 +5,7 @@ import { getChain } from "@/lib/chain";
 const chain = getChain();
 import { log as logtail } from "@logtail/next";
 const log = logtail.with({
+  service: "arweave",
   chain,
 });
 const DEBUG = debug();
@@ -146,7 +147,7 @@ export async function pinBase64ImageToArweave(
   imageBase64: string
 ): Promise<string | undefined> {
   if (ARWEAVE_KEY_STRING === undefined) {
-    console.error("ARWEAVE_KEY_STRING is undefined");
+    log.error("ARWEAVE_KEY_STRING is undefined");
     return undefined;
   }
 
@@ -166,7 +167,7 @@ export async function pinBase64ImageToArweave(
       console.log("pinImageToArweave url:", ArweaveService.hashToUrl(hash));
     return hash;
   } catch (err) {
-    console.error(err);
+    log.error("pinBase64ImageToArweave error", { error: err });
     return undefined;
   }
 }

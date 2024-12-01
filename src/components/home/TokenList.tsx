@@ -18,11 +18,9 @@ import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
 import Highlight from "./Highlight";
 import Pagination from "../common/Pagination";
-import {
-  isAvailable as isInitialAvailable,
-  checkAvailability,
-} from "@/lib/availability";
+import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import NotAvailable from "@/components/pages/NotAvailable";
+import { log } from "@/lib/log";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 /*
@@ -87,6 +85,7 @@ export type TokenListProps = {
 };
 
 const numberOfItemsOptions = [20, 50, 100];
+let connectWalletError = false;
 
 export default function TokenList({
   title,
@@ -102,14 +101,14 @@ export default function TokenList({
   const [numberOfItems, setNumberOfItems] = useState<number>(
     initialNumberOfItems ?? numberOfItemsOptions[0]
   );
-  const [isAvailable, setIsAvailable] = useState<boolean>(isInitialAvailable);
+  const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
   useEffect(() => {
     tippy("[data-tippy-content]");
     checkAvailability().then((result) => {
-      setIsAvailable(result ?? isInitialAvailable);
-      if (result === false) window.location.href = "/notavailable";
+      setIsAvailable(!result);
+      if (!result) window.location.href = "/not-available";
     });
   }, []);
 
@@ -174,6 +173,10 @@ export default function TokenList({
         userAddress = (await connectWallet())?.address;
         if (userAddress === undefined) {
           console.error("Cannot connect wallet");
+          if (!connectWalletError) {
+            log.info("Cannot connect wallet");
+            connectWalletError = true;
+          }
           onlyFavorites = false;
           onlyOwned = false;
           onlyIssued = false;

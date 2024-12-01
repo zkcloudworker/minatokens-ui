@@ -8,6 +8,7 @@ import { log as logtail } from "@logtail/next";
 
 const chain = getChain();
 const log = logtail.with({
+  service: "likes",
   chain,
 });
 const DEBUG = debug();

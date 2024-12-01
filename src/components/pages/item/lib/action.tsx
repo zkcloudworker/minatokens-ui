@@ -39,6 +39,7 @@ import {
   waitForProveJob,
   waitForContractVerification,
 } from "../../../launch/lib/mina-tx";
+import { log } from "@/lib/log";
 const chain = getChain();
 const DEBUG = debug();
 
@@ -506,7 +507,7 @@ export async function tokenAction(params: {
     }, 250); // Fire confetti every 250 milliseconds
     await stopProcessUpdateRequests();
   } catch (error) {
-    console.error(`tokenAction catch: ${action}`, error);
+    log.error(`tokenAction catch: ${action}`, { error });
     addLog({
       groupId: "error",
       status: "error",

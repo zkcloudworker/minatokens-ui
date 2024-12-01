@@ -6,7 +6,7 @@ import {
   BlockberryTokenTransaction,
   BlockberryTokenHolder,
 } from "@/lib/blockberry-tokens";
-
+import { log } from "@/lib/log";
 interface TokenDetailsState {
   info: DeployedTokenInfo | undefined;
   tokenState: TokenState | undefined;
@@ -57,7 +57,9 @@ const TokenDetailsContext = createContext<{
 }>({
   state: initialState,
   dispatch: () => {
-    console.error("Error: Dispatch called but no provider found");
+    log.error(
+      "Error: Dispatch TokenDetailsContext called but no provider found"
+    );
     return null;
   },
 });
@@ -94,16 +96,16 @@ const tokenDetailsReducer = (
     case "ADD_LIKE": {
       const tokenDetails = state[action.payload.tokenAddress];
       if (!tokenDetails?.info) return state;
-      
+
       return {
         ...state,
         [action.payload.tokenAddress]: {
           ...tokenDetails,
           info: {
             ...tokenDetails.info,
-            likes: (tokenDetails.info.likes || 0) + 1
-          }
-        }
+            likes: (tokenDetails.info.likes || 0) + 1,
+          },
+        },
       };
     }
     case "SET_HOLDERS":

@@ -6,6 +6,7 @@ import { getChain } from "./chain";
 const chain = getChain();
 const log = logtail.with({
   chain,
+  service: "rate-limit",
 });
 
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;
@@ -131,7 +132,7 @@ export async function penalizeRateLimit(params: {
   try {
     const rateLimiter = limiters[name];
     if (!rateLimiter) {
-      console.error(`Rate limiter ${name} not initialized`);
+      log.error(`Rate limiter ${name} not initialized`);
       return;
     }
     log.error(`Penalizing rate limit for ${name} : ${key} (${points} points)`);

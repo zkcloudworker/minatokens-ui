@@ -4,6 +4,7 @@ const { BLOCKBERRY_API } = process.env;
 const chain = getChain();
 import { log as logtail } from "@logtail/next";
 const log = logtail.with({
+  service: "blockberry-tokens",
   chain,
 });
 

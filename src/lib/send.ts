@@ -7,6 +7,7 @@ import { log as logtail } from "@logtail/next";
 const chain = getChain();
 const log = logtail.with({
   chain,
+  service: "send",
 });
 const DEBUG = debug();
 

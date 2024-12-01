@@ -15,10 +15,7 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { explorerAccountUrl } from "@/lib/chain";
 import { getSiteName } from "@/lib/chain";
-import {
-  isAvailable as isInitialAvailable,
-  checkAvailability,
-} from "@/lib/availability";
+import { unavailableCountry, checkAvailability } from "@/lib/availability";
 
 type TokenHeaderProps = {
   showSearch?: boolean;
@@ -29,12 +26,12 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
 }: TokenHeaderProps) => {
   const { setSearch } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
-  const [isAvailable, setIsAvailable] = useState<boolean>(isInitialAvailable);
+  const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
 
   useEffect(() => {
     addMobileMenuToggle();
     checkAvailability().then((result) => {
-      setIsAvailable(result ?? isInitialAvailable);
+      setIsAvailable(!result);
     });
     return () => {
       removeMenuActive();

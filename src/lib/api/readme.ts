@@ -3,6 +3,14 @@ import { ApiResponse } from "@minatokens/api";
 import { PrismaClient } from "@prisma/client";
 import { getBlockberryScamInfo } from "../blockberry-tokens";
 import { generateJWT } from "./key";
+import { log as logtail } from "@logtail/next";
+import { getChain } from "@/lib/chain";
+const chain = getChain();
+const log = logtail.with({
+  service: "api",
+  function: "readme",
+  chain,
+});
 
 export interface ReadmeParams {
   email: string;
@@ -104,7 +112,7 @@ export async function readmeApi(
       },
     };
   } catch (error) {
-    console.error(error);
+    log.error("readmeApi catch", { error });
     return {
       status: 500,
       json: { error: "Internal server error" },
