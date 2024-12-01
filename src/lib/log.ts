@@ -1,5 +1,4 @@
 "use client";
-import { getWalletInfo } from "./wallet";
 import { getSystemInfo } from "./system-info";
 import { log as logtail } from "@logtail/next";
 import { getChainId } from "./chain";
@@ -8,30 +7,37 @@ import { nanoid } from "nanoid";
 
 const id = nanoid();
 const chainId = getChainId();
+//TODO: remove system from the log when the version will be stable
+const system = getSystemInfo();
 export const log = logtail.with({
   id,
   chainId,
+  system,
   service: "web",
 });
 
-//TODO: remove wallet and system from the log when the version will be stable
-async function logInfo() {
-  const wallet = await getWalletInfo();
-  const system = await getSystemInfo();
+async function logSystemInfo() {
   const start = Date.now();
+  let corsStatus = "unknown";
+  try {
+    const response = await fetch(window.location.origin, { method: "HEAD" });
+    corsStatus = response.ok ? "enabled" : "disabled";
+  } catch (error) {
+    corsStatus = "disabled";
+  }
+
   while (!(geo || isFetchedFailed) && Date.now() - start < 10000) {
     await sleep(1000);
   }
   log.info("new browser session", {
-    wallet,
-    system,
+    corsStatus,
     geo,
     unavailableCountry,
     isFetchedFailed,
     geoDelay: Date.now() - start,
   });
 }
-logInfo();
+logSystemInfo();
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
