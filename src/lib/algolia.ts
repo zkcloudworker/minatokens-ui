@@ -7,6 +7,7 @@ const chain = getChain();
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
 const log = logtail.with({
+  service: "algolia",
   chain,
 });
 const DEBUG = debug();

@@ -286,6 +286,7 @@ export async function deployToken(params: {
     console.timeEnd("sent transaction");
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {
+      log.error("deployToken: Deploy transaction prove job failed", { symbol });
       console.error("JobId is undefined");
       updateTimelineItem({
         groupId,
@@ -331,6 +332,7 @@ export async function deployToken(params: {
     };
   } catch (error) {
     console.error("Error in deployToken", error);
+    log.error("deployToken: Error while deploying token", { error });
     updateTimelineItem({
       groupId,
       update: {

@@ -5,7 +5,14 @@ import { SignJWT } from "jose";
 import formData from "form-data";
 import { checkAddress } from "./address";
 import { getBlockberryScamInfo } from "../blockberry-tokens";
-
+import { log as logtail } from "@logtail/next";
+import { getChain } from "@/lib/chain";
+const chain = getChain();
+const log = logtail.with({
+  service: "api",
+  function: "key",
+  chain,
+});
 const {
   MAILGUN_API_ENDPOINT,
   MAILGUN_API_SEND_KEY,
@@ -185,7 +192,7 @@ export async function generateApiKey(
       json: { sent: true },
     };
   } catch (error) {
-    console.error(error);
+    log.error("generateApiKey catch", { error });
     return {
       status: 500,
       json: { error: "Internal server error" },

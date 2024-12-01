@@ -30,4 +30,5 @@ export const log = logtail.with({
   chainId,
   geo,
   unavailableCountry,
+  service: "web",
 });

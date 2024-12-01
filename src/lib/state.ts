@@ -10,6 +10,7 @@ import { log as logtail } from "@logtail/next";
 const chainId = getChainId();
 const log = logtail.with({
   chainId,
+  service: "state",
 });
 const DEBUG = debug();
 

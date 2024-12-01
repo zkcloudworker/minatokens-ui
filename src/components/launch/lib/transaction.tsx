@@ -343,6 +343,7 @@ export async function tokenTransaction(params: {
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {
       console.error("JobId is undefined");
+      log.error("tokenTransaction: JobId is undefined", { jobId });
       updateTimelineItem({
         groupId,
         update: {

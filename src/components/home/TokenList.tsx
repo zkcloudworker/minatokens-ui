@@ -20,6 +20,7 @@ import Highlight from "./Highlight";
 import Pagination from "../common/Pagination";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import NotAvailable from "@/components/pages/NotAvailable";
+import { log } from "@/lib/log";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 /*
@@ -84,6 +85,7 @@ export type TokenListProps = {
 };
 
 const numberOfItemsOptions = [20, 50, 100];
+let connectWalletError = false;
 
 export default function TokenList({
   title,
@@ -171,6 +173,10 @@ export default function TokenList({
         userAddress = (await connectWallet())?.address;
         if (userAddress === undefined) {
           console.error("Cannot connect wallet");
+          if (!connectWalletError) {
+            log.info("Cannot connect wallet");
+            connectWalletError = true;
+          }
           onlyFavorites = false;
           onlyOwned = false;
           onlyIssued = false;

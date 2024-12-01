@@ -14,6 +14,7 @@ import {
   TimelineGroupStatus,
 } from "@/components/launch/TimeLine";
 import { debug } from "@/lib/debug";
+import { log } from "@/lib/log";
 const DEBUG = debug();
 
 interface TokenActionState {
@@ -91,7 +92,9 @@ const TokenActionContext = createContext<{
 }>({
   state: initialState,
   dispatch: () => {
-    console.error("Error: Dispatch called but no provider found");
+    log.error(
+      "Error: Dispatch TokenActionContext called but no provider found"
+    );
     return null;
   },
 });

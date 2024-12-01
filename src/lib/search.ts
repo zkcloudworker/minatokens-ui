@@ -12,6 +12,7 @@ import { log as logtail } from "@logtail/next";
 const chain = getChain();
 const log = logtail.with({
   chain,
+  service: "search",
 });
 const DEBUG = debug();
 
@@ -238,7 +239,7 @@ export async function algoliaGetTokenList(
 
     return tokenList;
   } catch (error: any) {
-    console.error("algoliaGetToken error:", {
+    log.error("algoliaGetToken error:", {
       error: error?.message ?? String(error),
       params,
     });

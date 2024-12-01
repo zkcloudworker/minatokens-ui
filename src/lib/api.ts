@@ -138,7 +138,7 @@ function apiHandlerInternal<T, V>(params: {
         readme.verifyWebhook(req.body, signature, README_DOCS_SECRET);
       } catch (e: any) {
         // Handle invalid requests
-        console.error("webhook verification failed", e);
+        req.log.error("webhook verification failed", e);
         return res.status(401).json({ error: e?.message || "Unauthorized" });
       }
       const { status, json } = await readmeApi({ email });
@@ -201,7 +201,7 @@ function apiHandlerInternal<T, V>(params: {
       if (status !== 200) req.log.error("api reply", { status, json });
       if (!isInternal) {
         if (!README_API_KEY) {
-          console.error("README API key not set");
+          req.log.error("README API key not set");
         } else if (userKey && userName && userEmail) {
           const log = await readme.log(
             README_API_KEY,
@@ -275,7 +275,7 @@ function apiHandlerInternal<T, V>(params: {
           userName = jwt.payload.name as string;
           userEmail = jwt.payload.email as string;
         } catch (error: any) {
-          console.error(error);
+          req.log.error("API key verification failed", { error });
           return res
             .status(401)
             .json({ error: error?.message ?? "Unauthorized" });

@@ -947,6 +947,7 @@ export async function launchToken(params: {
     await stopProcessUpdateRequests();
   } catch (error) {
     console.error("launchToken catch:", error);
+    log.error("launchToken: error launching token", { error });
     addLog({
       groupId: "error",
       status: "error",
@@ -959,7 +960,6 @@ export async function launchToken(params: {
         },
       ],
     });
-    log.error("launchToken: error launching token", { error });
     await stopProcessUpdateRequests();
   }
 }

@@ -11,6 +11,7 @@ import { log as logtail } from "@logtail/next";
 const chainId = getChainId();
 const log = logtail.with({
   chainId,
+  service: "verify",
 });
 
 export async function verifyFungibleTokenState(params: {

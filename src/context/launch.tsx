@@ -13,7 +13,7 @@ import {
   TimelineGroupStatus,
 } from "@/components/launch/TimeLine";
 import { LaunchTokenData } from "@/lib/token";
-
+import { log } from "@/lib/log";
 interface LaunchTokenState {
   timelineItems: TimelineGroupDated[];
   tokenData: LaunchTokenData | null;
@@ -59,7 +59,9 @@ const LaunchTokenContext = createContext<{
 }>({
   state: initialState,
   dispatch: () => {
-    console.error("Error: Dispatch called but no provider found");
+    log.error(
+      "Error: Dispatch LaunchTokenContext called but no provider found"
+    );
     return null;
   },
 });

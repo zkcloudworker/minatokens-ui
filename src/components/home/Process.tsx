@@ -5,6 +5,7 @@ import { getSiteName } from "@/lib/chain";
 import { generateSubscription } from "@/lib/api/key";
 import { FormEvent, useState, useEffect } from "react";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
+import { log } from "@/lib/log";
 
 export const process = [
   {
@@ -72,10 +73,14 @@ export default function Process(): JSX.Element {
     setEmailMessage(emailMessages.processing);
     const response = await generateSubscription(email);
     if (response.status === 200) {
+      log.info("Subscription sent", { email });
       console.log("Subscription sent");
       setEmailMessage(emailMessages.success);
     } else {
-      console.error("Failed to send subscription", response.json?.error);
+      log.error("Failed to send subscription", {
+        error: response.json?.error,
+        email,
+      });
       setEmailMessage(response.json?.error ?? emailMessages.error);
     }
   };
