@@ -210,7 +210,11 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
 
             {/* Primary Nav */}
             {isAvailable && (
-              <nav className="navbar w-full lg:hidden">
+              <nav
+                className={`navbar w-full lg:hidden ${
+                  !showSearch ? "mt-24" : ""
+                }`}
+              >
                 <ul className="flex flex-col lg:flex-row">
                   <Nav />
                 </ul>
