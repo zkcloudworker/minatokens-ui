@@ -3,10 +3,17 @@
 import { getChainId } from "./chain";
 import { debug } from "./debug";
 import { getSystemInfo } from "./system-info";
-import { wallet } from "./log";
 import { log } from "./log";
 const DEBUG = debug();
 const chainId = getChainId();
+
+let walletInfo:
+  | {
+      address: string | undefined;
+      network: string | undefined;
+      isAuro: boolean | undefined;
+    }
+  | undefined;
 
 export async function connectWallet(
   params: {
@@ -166,11 +173,19 @@ export async function connectWallet(
   const result = {
     address,
     network: network?.networkID,
+    isAuro: (window as any).mina?.isAuro === true,
     error: undefined,
     success: true,
   };
-  wallet.address = result.address;
-  wallet.network = result.network;
+  if (
+    !walletInfo ||
+    walletInfo.address !== result.address ||
+    walletInfo.network !== result.network ||
+    walletInfo.isAuro !== result.isAuro
+  ) {
+    walletInfo = result;
+    log.info("connectWallet", result);
+  }
   return result;
 }
 
@@ -216,8 +231,14 @@ export async function getWalletInfo(): Promise<{
     network,
     isAuro: (window as any).mina?.isAuro === true,
   };
-  wallet.address = info.address;
-  wallet.network = info.network;
-  wallet.isAuro = info.isAuro;
+  if (
+    !walletInfo ||
+    walletInfo.address !== info.address ||
+    walletInfo.network !== info.network ||
+    walletInfo.isAuro !== info.isAuro
+  ) {
+    walletInfo = info;
+    log.info("getWalletInfo", info);
+  }
   return info;
 }

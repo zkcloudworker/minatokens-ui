@@ -1,16 +1,15 @@
 "use client";
 
-export async function getSystemInfo(): Promise<{
+export function getSystemInfo(): {
   memoryAvailable: number;
   cpuType: string;
   numberOfCores: number;
   browser: string;
   sharedArrayBufferAvailable: boolean;
-  corsStatus: string;
   isMobile: boolean;
   isAndroid: boolean;
   isIOS: boolean;
-}> {
+} {
   const memoryAvailable = (navigator as any).deviceMemory || 0;
   const cpuType = (navigator as any).hardwareConcurrency
     ? "Multi-core"
@@ -25,21 +24,12 @@ export async function getSystemInfo(): Promise<{
   const isAndroid = /Android/i.test(userAgent);
   const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
 
-  let corsStatus = "unknown";
-  try {
-    const response = await fetch(window.location.origin, { method: "HEAD" });
-    corsStatus = response.ok ? "enabled" : "disabled";
-  } catch (error) {
-    corsStatus = "disabled";
-  }
-
   return {
     memoryAvailable,
     cpuType,
     numberOfCores,
     browser,
     sharedArrayBufferAvailable,
-    corsStatus,
     isMobile,
     isAndroid,
     isIOS,
