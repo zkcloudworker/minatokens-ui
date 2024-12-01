@@ -1,17 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  isAvailable as isInitialAvailable,
-  checkAvailability,
-} from "@/lib/availability";
+import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import NotAvailable from "@/components/pages/NotAvailable";
 
 export default function Hero() {
-  const [isAvailable, setIsAvailable] = useState < boolean > isInitialAvailable;
+  const [isAvailable, setIsAvailable] =
+    useState < boolean > !unavailableCountry;
   useEffect(() => {
     checkAvailability().then((result) => {
-      setIsAvailable(result ?? isInitialAvailable);
+      setIsAvailable(!result);
       if (result === false) window.location.href = "/not-available";
     });
   }, []);
