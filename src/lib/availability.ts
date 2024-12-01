@@ -77,14 +77,13 @@ export async function checkAvailability(
     geo = isChecked ? result : geo;
     return unavailableCountry;
   } catch (error: any) {
-    log.error(
-      `checkAvailability error : ${
-        typeof error?.message === "string" ? error?.message : "unknown"
-      }`,
-      { error, retry }
-    );
-
     if (retry) {
+      log.error(
+        `checkAvailability error : ${
+          typeof error?.message === "string" ? error?.message : "unknown"
+        }`,
+        { error, retry }
+      );
       isFetchedFailed = true;
       return unavailableCountry;
     }
