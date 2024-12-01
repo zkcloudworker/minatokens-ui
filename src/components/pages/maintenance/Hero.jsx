@@ -10,7 +10,7 @@ export default function Hero() {
   useEffect(() => {
     checkAvailability().then((result) => {
       setIsAvailable(!result);
-      if (result === false) window.location.href = "/not-available";
+      if (result) window.location.href = "/not-available";
     });
   }, []);
   return (

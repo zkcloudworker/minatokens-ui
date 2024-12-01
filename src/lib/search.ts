@@ -40,7 +40,7 @@ export async function algoliaGetTokenList(
     ownedByAddress?: string;
   } = {}
 ): Promise<TokenList | undefined> {
-  log.info("algoliaGetTokenList", params);
+  //log.info("algoliaGetTokenList", params);
   const { favoritesOfAddress, issuedByAddress, ownedByAddress } = params;
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)

@@ -303,7 +303,7 @@ const API: React.FC = () => {
   useEffect(() => {
     checkAvailability().then((result) => {
       setIsAvailable(!result);
-      if (!result) window.location.href = "/not-available";
+      if (result) window.location.href = "/not-available";
     });
   }, []);
 
