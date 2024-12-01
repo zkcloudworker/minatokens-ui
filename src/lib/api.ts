@@ -90,6 +90,7 @@ function apiHandlerInternal<T, V>(params: {
   const { name, handler, isInternal = false, isReadme = false } = params;
 
   return async (req: LogtailAPIRequest & { body: T }, res: NextApiResponse) => {
+    req.log.info("apiHandler", { name });
     const start = Date.now();
     if (req.method === "OPTIONS") {
       res.setHeader("Access-Control-Allow-Origin", "*");
