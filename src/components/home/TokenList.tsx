@@ -107,8 +107,9 @@ export default function TokenList({
   useEffect(() => {
     tippy("[data-tippy-content]");
     checkAvailability().then((result) => {
+      console.log("checkAvailability", result);
       setIsAvailable(!result);
-      if (!result) window.location.href = "/not-available";
+      if (result) window.location.href = "/not-available";
     });
   }, []);
 

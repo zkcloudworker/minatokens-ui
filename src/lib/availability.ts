@@ -28,15 +28,15 @@ export let countriesNotAvailable: Country[] = [
   { code: "MA", name: "Morocco" },
 ];
 
-export async function checkAvailability(): Promise<Country | null | undefined> {
+export async function checkAvailability(): Promise<Country | null> {
   try {
     const token = process.env.NEXT_PUBLIC_IPINFO_TOKEN;
     if (token === undefined) {
       log.error("NEXT_PUBLIC_IPINFO_TOKEN is not defined");
-      return undefined;
+      return null;
     }
     const response = await fetch(`https://ipinfo.io?token=${token}`);
-    if (!response.ok) return undefined;
+    if (!response.ok) return null;
     const result = await response.json();
     geo = result;
     const country = countriesNotAvailable.find(
@@ -51,7 +51,7 @@ export async function checkAvailability(): Promise<Country | null | undefined> {
       });
       unavailableCountry = country;
     }
-    return country ?? unavailableCountry;
+    return unavailableCountry;
   } catch (error: any) {
     log.error(
       `checkAvailability error : ${
@@ -59,7 +59,7 @@ export async function checkAvailability(): Promise<Country | null | undefined> {
       }`,
       { error }
     );
-    return undefined;
+    return unavailableCountry;
   }
 }
 checkAvailability();
