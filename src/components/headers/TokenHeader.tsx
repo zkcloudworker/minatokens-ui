@@ -212,7 +212,7 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
             {isAvailable && (
               <nav
                 className={`navbar w-full lg:hidden ${
-                  !showSearch ? "mt-24" : ""
+                  !showSearch ? "mt-36" : ""
                 }`}
               >
                 <ul className="flex flex-col lg:flex-row">
