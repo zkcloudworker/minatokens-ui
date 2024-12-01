@@ -7,7 +7,7 @@ import { getSiteName } from "@/lib/chain";
 import { FC } from "react";
 
 export const metadata = {
-  title: `${getSiteName()} | Home`,
+  title: `${getSiteName()} | Launchpad`,
 };
 
 const HomeToken: FC = () => {

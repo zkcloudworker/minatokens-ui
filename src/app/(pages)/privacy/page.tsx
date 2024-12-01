@@ -9,7 +9,7 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <>
-      <TokenHeader />
+      <TokenHeader showSearch={false} />
       <main className="pt-[5.5rem] lg:pt-24">
         <Privacy />
       </main>
