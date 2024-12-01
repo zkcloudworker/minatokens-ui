@@ -7,8 +7,12 @@ import { Mainnet, Devnet, Zeko } from "@/lib/networks";
 import { Chain, APIKeyCalls } from "@prisma/client";
 import { getApiCalls } from "@/lib/api-calls";
 import Image from "next/image";
-import Link from "next/link";
 import Pagination from "@/components/common/Pagination";
+import {
+  isAvailable as isInitialAvailable,
+  checkAvailability,
+} from "@/lib/availability";
+import NotAvailable from "@/components/pages/NotAvailable";
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
@@ -258,7 +262,7 @@ const API: React.FC = () => {
   ]);
   const [totalPages, setTotalPages] = useState<number>(1);
   const { address, setAddress } = useContext(AddressContext);
-
+  const [isAvailable, setIsAvailable] = useState<boolean>(isInitialAvailable);
   async function openGoogleForm() {
     if (
       !process.env.NEXT_PUBLIC_GOOGLE_FORM_URL ||
@@ -300,6 +304,13 @@ const API: React.FC = () => {
   };
 
   useEffect(() => {
+    checkAvailability().then((result) => {
+      setIsAvailable(result ?? isInitialAvailable);
+      if (result === false) window.location.href = "/notavailable";
+    });
+  }, []);
+
+  useEffect(() => {
     if (DEBUG) console.log("address", address);
     fetchApiCalls();
 
@@ -335,424 +346,439 @@ const API: React.FC = () => {
   }
 
   return (
-    <section className="relative py-24">
-      <picture className="pointer-events-none absolute inset-0 -z-10 dark:hidden">
-        <Image
-          width={1920}
-          height={789}
-          src="/img/gradient_light.jpg"
-          alt="gradient"
-          className="h-full w-full"
-        />
-      </picture>
-      <div className="container">
-        <h1 className="py-16 text-center font-display text-4xl font-medium text-jacarta-700 dark:text-white">
-          Your API Requests
-        </h1>
+    <>
+      {isAvailable && (
+        <section className="relative py-24">
+          <picture className="pointer-events-none absolute inset-0 -z-10 dark:hidden">
+            <Image
+              width={1920}
+              height={789}
+              src="/img/gradient_light.jpg"
+              alt="gradient"
+              className="h-full w-full"
+            />
+          </picture>
+          <div className="container">
+            <h1 className="py-16 text-center font-display text-4xl font-medium text-jacarta-700 dark:text-white">
+              Your API Requests
+            </h1>
 
-        <div className="flex items-center justify-between mb-10 gap-20">
-          <p className="text-md leading-normal dark:text-jacarta-300">
-            Explore our comprehensive API documentation and try out live API
-            endpoints at{" "}
-            <a
-              href="https://docs.minatokens.com"
-              className="text-accent"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              https://docs.minatokens.com
-            </a>
-            . Explore proof generation jobs at{" "}
-            <a
-              href="https://jobs.minatokens.com"
-              className="text-accent"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              https://jobs.minatokens.com
-            </a>
-          </p>
-
-          <button
-            className="h-16 min-w-[250px] flex items-center justify-center rounded-full border-2 border-jacarta-100 bg-white px-8 text-center font-semibold text-jacarta-700 transition-all hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
-            onClick={openGoogleForm}
-          >
-            <span>Get API Key</span>
-          </button>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-8 flex flex-wrap items-center justify-between">
-          <div className="flex flex-wrap items-center">
-            {/* Categories */}
-            <div className="my-1 mr-2.5">
-              <button
-                className="dropdown-toggle group group flex h-9 items-center rounded-lg border border-jacarta-100 bg-white px-4 font-display text-sm font-semibold text-jacarta-700 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:bg-accent"
-                id="categoriesFilter"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  height="24"
-                  className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
+            <div className="flex items-center justify-between mb-10 gap-20">
+              <p className="text-md leading-normal dark:text-jacarta-300">
+                Explore our comprehensive API documentation and try out live API
+                endpoints at{" "}
+                <a
+                  href="https://docs.minatokens.com"
+                  className="text-accent"
+                  target="_blank"
+                  rel="noreferrer noopener"
                 >
-                  <path fill="none" d="M0 0h24v24H0z" />
-                  <path d="M14 10v4h-4v-4h4zm2 0h5v4h-5v-4zm-2 11h-4v-5h4v5zm2 0v-5h5v4a1 1 0 0 1-1 1h-4zM14 3v5h-4V3h4zm2 0h4a1 1 0 0 1 1 1v4h-5V3zm-8 7v4H3v-4h5zm0 11H4a1 1 0 0 1-1-1v-4h5v5zM8 3v5H3V4a1 1 0 0 1 1-1h4z" />
-                </svg>
-                <span>{activeCategory}</span>
-              </button>
-              <div
-                className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
-                aria-labelledby="categoriesFilter"
+                  https://docs.minatokens.com
+                </a>
+                . Explore proof generation jobs at{" "}
+                <a
+                  href="https://jobs.minatokens.com"
+                  className="text-accent"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  https://jobs.minatokens.com
+                </a>
+              </p>
+
+              <button
+                className="h-16 min-w-[250px] flex items-center justify-center rounded-full border-2 border-jacarta-100 bg-white px-8 text-center font-semibold text-jacarta-700 transition-all hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
+                onClick={openGoogleForm}
               >
-                <ul className="flex flex-col flex-wrap">
-                  {categories.map((elm, i) => (
-                    <li
-                      onClick={() => setActiveCategory(elm)}
-                      key={i}
-                      className="cursor-pointer"
-                    >
-                      {activeCategory == elm ? (
-                        <div className="dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                          <span className="text-jacarta-700 dark:text-white">
-                            {elm}
-                          </span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="mb-[3px] h-4 w-4 fill-accent"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      ) : (
-                        <div className="dropdown-item flex w-full items-center rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                          {elm}
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                <span>Get API Key</span>
+              </button>
             </div>
 
-            {/* Chains */}
-            <div className="my-1 mr-2.5">
-              <button
-                className="dropdown-toggle group group flex h-9 items-center rounded-lg border border-jacarta-100 bg-white px-4 font-display text-sm font-semibold text-jacarta-700 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:bg-accent"
-                id="blockchainFilter"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  height="24"
-                  className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
-                >
-                  <path fill="none" d="M0 0h24v24H0z" />
-                  <path d="M20 16h2v6h-6v-2H8v2H2v-6h2V8H2V2h6v2h8V2h6v6h-2v8zm-2 0V8h-2V6H8v2H6v8h2v2h8v-2h2zM4 4v2h2V4H4zm0 14v2h2v-2H4zM18 4v2h2V4h-2zm0 14v2h2v-2h-2z" />
-                </svg>
-                <span>{activeBlockchainOption?.name ?? "All Chains"}</span>
-              </button>
-              <div
-                className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
-                aria-labelledby="blockchainFilter"
-              >
-                <ul className="flex flex-col flex-wrap">
-                  {chains.map((elm, i) => (
-                    <li
-                      onClick={() =>
-                        setActiveBlockchainOption(
-                          chains.find((c) => c.value === elm.value) || chains[0]
-                        )
-                      }
-                      key={i}
-                      className="cursor-pointer"
-                    >
-                      {activeBlockchainOption == elm ? (
-                        <div className="dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                          <span className="text-jacarta-700 dark:text-white">
-                            {elm.name}
-                          </span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="mb-[3px] h-4 w-4 fill-accent"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      ) : (
-                        <div className="dropdown-item flex w-full items-center rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                          {elm.name}
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="dropdown relative cursor-pointer ml-2">
-              <button
-                className="dropdown-toggle group inline-flex items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
-                id="statusFilter"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  height="24"
-                  className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
-                >
-                  <path fill="none" d="M0 0h24v24H0z" />
-                  <path d="M13 10h5l-6 6-6-6h5V3h2v7zm-9 9h16v-7h2v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8h2v7z" />
-                </svg>
-                <span>
-                  {statusFilter ? `Status ${statusFilter}` : "All statuses"}
-                </span>
-              </button>
-              <div
-                className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
-                aria-labelledby="statusFilter"
-              >
-                <ul className="flex flex-col flex-wrap">
-                  {statusList.map((status, i) => (
-                    <li
-                      onClick={() => {
-                        setStatusFilter(
-                          status === "All statuses"
-                            ? undefined
-                            : parseInt(status)
-                        );
-                      }}
-                      key={i}
-                      className="cursor-pointer"
-                    >
-                      {(statusFilter === undefined &&
-                        status === "All statuses") ||
-                      (statusFilter !== undefined &&
-                        status === statusFilter.toString()) ? (
-                        <div className="dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                          <span>{status}</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="mb-[3px] h-4 w-4 fill-accent"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      ) : (
-                        <div className="dropdown-item flex w-full items-center rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
-                          {status}
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 my-1">
-            <button
-              onClick={() => {
-                fetchApiCalls();
-              }}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-jacarta-100 bg-white hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                className="h-4 w-4 fill-jacarta-700 group-hover:fill-white dark:fill-jacarta-100"
-              >
-                <path fill="none" d="M0 0h24v24H0z" />
-                <path d="M5.463 4.433A9.961 9.961 0 0 1 12 2c5.523 0 10 4.477 10 10 0 2.136-.67 4.116-1.81 5.74L17 12h3A8 8 0 0 0 6.46 6.228l-.997-1.795zm13.074 15.134A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12c0-2.136.67-4.116 1.81-5.74L7 12H4a8 8 0 0 0 13.54 5.772l.997 1.795z" />
-              </svg>
-            </button>
-
-            <div className="dropdown relative cursor-pointer">
-              <div
-                className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
-                role="button"
-                id="sortOrdering"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <span className="font-display">{activeTimeOption.label}</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="24"
-                  height="24"
-                  className="h-4 w-4 fill-jacarta-500 dark:fill-white"
-                >
-                  <path fill="none" d="M0 0h24v24H0z" />
-                  <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
-                </svg>
-              </div>
-
-              <div
-                className="dropdown-menu z-10 hidden w-full whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
-                aria-labelledby="sortOrdering"
-              >
-                {timeOptions.map((elm, i) => (
+            {/* Filters */}
+            <div className="mb-8 flex flex-wrap items-center justify-between">
+              <div className="flex flex-wrap items-center">
+                {/* Categories */}
+                <div className="my-1 mr-2.5">
                   <button
-                    onClick={() => setActiveTimeOption(elm)}
-                    key={i}
-                    className={
-                      activeTimeOption == elm
-                        ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                        : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                    }
+                    className="dropdown-toggle group group flex h-9 items-center rounded-lg border border-jacarta-100 bg-white px-4 font-display text-sm font-semibold text-jacarta-700 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:bg-accent"
+                    id="categoriesFilter"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
                   >
-                    {elm.label}
-                    {activeTimeOption == elm && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                        className="mb-[3px] h-4 w-4 fill-accent"
-                      >
-                        <path fill="none" d="M0 0h24v24H0z" />
-                        <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/*  */}
-        </div>
-        {/* end filters */}
-
-        {/* Table */}
-        <div className="scrollbar-custom overflow-x-auto">
-          <div
-            role="table"
-            className="w-full min-w-[736px] border border-jacarta-100 bg-white text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white lg:rounded-2lg"
-          >
-            <div
-              className="flex rounded-t-2lg bg-jacarta-50 dark:bg-jacarta-600"
-              role="row"
-            >
-              <div className="w-[10%] py-3 px-4" role="columnheader">
-                <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
-                  Date
-                </span>
-              </div>
-              <div className="w-[10%] py-3 px-4" role="columnheader">
-                <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
-                  Endpoint
-                </span>
-              </div>
-              <div className="w-[10%] py-3 px-4" role="columnheader">
-                <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
-                  Chain
-                </span>
-              </div>
-              <div className="w-[5%] py-3 px-4" role="columnheader">
-                <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
-                  Status
-                </span>
-              </div>
-              <div className="w-[15%] py-3 px-4" role="columnheader">
-                <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
-                  Response Time
-                </span>
-              </div>
-              <div className="w-[50%] py-3 px-4" role="columnheader">
-                <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
-                  Result
-                </span>
-              </div>
-            </div>
-
-            {apiCalls
-              .filter(
-                (elm) => !statusFilter || elm.status === Number(statusFilter)
-              )
-              .map((elm, i) => (
-                <div key={i} className="flex">
-                  <div
-                    className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                    role="cell"
-                  >
-                    <span className="text-sm font-medium tracking-tight">
-                      {timeString(elm.time)}
-                    </span>
-                  </div>
-                  <div
-                    className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                    role="cell"
-                  >
-                    <span className="text-sm font-medium tracking-tight">
-                      {elm.endpoint}
-                    </span>
-                  </div>
-                  <div
-                    className="flex w-[10%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                    role="cell"
-                  >
-                    <span className="text-sm font-medium tracking-tight">
-                      {getChainName(elm.chain)}
-                    </span>
-                  </div>
-                  <div
-                    className="flex w-[5%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                    role="cell"
-                  >
-                    <span
-                      className={`text-${elm.status === 200 ? "green" : "red"}`}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
                     >
-                      {elm.status}
-                    </span>
-                  </div>
+                      <path fill="none" d="M0 0h24v24H0z" />
+                      <path d="M14 10v4h-4v-4h4zm2 0h5v4h-5v-4zm-2 11h-4v-5h4v5zm2 0v-5h5v4a1 1 0 0 1-1 1h-4zM14 3v5h-4V3h4zm2 0h4a1 1 0 0 1 1 1v4h-5V3zm-8 7v4H3v-4h5zm0 11H4a1 1 0 0 1-1-1v-4h5v5zM8 3v5H3V4a1 1 0 0 1 1-1h4z" />
+                    </svg>
+                    <span>{activeCategory}</span>
+                  </button>
                   <div
-                    className="flex w-[15%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                    role="cell"
+                    className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
+                    aria-labelledby="categoriesFilter"
                   >
-                    {showResponseTime(elm.endpoint, elm.responseTimeMs)}
-                  </div>
-                  <div
-                    className="flex w-[50%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
-                    role="cell"
-                  >
-                    {showResult({
-                      endpoint: elm.endpoint,
-                      chain: elm.chain,
-                      result: elm.result,
-                      error: elm.error,
-                    })}
+                    <ul className="flex flex-col flex-wrap">
+                      {categories.map((elm, i) => (
+                        <li
+                          onClick={() => setActiveCategory(elm)}
+                          key={i}
+                          className="cursor-pointer"
+                        >
+                          {activeCategory == elm ? (
+                            <div className="dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                              <span className="text-jacarta-700 dark:text-white">
+                                {elm}
+                              </span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                height="24"
+                                className="mb-[3px] h-4 w-4 fill-accent"
+                              >
+                                <path fill="none" d="M0 0h24v24H0z"></path>
+                                <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                              </svg>
+                            </div>
+                          ) : (
+                            <div className="dropdown-item flex w-full items-center rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                              {elm}
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
-              ))}
+
+                {/* Chains */}
+                <div className="my-1 mr-2.5">
+                  <button
+                    className="dropdown-toggle group group flex h-9 items-center rounded-lg border border-jacarta-100 bg-white px-4 font-display text-sm font-semibold text-jacarta-700 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:bg-accent"
+                    id="blockchainFilter"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
+                    >
+                      <path fill="none" d="M0 0h24v24H0z" />
+                      <path d="M20 16h2v6h-6v-2H8v2H2v-6h2V8H2V2h6v2h8V2h6v6h-2v8zm-2 0V8h-2V6H8v2H6v8h2v2h8v-2h2zM4 4v2h2V4H4zm0 14v2h2v-2H4zM18 4v2h2V4h-2zm0 14v2h2v-2h-2z" />
+                    </svg>
+                    <span>{activeBlockchainOption?.name ?? "All Chains"}</span>
+                  </button>
+                  <div
+                    className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
+                    aria-labelledby="blockchainFilter"
+                  >
+                    <ul className="flex flex-col flex-wrap">
+                      {chains.map((elm, i) => (
+                        <li
+                          onClick={() =>
+                            setActiveBlockchainOption(
+                              chains.find((c) => c.value === elm.value) ||
+                                chains[0]
+                            )
+                          }
+                          key={i}
+                          className="cursor-pointer"
+                        >
+                          {activeBlockchainOption == elm ? (
+                            <div className="dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                              <span className="text-jacarta-700 dark:text-white">
+                                {elm.name}
+                              </span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                height="24"
+                                className="mb-[3px] h-4 w-4 fill-accent"
+                              >
+                                <path fill="none" d="M0 0h24v24H0z"></path>
+                                <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                              </svg>
+                            </div>
+                          ) : (
+                            <div className="dropdown-item flex w-full items-center rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                              {elm.name}
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <div className="dropdown relative cursor-pointer ml-2">
+                  <button
+                    className="dropdown-toggle group inline-flex items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
+                    id="statusFilter"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
+                    >
+                      <path fill="none" d="M0 0h24v24H0z" />
+                      <path d="M13 10h5l-6 6-6-6h5V3h2v7zm-9 9h16v-7h2v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8h2v7z" />
+                    </svg>
+                    <span>
+                      {statusFilter ? `Status ${statusFilter}` : "All statuses"}
+                    </span>
+                  </button>
+                  <div
+                    className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
+                    aria-labelledby="statusFilter"
+                  >
+                    <ul className="flex flex-col flex-wrap">
+                      {statusList.map((status, i) => (
+                        <li
+                          onClick={() => {
+                            setStatusFilter(
+                              status === "All statuses"
+                                ? undefined
+                                : parseInt(status)
+                            );
+                          }}
+                          key={i}
+                          className="cursor-pointer"
+                        >
+                          {(statusFilter === undefined &&
+                            status === "All statuses") ||
+                          (statusFilter !== undefined &&
+                            status === statusFilter.toString()) ? (
+                            <div className="dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                              <span>{status}</span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                height="24"
+                                className="mb-[3px] h-4 w-4 fill-accent"
+                              >
+                                <path fill="none" d="M0 0h24v24H0z"></path>
+                                <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                              </svg>
+                            </div>
+                          ) : (
+                            <div className="dropdown-item flex w-full items-center rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                              {status}
+                            </div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 my-1">
+                <button
+                  onClick={() => {
+                    fetchApiCalls();
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-jacarta-100 bg-white hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                    className="h-4 w-4 fill-jacarta-700 group-hover:fill-white dark:fill-jacarta-100"
+                  >
+                    <path fill="none" d="M0 0h24v24H0z" />
+                    <path d="M5.463 4.433A9.961 9.961 0 0 1 12 2c5.523 0 10 4.477 10 10 0 2.136-.67 4.116-1.81 5.74L17 12h3A8 8 0 0 0 6.46 6.228l-.997-1.795zm13.074 15.134A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12c0-2.136.67-4.116 1.81-5.74L7 12H4a8 8 0 0 0 13.54 5.772l.997 1.795z" />
+                  </svg>
+                </button>
+
+                <div className="dropdown relative cursor-pointer">
+                  <div
+                    className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
+                    role="button"
+                    id="sortOrdering"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <span className="font-display">
+                      {activeTimeOption.label}
+                    </span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      height="24"
+                      className="h-4 w-4 fill-jacarta-500 dark:fill-white"
+                    >
+                      <path fill="none" d="M0 0h24v24H0z" />
+                      <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
+                    </svg>
+                  </div>
+
+                  <div
+                    className="dropdown-menu z-10 hidden w-full whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
+                    aria-labelledby="sortOrdering"
+                  >
+                    {timeOptions.map((elm, i) => (
+                      <button
+                        onClick={() => setActiveTimeOption(elm)}
+                        key={i}
+                        className={
+                          activeTimeOption == elm
+                            ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                            : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                        }
+                      >
+                        {elm.label}
+                        {activeTimeOption == elm && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            width="24"
+                            height="24"
+                            className="mb-[3px] h-4 w-4 fill-accent"
+                          >
+                            <path fill="none" d="M0 0h24v24H0z" />
+                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/*  */}
+            </div>
+            {/* end filters */}
+
+            {/* Table */}
+            <div className="scrollbar-custom overflow-x-auto">
+              <div
+                role="table"
+                className="w-full min-w-[736px] border border-jacarta-100 bg-white text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white lg:rounded-2lg"
+              >
+                <div
+                  className="flex rounded-t-2lg bg-jacarta-50 dark:bg-jacarta-600"
+                  role="row"
+                >
+                  <div className="w-[10%] py-3 px-4" role="columnheader">
+                    <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
+                      Date
+                    </span>
+                  </div>
+                  <div className="w-[10%] py-3 px-4" role="columnheader">
+                    <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
+                      Endpoint
+                    </span>
+                  </div>
+                  <div className="w-[10%] py-3 px-4" role="columnheader">
+                    <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
+                      Chain
+                    </span>
+                  </div>
+                  <div className="w-[5%] py-3 px-4" role="columnheader">
+                    <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
+                      Status
+                    </span>
+                  </div>
+                  <div className="w-[15%] py-3 px-4" role="columnheader">
+                    <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
+                      Response Time
+                    </span>
+                  </div>
+                  <div className="w-[50%] py-3 px-4" role="columnheader">
+                    <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
+                      Result
+                    </span>
+                  </div>
+                </div>
+
+                {apiCalls
+                  .filter(
+                    (elm) =>
+                      !statusFilter || elm.status === Number(statusFilter)
+                  )
+                  .map((elm, i) => (
+                    <div key={i} className="flex">
+                      <div
+                        className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                        role="cell"
+                      >
+                        <span className="text-sm font-medium tracking-tight">
+                          {timeString(elm.time)}
+                        </span>
+                      </div>
+                      <div
+                        className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                        role="cell"
+                      >
+                        <span className="text-sm font-medium tracking-tight">
+                          {elm.endpoint}
+                        </span>
+                      </div>
+                      <div
+                        className="flex w-[10%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                        role="cell"
+                      >
+                        <span className="text-sm font-medium tracking-tight">
+                          {getChainName(elm.chain)}
+                        </span>
+                      </div>
+                      <div
+                        className="flex w-[5%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                        role="cell"
+                      >
+                        <span
+                          className={`text-${
+                            elm.status === 200 ? "green" : "red"
+                          }`}
+                        >
+                          {elm.status}
+                        </span>
+                      </div>
+                      <div
+                        className="flex w-[15%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                        role="cell"
+                      >
+                        {showResponseTime(elm.endpoint, elm.responseTimeMs)}
+                      </div>
+                      <div
+                        className="flex w-[50%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                        role="cell"
+                      >
+                        {showResult({
+                          endpoint: elm.endpoint,
+                          chain: elm.chain,
+                          result: elm.result,
+                          error: elm.error,
+                        })}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              <Pagination
+                page={page}
+                setPage={setPage}
+                totalPages={totalPages}
+              />
+            </div>
           </div>
-          <Pagination page={page} setPage={setPage} totalPages={totalPages} />
-        </div>
-      </div>
-    </section>
+        </section>
+      )}
+      {!isAvailable && <NotAvailable />}
+    </>
   );
 };
 

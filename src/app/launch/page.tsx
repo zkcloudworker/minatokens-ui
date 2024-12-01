@@ -3,8 +3,6 @@ import TokenHeader from "@/components/headers/TokenHeader";
 import LaunchToken from "@/components/launch/LaunchToken";
 import { FC } from "react";
 import { getSiteName } from "@/lib/chain";
-import { isAvailable } from "@/lib/availability";
-import NotAvailable from "@/components/pages/NotAvailable";
 
 export const metadata = {
   title: `${getSiteName()} | Launchpad`,
@@ -15,8 +13,7 @@ const LaunchTokenPage: FC = () => {
     <>
       <TokenHeader showSearch={false} />
       <main>
-        {isAvailable && <LaunchToken />}
-        {!isAvailable && <NotAvailable />}
+        <LaunchToken />
       </main>
       <TokenFooter />
     </>

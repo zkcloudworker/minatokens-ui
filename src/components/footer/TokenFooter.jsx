@@ -9,7 +9,7 @@ export default function TokenFooter() {
       <div className="container">
         <div className="grid grid-cols-3 gap-x-7 gap-y-14 pt-12 pb-6 md:grid-cols-12">
           <div className="col-span-full sm:col-span-3 md:col-span-6 pe-96">
-            <Link href="/" className="mb-6 block flex items-center">
+            <Link href="/" className="mb-6 flex items-center">
               <span className="inline-block">
                 <Image
                   width={32}
