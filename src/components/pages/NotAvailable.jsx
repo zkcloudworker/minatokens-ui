@@ -30,9 +30,9 @@ export default function NotAvailable() {
             Not Available in {country}
           </h2>
           <p className="mb-12  leading-normal dark:text-jacarta-300">
-            MinaTokens.com services are currently not available in {country}
-            due to regulatory requirements. We are working diligently to expand
-            our coverage and will announce when our services become available in
+            MinaTokens.com services are currently not available in {country} due
+            to regulatory requirements. We are working diligently to expand our
+            coverage and will announce when our services become available in
             your country. Please check back later or follow our social media
             channels for updates on service availability in your area.
           </p>

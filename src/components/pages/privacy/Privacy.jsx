@@ -558,18 +558,6 @@ export default function Privacy() {
 
           <hr className="my-8" />
 
-          <h2 id="19-minors" className="text-xl font-semibold mt-8 mb-4">
-            19. <strong>Minors</strong>
-          </h2>
-          <p>
-            Our Service is not intended for individuals under the age of 18. If
-            we become aware that we have collected personal information from a
-            child under age 18 without parental consent, we will take steps to
-            delete that information.
-          </p>
-
-          <hr className="my-8" />
-
           <h2 id="acceptance" className="text-xl font-semibold mt-8 mb-4">
             <strong>
               Your use of the Service signifies your acknowledgment of this
