@@ -34,7 +34,7 @@ async function logSystemInfo() {
     geo,
     unavailableCountry,
     isFetchedFailed,
-    geoDelay: Date.now() - start,
+    infoDelay: Date.now() - start,
   });
 }
 logSystemInfo();
