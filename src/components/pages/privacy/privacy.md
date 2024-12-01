@@ -294,10 +294,4 @@ You are responsible for:
 
 ---
 
-## 19. Minors
-
-Our Service is not intended for individuals under the age of 18. If we become aware that we have collected personal information from a child under age 18 without parental consent, we will take steps to delete that information.
-
----
-
 **Your use of the Service signifies your acknowledgment of this Privacy Policy.**
