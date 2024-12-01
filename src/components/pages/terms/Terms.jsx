@@ -19,7 +19,7 @@ export default function Terms() {
         </h1>
         <div className="article-content mx-auto max-w-[48.125rem]">
           <p>
-            <strong>Last Updated: 30 November 2024</strong>
+            <strong>Last Updated: December 1, 2024</strong>
           </p>
           <p>
             Welcome to MinaTokens.com (<strong>"MinaTokens"</strong>,{" "}

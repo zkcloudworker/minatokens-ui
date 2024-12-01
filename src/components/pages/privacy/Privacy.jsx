@@ -19,7 +19,7 @@ export default function Privacy() {
         </h1>
         <div className="article-content mx-auto max-w-[48.125rem]">
           <p>
-            <strong>Last Updated: November 30, 2024</strong>
+            <strong>Last Updated: December 1, 2024</strong>
           </p>
           <p>
             MinaTokens.com (<strong>"MinaTokens"</strong>, <strong>"we"</strong>
