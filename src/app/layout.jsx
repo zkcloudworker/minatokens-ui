@@ -13,7 +13,7 @@ import { SearchProvider } from "@/context/search";
 import { AddressProvider } from "@/context/address";
 import { TokenActionProvider } from "@/context/tokenAction";
 import { Analytics } from "@vercel/analytics/next";
-import Head from "next/head";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 if (typeof window !== "undefined") {
   // Import the script only on the client side
@@ -25,25 +25,12 @@ if (typeof window !== "undefined") {
 export default function RootLayout({ children }) {
   return (
     <>
-      <Head>
-        {/* Google tag (gtag.js) */}
-        <script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
-        ></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-  
-              gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}');
-            `,
-          }}
-        />
-      </Head>
       <html lang="en" className="dark">
+        <head>
+          <GoogleAnalytics
+            GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}
+          />
+        </head>
         <body
           itemScope
           itemType="http://schema.org/WebPage"
