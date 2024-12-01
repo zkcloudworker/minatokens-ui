@@ -1,8 +1,6 @@
 import TokenHeader from "@/components/headers/TokenHeader";
 import TokenFooter from "@/components/footer/TokenFooter";
 import TokenDetails from "@/components/pages/item/TokenDetails";
-import { isAvailable } from "@/lib/availability";
-import NotAvailable from "@/components/pages/NotAvailable";
 
 export const metadata = {
   title: "Token Details",
@@ -19,8 +17,7 @@ export default function TokenDetailsPage({ params }: TokenDetailsPageProps) {
     <>
       <TokenHeader showSearch={false} />
       <main className="mt-24">
-        {isAvailable && <TokenDetails tokenAddress={params.id} />}
-        {!isAvailable && <NotAvailable />}
+        <TokenDetails tokenAddress={params.id} />
       </main>
       <TokenFooter />
     </>

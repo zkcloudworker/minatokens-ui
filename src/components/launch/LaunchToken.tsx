@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import { TokenProgress } from "./TokenProgress";
 import { LaunchForm } from "./LaunchForm";
@@ -14,6 +14,12 @@ import {
   TimelineGroupStatus,
   TimelineItemStatus,
 } from "./TimeLine";
+import {
+  isAvailable as isInitialAvailable,
+  checkAvailability,
+} from "@/lib/availability";
+import NotAvailable from "@/components/pages/NotAvailable";
+
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 type MintStatistics = { [key in TimelineItemStatus]: number };
@@ -36,6 +42,14 @@ export function isError(): boolean {
 
 const LaunchToken: React.FC = () => {
   const { state, dispatch } = useLaunchToken();
+  const [isAvailable, setIsAvailable] = useState<boolean>(isInitialAvailable);
+
+  useEffect(() => {
+    checkAvailability().then((result) => {
+      setIsAvailable(result ?? isInitialAvailable);
+      if (!result) window.location.href = "/notavailable";
+    });
+  }, []);
 
   function addLog(item: TimelineGroup) {
     dispatch({
@@ -135,20 +149,27 @@ const LaunchToken: React.FC = () => {
 
   return (
     <>
-      {state.tokenData && (
-        <TokenProgress
-          caption={state.isLaunched ? "Token Launched" : "Launching Token"}
-          items={state.timelineItems}
-          tokenAddress={state.tokenAddress}
-          image={state.tokenData.imageURL ?? "token.png"}
-          likes={state.likes}
-          name={state.tokenData.name ?? state.tokenData.symbol}
-          symbol={state.tokenData.symbol}
-          totalSupply={state.totalSupply}
-          isLiked={true}
-        />
+      {isAvailable && (
+        <>
+          {state.tokenData && (
+            <TokenProgress
+              caption={state.isLaunched ? "Token Launched" : "Launching Token"}
+              items={state.timelineItems}
+              tokenAddress={state.tokenAddress}
+              image={state.tokenData.imageURL ?? "token.png"}
+              likes={state.likes}
+              name={state.tokenData.name ?? state.tokenData.symbol}
+              symbol={state.tokenData.symbol}
+              totalSupply={state.totalSupply}
+              isLiked={true}
+            />
+          )}
+          {!state.tokenData && (
+            <LaunchForm onLaunch={handleLaunchButtonClick} />
+          )}
+        </>
       )}
-      {!state.tokenData && <LaunchForm onLaunch={handleLaunchButtonClick} />}
+      {!isAvailable && <NotAvailable />}
     </>
   );
 };
