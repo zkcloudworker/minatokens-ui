@@ -31,7 +31,9 @@ export const countriesNotAvailable: Country[] = [
   { code: "MA", name: "Morocco" },
 ];
 
-export async function checkAvailability(): Promise<Country | null> {
+export async function checkAvailability(
+  retry = false
+): Promise<Country | null> {
   if (unavailableCountry || isChecked) return unavailableCountry;
   try {
     const token = process.env.NEXT_PUBLIC_IPINFO_TOKEN;
@@ -40,13 +42,18 @@ export async function checkAvailability(): Promise<Country | null> {
       isFetchedFailed = true;
       return null;
     }
-    const response = await fetch(`https://ipinfo.io?token=${token}`);
+    let response = await fetch(`https://ipinfo.io?token=${token}`);
     if (!response.ok) {
-      log.error(
-        `checkAvailability error: not ok : ${response.status} ${response.statusText}`
-      );
-      isFetchedFailed = true;
-      return null;
+      await sleep(5000);
+      response = await fetch(`https://ipinfo.io?token=${token}`);
+      if (!response.ok) {
+        log.error(
+          `checkAvailability error: not ok : ${response.status} ${response.statusText}`,
+          { retry }
+        );
+        isFetchedFailed = true;
+        return null;
+      }
     }
     const result = await response.json();
     const country = countriesNotAvailable.find(
@@ -74,10 +81,19 @@ export async function checkAvailability(): Promise<Country | null> {
       `checkAvailability error : ${
         typeof error?.message === "string" ? error?.message : "unknown"
       }`,
-      { error }
+      { error, retry }
     );
-    isFetchedFailed = true;
-    return unavailableCountry;
+
+    if (retry) {
+      isFetchedFailed = true;
+      return unavailableCountry;
+    }
+    await sleep(5000);
+    return await checkAvailability(true);
   }
 }
 checkAvailability();
+
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
