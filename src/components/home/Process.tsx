@@ -4,10 +4,7 @@ import Image from "next/image";
 import { getSiteName } from "@/lib/chain";
 import { generateSubscription } from "@/lib/api/key";
 import { FormEvent, useState, useEffect } from "react";
-import {
-  isAvailable as isInitialAvailable,
-  checkAvailability,
-} from "@/lib/availability";
+import { unavailableCountry, checkAvailability } from "@/lib/availability";
 
 export const process = [
   {
@@ -59,12 +56,12 @@ const emailMessages = {
 
 export default function Process(): JSX.Element {
   const [emailMessage, setEmailMessage] = useState(emailMessages.initial);
-  const [isAvailable, setIsAvailable] = useState<boolean>(isInitialAvailable);
+  const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
 
   useEffect(() => {
     checkAvailability().then((result) => {
-      setIsAvailable(result ?? isInitialAvailable);
-      if (result === false) window.location.href = "/notavailable";
+      setIsAvailable(!result);
+      if (!result) window.location.href = "/not-available";
     });
   }, []);
 

@@ -14,10 +14,7 @@ import {
   TimelineGroupStatus,
   TimelineItemStatus,
 } from "./TimeLine";
-import {
-  isAvailable as isInitialAvailable,
-  checkAvailability,
-} from "@/lib/availability";
+import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import NotAvailable from "@/components/pages/NotAvailable";
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
@@ -42,12 +39,12 @@ export function isError(): boolean {
 
 const LaunchToken: React.FC = () => {
   const { state, dispatch } = useLaunchToken();
-  const [isAvailable, setIsAvailable] = useState<boolean>(isInitialAvailable);
+  const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
 
   useEffect(() => {
     checkAvailability().then((result) => {
-      setIsAvailable(result ?? isInitialAvailable);
-      if (!result) window.location.href = "/notavailable";
+      setIsAvailable(!result);
+      if (!result) window.location.href = "/not-available";
     });
   }, []);
 

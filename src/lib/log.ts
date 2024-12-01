@@ -1,8 +1,9 @@
 "use client";
 import { getWalletInfo } from "./wallet";
 import { getSystemInfo } from "./system-info";
-import { log as logtail, Logger } from "@logtail/next";
+import { log as logtail } from "@logtail/next";
 import { getChainId } from "./chain";
+import { geo, unavailableCountry } from "./availability";
 const chainId = getChainId();
 
 export let wallet: {
@@ -27,4 +28,6 @@ export const log = logtail.with({
   wallet,
   system,
   chainId,
+  geo,
+  unavailableCountry,
 });

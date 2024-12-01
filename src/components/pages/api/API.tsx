@@ -8,10 +8,7 @@ import { Chain, APIKeyCalls } from "@prisma/client";
 import { getApiCalls } from "@/lib/api-calls";
 import Image from "next/image";
 import Pagination from "@/components/common/Pagination";
-import {
-  isAvailable as isInitialAvailable,
-  checkAvailability,
-} from "@/lib/availability";
+import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import NotAvailable from "@/components/pages/NotAvailable";
 
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
@@ -262,7 +259,7 @@ const API: React.FC = () => {
   ]);
   const [totalPages, setTotalPages] = useState<number>(1);
   const { address, setAddress } = useContext(AddressContext);
-  const [isAvailable, setIsAvailable] = useState<boolean>(isInitialAvailable);
+  const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
   async function openGoogleForm() {
     if (
       !process.env.NEXT_PUBLIC_GOOGLE_FORM_URL ||
@@ -305,8 +302,8 @@ const API: React.FC = () => {
 
   useEffect(() => {
     checkAvailability().then((result) => {
-      setIsAvailable(result ?? isInitialAvailable);
-      if (result === false) window.location.href = "/notavailable";
+      setIsAvailable(!result);
+      if (!result) window.location.href = "/not-available";
     });
   }, []);
 

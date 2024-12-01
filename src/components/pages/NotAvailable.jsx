@@ -1,7 +1,10 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
+import { unavailableCountry } from "@/lib/availability";
 
 export default function NotAvailable() {
+  const country = unavailableCountry?.name ?? "your country";
   return (
     <section className="relative py-16 dark:bg-jacarta-800 md:py-24">
       <picture className="pointer-events-none absolute inset-0 -z-10 dark:hidden">
@@ -24,14 +27,14 @@ export default function NotAvailable() {
             className="mb-8 inline-block"
           />
           <h2 className="mb-6 font-display text-4xl text-jacarta-700 dark:text-white md:text-4xl">
-            Not Available in US
+            Not Available in {country}
           </h2>
           <p className="mb-12  leading-normal dark:text-jacarta-300">
-            MinaTokens.com services are currently not available in your region
+            MinaTokens.com services are currently not available in {country}
             due to regulatory requirements. We are working diligently to expand
             our coverage and will announce when our services become available in
-            your area. Please check back later or follow our social media
-            channels for updates on regional availability.
+            your country. Please check back later or follow our social media
+            channels for updates on service availability in your area.
           </p>
           <Link
             href="https://minascan.io/directory"
