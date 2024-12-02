@@ -7,6 +7,11 @@ const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
   outputFileTracing: process.env.LOCAL_BUILD !== "true",
   images: {
     remotePatterns: [

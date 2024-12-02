@@ -18,8 +18,11 @@ import {
   TransactionParams,
   ApiResponse,
   TokenTransaction,
+  TokenTransactions,
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
+  AirdropTransactionParams,
+  TransferTransactionParams,
 } from "@minatokens/api";
 import { getTokenSymbolAndAdmin } from "./symbol";
 import { checkAddress } from "./address";
@@ -35,8 +38,134 @@ const TRANSFER_FEE = 1e8;
 
 export type TokenTransactionParams = Exclude<
   TransactionParams,
-  LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams
+  | LaunchTokenStandardAdminParams
+  | LaunchTokenAdvancedAdminParams
+  | AirdropTransactionParams
 >;
+
+export async function airdropTransaction(
+  params: AirdropTransactionParams,
+  apiKeyAddress: string
+): Promise<ApiResponse<TokenTransactions>> {
+  if (!params.sender || !checkAddress(params.sender)) {
+    return {
+      status: 400,
+      json: { error: "Invalid sender address" },
+    };
+  }
+  if (params.nonce && typeof params.nonce !== "number") {
+    return {
+      status: 400,
+      json: { error: "Invalid nonce" },
+    };
+  }
+  if (!params.tokenAddress || !checkAddress(params.tokenAddress)) {
+    return {
+      status: 400,
+      json: { error: "Invalid token contract address" },
+    };
+  }
+
+  const sender = PublicKey.fromBase58(params.sender);
+  const tokenAddress = PublicKey.fromBase58(params.tokenAddress);
+  const tokenId = TokenId.derive(tokenAddress);
+  await fetchMinaAccount({
+    publicKey: sender,
+    force: false,
+  });
+
+  await fetchMinaAccount({
+    publicKey: sender,
+    tokenId,
+    force: false,
+  });
+  if (!Mina.hasAccount(sender, tokenId)) {
+    return {
+      status: 400,
+      json: {
+        error: `Token account ${sender.toBase58()} not found, no tokens to transfer`,
+      },
+    };
+  }
+  const senderTokenBalance = Mina.hasAccount(sender, tokenId)
+    ? Mina.getAccount(sender, tokenId).balance
+    : UInt64.from(0);
+  if (DEBUG)
+    console.log(
+      "senderTokenBalance:",
+      Number(senderTokenBalance.toBigInt()) / 1_000_000_000
+    );
+  const requiredBalance = params.recipients.reduce(
+    (acc, recipient) => acc + recipient.amount,
+    0
+  );
+  if (Number(senderTokenBalance.toBigInt()) < requiredBalance) {
+    return {
+      status: 400,
+      json: {
+        error: `Account ${sender.toBase58()} does not have enough tokens. Required: ${
+          requiredBalance / 1_000_000_000
+        }, available: ${Number(senderTokenBalance.toBigInt()) / 1_000_000_000}`,
+      },
+    };
+  }
+  const symbolResponse = await getTokenSymbolAndAdmin({
+    tokenAddress: params.tokenAddress,
+  });
+  if (symbolResponse.status !== 200) {
+    return symbolResponse;
+  }
+
+  const symbol = symbolResponse.json.tokenSymbol;
+  let nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
+  if (DEBUG) console.log("nonce:", nonce);
+  const txs: TokenTransaction[] = [];
+  for (const recipient of params.recipients) {
+    const to = recipient.address;
+    if (!to || !checkAddress(to)) {
+      return {
+        status: 400,
+        json: { error: "Invalid recipient address" },
+      };
+    }
+    const amount = recipient.amount;
+    if (!amount || typeof amount !== "number") {
+      return {
+        status: 400,
+        json: { error: "Invalid recipient address" },
+      };
+    }
+    if (recipient.memo && typeof recipient.memo !== "string") {
+      return {
+        status: 400,
+        json: { error: "Invalid memo" },
+      };
+    }
+    const memo =
+      recipient.memo ??
+      `airdrop ${amount / 1_000_000_000} ${symbol}`.length > 30
+        ? `airdrop ${symbol}`.substring(0, 30)
+        : `airdrop ${amount / 1_000_000_000} ${symbol}`;
+    const tx: TransferTransactionParams = {
+      txType: "transfer",
+      sender: sender.toBase58(),
+      to,
+      amount,
+      memo,
+      tokenAddress: params.tokenAddress,
+      nonce: nonce++,
+    };
+    const transferTx = await tokenTransaction(tx, apiKeyAddress);
+    if (transferTx.status !== 200) {
+      return transferTx;
+    }
+    txs.push(transferTx.json);
+  }
+  return {
+    status: 200,
+    json: { txs },
+  };
+}
 
 export async function tokenTransaction(
   params: TokenTransactionParams,
@@ -80,6 +209,13 @@ export async function tokenTransaction(
     return {
       status: 400,
       json: { error: "Invalid token contract address" },
+    };
+  }
+
+  if (!params.sender || !checkAddress(params.sender)) {
+    return {
+      status: 400,
+      json: { error: "Invalid sender address" },
     };
   }
 
@@ -293,7 +429,8 @@ export async function tokenTransaction(
         Number(senderTokenBalance.toBigInt()) / 1_000_000_000,
         symbol
       );
-    if (senderTokenBalance.toBigInt() < amount.toBigInt()) {
+    const requiredBalance = Number(amount.toBigInt());
+    if (Number(senderTokenBalance.toBigInt()) < requiredBalance) {
       return {
         status: 400,
         json: {
