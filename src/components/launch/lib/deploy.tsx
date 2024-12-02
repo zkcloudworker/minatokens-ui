@@ -152,9 +152,10 @@ export async function deployToken(params: {
     const decimals = 9;
 
     const { tx, whitelist } = await buildTokenDeployTransaction({
+      adminType: "standard",
       chain,
-      fee: UInt64.from(fee),
       sender,
+      fee: UInt64.from(fee),
       nonce,
       memo,
       adminContractAddress: adminContractPublicKey,
@@ -258,7 +259,8 @@ export async function deployToken(params: {
     });
 
     const jobId = await sendDeployTransaction({
-      txType: "deploy",
+      txType: "launch",
+      adminType: "standard",
       ...payloads,
       adminContractAddress: adminContractPublicKey.toBase58(),
       tokenAddress: contractAddress.toBase58(),

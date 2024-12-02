@@ -218,6 +218,7 @@ export async function tokenTransaction(params: {
 
     const { tx, whitelist } = await buildTokenTransaction({
       txType: action,
+      sender,
       chain,
       fee: UInt64.from(fee),
       nonce,
