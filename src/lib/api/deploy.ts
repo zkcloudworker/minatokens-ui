@@ -8,7 +8,8 @@ import { PrivateKey, PublicKey, UInt64, Mina, UInt8 } from "o1js";
 import { buildTokenDeployTransaction, LAUNCH_FEE } from "@minatokens/token";
 import {
   DeployTransaction,
-  DeployTokenParams,
+  LaunchTokenStandardAdminParams,
+  LaunchTokenAdvancedAdminParams,
   ApiResponse,
 } from "@minatokens/api";
 import { createTransactionPayloads } from "zkcloudworker";
@@ -23,10 +24,10 @@ const DEBUG = debug();
 const ISSUE_FEE = 1e9;
 
 export async function deployToken(
-  params: DeployTokenParams,
+  params: LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams,
   apiKeyAddress: string
 ): Promise<ApiResponse<DeployTransaction>> {
-  const { adminAddress, symbol, decimals, uri } = params;
+  const { symbol, decimals, uri } = params;
   if (DEBUG) console.log("Deploying token", params);
   console.log("chain", chain);
   await initBlockchain();
@@ -45,10 +46,10 @@ export async function deployToken(
     };
   }
 
-  if (!checkAddress(adminAddress)) {
+  if (!params.sender || !checkAddress(params.sender)) {
     return {
       status: 400,
-      json: { error: "Invalid admin address" },
+      json: { error: "Invalid sender address" },
     };
   }
   if (!checkAddress(apiKeyAddress)) {
@@ -111,13 +112,21 @@ export async function deployToken(
     };
   }
 
-  if (params.whitelist && !Array.isArray(params.whitelist)) {
+  if (
+    "whitelist" in params &&
+    params.whitelist &&
+    !Array.isArray(params.whitelist)
+  ) {
     return {
       status: 400,
       json: { error: "Invalid whitelist" },
     };
   }
-  if (params.whitelist && Array.isArray(params.whitelist)) {
+  if (
+    "whitelist" in params &&
+    params.whitelist &&
+    Array.isArray(params.whitelist)
+  ) {
     for (const whitelist of params.whitelist) {
       if (!checkAddress(whitelist.address)) {
         return { status: 400, json: { error: "Invalid whitelist address" } };
@@ -128,7 +137,7 @@ export async function deployToken(
     }
   }
   console.time("prepared tx");
-  const sender = PublicKey.fromBase58(adminAddress);
+  const sender = PublicKey.fromBase58(params.sender);
   if (DEBUG) console.log("Sender", sender.toBase58());
 
   const tokenContractPrivateKey = PrivateKey.random();
@@ -177,6 +186,7 @@ export async function deployToken(
   const nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
 
   const { tx, whitelist } = await buildTokenDeployTransaction({
+    adminType: params.adminContract,
     chain,
     fee: UInt64.from(fee),
     sender,
@@ -187,7 +197,7 @@ export async function deployToken(
     tokenAddress: contractAddress,
     uri,
     symbol,
-    whitelist: params.whitelist,
+    whitelist: "whitelist" in params ? params.whitelist : undefined,
     provingKey: wallet,
     provingFee: UInt64.from(LAUNCH_FEE),
     decimals: UInt8.from(decimals ?? 9),
@@ -203,7 +213,8 @@ export async function deployToken(
   return {
     status: 200,
     json: {
-      txType: "deploy",
+      txType: "launch",
+      adminType: params.adminContract,
       ...payloads,
       sender: sender.toBase58(),
       tokenAddress: contractAddress.toBase58(),

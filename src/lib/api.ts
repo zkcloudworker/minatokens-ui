@@ -19,15 +19,28 @@ import {
   JobResult,
   TransactionStatus,
   BalanceResponse,
+  FungibleTokenTransactionType,
 } from "@minatokens/api";
 import { debug } from "./debug";
 import { getChain } from "@/lib/chain";
-
 import { readmeApi } from "./api/readme";
 const chain = getChain();
 const DEBUG = debug();
 const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY, README_DOCS_SECRET } =
   process.env;
+
+type ApiName =
+  | FungibleTokenTransactionType
+  | "launch"
+  | "info"
+  | "balance"
+  | "prove"
+  | "proof"
+  | "tx-status"
+  | "faucet"
+  | "nft"
+  | "key"
+  | "readme";
 
 initializeMemoryRateLimiter({
   name: "ipMemory",
@@ -73,7 +86,7 @@ function getChainId(): Chain {
 }
 
 export function apiHandler<T, V>(params: {
-  name: string;
+  name: ApiName;
   handler: (params: T, apiKeyAddress: string) => Promise<ApiResponse<V>>;
   isInternal?: boolean;
   isReadme?: boolean;
@@ -82,7 +95,7 @@ export function apiHandler<T, V>(params: {
 }
 
 function apiHandlerInternal<T, V>(params: {
-  name: string;
+  name: ApiName;
   handler: (params: T, apiKeyAddress: string) => Promise<ApiResponse<V>>;
   isInternal?: boolean;
   isReadme?: boolean;
@@ -184,16 +197,14 @@ function apiHandlerInternal<T, V>(params: {
           return (json as FaucetResponse)?.hash;
         case "prove":
           return (json as JobId)?.jobId;
-        case "transaction":
-          return (json as TokenTransaction)?.memo;
-        case "deploy":
+        case "launch":
           return (json as DeployTransaction)?.memo;
         case "info":
           return (json as TokenState)?.tokenSymbol;
         case "balance":
           return (json as BalanceResponse)?.balance?.toString();
         default:
-          return undefined;
+          return (json as TokenTransaction)?.memo;
       }
     }
 

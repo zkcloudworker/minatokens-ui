@@ -105,7 +105,7 @@ export async function proveToken(
   const adminContractAddress =
     "adminContractAddress" in tx ? tx.adminContractAddress : undefined;
 
-  if (tx.txType === "deploy" && !adminContractAddress) {
+  if (tx.txType === "launch" && !adminContractAddress) {
     return {
       status: 400,
       json: { error: "Admin contract address is required" },
@@ -130,7 +130,7 @@ export async function proveToken(
   tx.sendTransaction = sendTransaction;
 
   const jobId =
-    tx.txType === "deploy"
+    tx.txType === "launch"
       ? await sendDeployTransaction(tx)
       : await sendTokenTransaction(tx);
 

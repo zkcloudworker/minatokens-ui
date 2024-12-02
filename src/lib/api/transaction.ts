@@ -12,16 +12,14 @@ import {
   TokenId,
   PrivateKey,
 } from "o1js";
-import {
-  buildTokenTransaction,
-  TRANSACTION_FEE,
-  getTokenTransactionSender,
-} from "@minatokens/token";
+import { buildTokenTransaction, TRANSACTION_FEE } from "@minatokens/token";
 import { createTransactionPayloads } from "zkcloudworker";
 import {
-  TransactionTokenParams,
+  TransactionParams,
   ApiResponse,
   TokenTransaction,
+  LaunchTokenStandardAdminParams,
+  LaunchTokenAdvancedAdminParams,
 } from "@minatokens/api";
 import { getTokenSymbolAndAdmin } from "./symbol";
 import { checkAddress } from "./address";
@@ -35,8 +33,13 @@ const DEBUG = debug();
 const MINT_FEE = 1e8;
 const TRANSFER_FEE = 1e8;
 
+export type TokenTransactionParams = Exclude<
+  TransactionParams,
+  LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams
+>;
+
 export async function tokenTransaction(
-  params: TransactionTokenParams,
+  params: TokenTransactionParams,
   apiKeyAddress: string
 ): Promise<ApiResponse<TokenTransaction>> {
   const { txType } = params;
@@ -52,7 +55,7 @@ export async function tokenTransaction(
     };
   }
 
-  if (params.price && typeof params.price !== "number") {
+  if ("price" in params && params.price && typeof params.price !== "number") {
     return {
       status: 400,
       json: { error: "Invalid price" },
@@ -87,13 +90,6 @@ export async function tokenTransaction(
     };
   }
 
-  if (!params.from || !checkAddress(params.from)) {
-    return {
-      status: 400,
-      json: { error: "Invalid from address" },
-    };
-  }
-
   if (params.developerFee && !(await accountExists(apiKeyAddress))) {
     return {
       status: 400,
@@ -101,10 +97,32 @@ export async function tokenTransaction(
     };
   }
 
-  if (params.to && !checkAddress(params.to)) {
+  if ("to" in params && params.to && !checkAddress(params.to)) {
     return {
       status: 400,
       json: { error: "Invalid to address" },
+    };
+  }
+
+  if (
+    "offerAddress" in params &&
+    params.offerAddress &&
+    !checkAddress(params.offerAddress)
+  ) {
+    return {
+      status: 400,
+      json: { error: "Invalid offer address" },
+    };
+  }
+
+  if (
+    "bidAddress" in params &&
+    params.bidAddress &&
+    !checkAddress(params.bidAddress)
+  ) {
+    return {
+      status: 400,
+      json: { error: "Invalid bid address" },
     };
   }
 
@@ -122,7 +140,7 @@ export async function tokenTransaction(
     };
   }
 
-  if (params.amount && params.amount <= 0) {
+  if ("amount" in params && params.amount && params.amount <= 0) {
     return {
       status: 400,
       json: { error: "Invalid amount" },
@@ -147,6 +165,37 @@ export async function tokenTransaction(
     };
   }
 
+  /*
+// export function getTokenTransactionSender(params: {
+//   txType: FungibleTokenTransactionType;
+//   from: PublicKey;
+//   to: PublicKey;
+// }) {
+//   const { txType, from, to } = params;
+//   if (
+//     txType === "buy" ||
+//     txType === "withdrawOffer" ||
+//     txType === "withdrawBid"
+//   ) {
+//     return to;
+//   }
+//   return from;
+// }
+  */
+
+  const sender = PublicKey.fromBase58(params.sender);
+  const newKey = PrivateKey.random();
+  const newAddress = newKey.toPublicKey();
+  const from =
+    txType === "buy" || txType === "withdrawOffer"
+      ? PublicKey.fromBase58(params.offerAddress)
+      : txType === "withdrawBid"
+      ? PublicKey.fromBase58(params.bidAddress)
+      : sender;
+  const to =
+    "to" in params && params.to ? PublicKey.fromBase58(params.to) : newAddress;
+  if (DEBUG) console.log("to:", to.toBase58());
+
   const symbolResponse = await getTokenSymbolAndAdmin({
     tokenAddress: params.tokenAddress,
   });
@@ -169,19 +218,18 @@ export async function tokenTransaction(
   const adminContractPublicKey = PublicKey.fromBase58(adminContractAddress);
   if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
   const wallet = PublicKey.fromBase58(WALLET);
-  const newKey = PrivateKey.random();
-  const newAddress = newKey.toPublicKey();
 
-  const to = params.to ? PublicKey.fromBase58(params.to) : newAddress;
-  const from = PublicKey.fromBase58(params.from);
-  if (DEBUG) console.log("to:", to.toBase58());
-  const amount = params.amount ? UInt64.from(params.amount) : UInt64.from(0);
-  const price = params.price ? UInt64.from(params.price) : undefined;
-  const developerFee = params.developerFee
-    ? UInt64.from(params.developerFee)
-    : undefined;
+  const amount =
+    "amount" in params && params.amount
+      ? UInt64.from(params.amount)
+      : UInt64.from(0);
+  const price =
+    "price" in params && params.price ? UInt64.from(params.price) : undefined;
+  const developerFee =
+    "developerFee" in params && params.developerFee
+      ? UInt64.from(params.developerFee)
+      : undefined;
   const developerFeeAddress = PublicKey.fromBase58(apiKeyAddress);
-  const sender = getTokenTransactionSender({ txType, from, to });
 
   if (DEBUG) console.log("amount:", amount.toBigInt());
 
@@ -199,12 +247,9 @@ export async function tokenTransaction(
       publicKey: sender,
       force: false,
     });
+
     await fetchMinaAccount({
-      publicKey: from,
-      force: false,
-    });
-    await fetchMinaAccount({
-      publicKey: from,
+      publicKey: sender,
       tokenId,
       force: false,
     });
@@ -231,16 +276,16 @@ export async function tokenTransaction(
   }
 
   if (txType === "transfer" || txType === "offer") {
-    if (!Mina.hasAccount(from, tokenId)) {
+    if (!Mina.hasAccount(sender, tokenId)) {
       return {
         status: 400,
         json: {
-          error: `Token account ${from.toBase58()} not found, no tokens to transfer`,
+          error: `Token account ${sender.toBase58()} not found, no tokens to transfer`,
         },
       };
     }
-    const senderTokenBalance = Mina.hasAccount(from, tokenId)
-      ? Mina.getAccount(from, tokenId).balance
+    const senderTokenBalance = Mina.hasAccount(sender, tokenId)
+      ? Mina.getAccount(sender, tokenId).balance
       : UInt64.from(0);
     if (DEBUG)
       console.log(
@@ -252,7 +297,7 @@ export async function tokenTransaction(
       return {
         status: 400,
         json: {
-          error: `Account ${from.toBase58()} does not have enough tokens. Required: ${
+          error: `Account ${sender.toBase58()} does not have enough tokens. Required: ${
             Number(amount.toBigInt()) / 1_000_000_000
           } ${symbol}, available: ${
             Number(senderTokenBalance.toBigInt()) / 1_000_000_000
@@ -279,22 +324,23 @@ export async function tokenTransaction(
 
   const { tx, whitelist } = await buildTokenTransaction({
     txType,
+    sender,
+    from: sender,
     chain,
     fee: UInt64.from(fee),
     nonce,
     memo,
     tokenAddress,
-    from,
     to,
     amount,
     price,
     developerFee,
     developerAddress: PublicKey.fromBase58(apiKeyAddress),
-    whitelist: params.whitelist,
+    whitelist: "whitelist" in params ? params.whitelist : undefined,
     provingKey: wallet,
     provingFee: UInt64.from(TRANSACTION_FEE),
   });
-  if (!params.to) tx.sign([newKey]);
+  if ("to" in params && !params.to) tx.sign([newKey]);
   const payloads = createTransactionPayloads(tx);
   console.timeEnd("prepared tx");
 
@@ -307,7 +353,8 @@ export async function tokenTransaction(
       symbol,
       to: to.toBase58(),
       from: from.toBase58(),
-      toPrivateKey: params.to ? undefined : newKey.toBase58(),
+      toPrivateKey:
+        "to" in params && !params.to ? undefined : newKey.toBase58(),
       amount: Number(amount.toBigInt()),
       price: price ? Number(price.toBigInt()) : undefined,
       memo,
