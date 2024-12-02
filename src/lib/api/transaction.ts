@@ -325,13 +325,21 @@ export async function tokenTransaction(
   const { tx, whitelist } = await buildTokenTransaction({
     txType,
     sender,
-    from: sender,
+    from:
+      txType === "buy" || txType === "withdrawOffer"
+        ? PublicKey.fromBase58(params.offerAddress)
+        : sender,
     chain,
     fee: UInt64.from(fee),
     nonce,
     memo,
     tokenAddress,
-    to: txType === "offer" ? newAddress : to,
+    to:
+      txType === "offer"
+        ? newAddress
+        : txType === "buy" || txType === "withdrawOffer"
+        ? sender
+        : to,
     amount,
     price,
     developerFee,
