@@ -12,7 +12,7 @@ export let isFetchedFailed = false;
 export const countriesNotAvailable: Country[] = [
   { code: "US", name: "United States" },
   { code: "CN", name: "China" },
-  { code: "IN", name: "India" },
+  // { code: "IN", name: "India" }, TODO: check regulation
   { code: "IR", name: "Iran" },
   { code: "KP", name: "North Korea" },
   { code: "CU", name: "Cuba" },
