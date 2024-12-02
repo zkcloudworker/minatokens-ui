@@ -1,6 +1,6 @@
 "use client";
 
-import { sendTokenTransaction } from "@/lib/token-api";
+import { proveTransactions } from "@/lib/token-api";
 import { UpdateTimelineItemFunction, messages } from "./messages";
 import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
@@ -313,20 +313,22 @@ export async function tokenTransaction(params: {
       update: messages.txProved,
     });
 
-    const jobId = await sendTokenTransaction({
-      txType: action,
-      ...payloads,
-      tokenAddress: contractAddress.toBase58(),
-      to: to.toBase58(),
-      from: sender.toBase58(),
-      price: undefined,
-      amount: Number(amount.toBigInt()),
-      symbol,
-      whitelist,
-      sendTransaction: false,
-      developerFee: undefined,
-      developerAddress: undefined,
-    });
+    const jobId = await proveTransactions([
+      {
+        txType: action,
+        ...payloads,
+        tokenAddress: contractAddress.toBase58(),
+        to: to.toBase58(),
+        from: sender.toBase58(),
+        price: undefined,
+        amount: Number(amount.toBigInt()),
+        symbol,
+        whitelist,
+        sendTransaction: false,
+        developerFee: undefined,
+        developerAddress: undefined,
+      },
+    ]);
     // const jobId = await sendTokenTransaction({
     //   txType: action,
     //   tokenAddress: contractAddress.toBase58(),

@@ -7,7 +7,7 @@ import { getChain } from "@/lib/chain";
 const ZKCW_JWT = process.env.ZKCW_JWT;
 const chain = getChain();
 
-export async function jobResult(
+export async function proof(
   params: JobId,
   apiKeyAddress: string
 ): Promise<ApiResponse<JobResult>> {
@@ -30,7 +30,7 @@ export async function jobResult(
     chain,
   });
 
-  const result = await api.getResult(jobId);
+  const result = await api.getResults(jobId);
   if (!result) {
     return {
       status: 500,

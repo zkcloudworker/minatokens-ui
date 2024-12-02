@@ -20,6 +20,7 @@ import {
   TransactionStatus,
   BalanceResponse,
   FungibleTokenTransactionType,
+  JobResults,
 } from "@minatokens/api";
 import { debug } from "./debug";
 import { getChain } from "@/lib/chain";
@@ -190,7 +191,16 @@ function apiHandlerInternal<T, V>(params: {
 
       switch (name) {
         case "proof":
-          return (json as JobResult)?.hash ?? (json as JobResult)?.jobStatus;
+          const jobResults = json as JobResults;
+          if (
+            jobResults.success &&
+            jobResults.results &&
+            jobResults.results.length > 0
+          )
+            return jobResults.results[0].hash;
+          if (jobResults.jobStatus) return jobResults.jobStatus;
+          if (jobResults.success) return jobResults.success.toString();
+          return "error";
         case "tx-status":
           return (json as TransactionStatus)?.status;
         case "faucet":
