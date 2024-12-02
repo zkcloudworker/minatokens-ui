@@ -331,7 +331,7 @@ export async function tokenTransaction(
     nonce,
     memo,
     tokenAddress,
-    to,
+    to: txType === "offer" ? newAddress : to,
     amount,
     price,
     developerFee,
@@ -340,7 +340,7 @@ export async function tokenTransaction(
     provingKey: wallet,
     provingFee: UInt64.from(TRANSACTION_FEE),
   });
-  if ("to" in params && !params.to) tx.sign([newKey]);
+  if (txType === "offer") tx.sign([newKey]);
   const payloads = createTransactionPayloads(tx);
   console.timeEnd("prepared tx");
 
