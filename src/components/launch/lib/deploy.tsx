@@ -10,7 +10,7 @@ import {
 import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
-import { sendDeployTransaction } from "@/lib/token-api";
+import { proveTransactions } from "@/lib/token-api";
 import { log } from "@/lib/log";
 const DEBUG = debug();
 const chain = getChain();
@@ -258,20 +258,22 @@ export async function deployToken(params: {
       update: messages.txProved,
     });
 
-    const jobId = await sendDeployTransaction({
-      txType: "launch",
-      adminType: "standard",
-      ...payloads,
-      adminContractAddress: adminContractPublicKey.toBase58(),
-      tokenAddress: contractAddress.toBase58(),
-      sender: sender.toBase58(),
-      symbol,
-      uri,
-      sendTransaction: false,
-      developerFee: undefined,
-      developerAddress: undefined,
-      whitelist,
-    });
+    const jobId = await proveTransactions([
+      {
+        txType: "launch",
+        adminType: "standard",
+        ...payloads,
+        adminContractAddress: adminContractPublicKey.toBase58(),
+        tokenAddress: contractAddress.toBase58(),
+        sender: sender.toBase58(),
+        symbol,
+        uri,
+        sendTransaction: false,
+        developerFee: undefined,
+        developerAddress: undefined,
+        whitelist,
+      },
+    ]);
 
     // const jobId = await sendDeployTransaction({
     //   txType: "deploy",

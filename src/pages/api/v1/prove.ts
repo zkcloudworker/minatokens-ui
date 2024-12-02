@@ -1,9 +1,9 @@
 "use server";
 import { apiHandler } from "@/lib/api";
-import { proveToken } from "@/lib/api/prove";
-import { ProveTokenTransaction, JobId } from "@minatokens/api";
+import { prove } from "@/lib/api/prove";
+import { ProveTokenTransactions, JobId } from "@minatokens/api";
 
-export default apiHandler<ProveTokenTransaction, JobId>({
+export default apiHandler<ProveTokenTransactions, JobId>({
   name: "prove",
-  handler: proveToken,
+  handler: prove,
 });

@@ -48,21 +48,28 @@ export async function waitForProveJob(params: {
 
   await sleep(10000);
   let result = await getResult(jobId);
+  let jobStatus = result?.jobStatus;
   while (
-    result?.tx === undefined &&
-    result?.error === undefined &&
-    result?.success !== false
+    jobStatus !== "finished" &&
+    jobStatus !== "used" &&
+    jobStatus !== "failed"
   ) {
     await sleep(10000);
     result = await getResult(jobId);
+    jobStatus = result?.jobStatus;
   }
 
-  if (result?.error || result?.tx === undefined || result?.success == false) {
+  if (
+    jobStatus === "failed" ||
+    result.success === false ||
+    !result?.results ||
+    result?.results[0]?.tx === undefined
+  ) {
     updateTimelineItem({
       groupId,
       update: {
         lineId: "txProved",
-        content: result?.error ?? "Failed to prove transaction",
+        content: "Failed to prove transaction",
         status: "error",
       },
     });
@@ -71,6 +78,8 @@ export async function waitForProveJob(params: {
     });
     return false;
   }
+
+  const transaction = result?.results[0].tx;
 
   const txSuccessMsg = (
     <>
@@ -98,8 +107,6 @@ export async function waitForProveJob(params: {
     groupId,
     update: messages.txSent,
   });
-
-  const transaction = result.tx;
 
   if (DEBUG) console.log("Transaction proved:", transaction?.slice(0, 50));
   if (!transaction) {

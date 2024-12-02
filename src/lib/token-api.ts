@@ -1,6 +1,6 @@
 "use server";
 
-import { TokenAPI } from "zkcloudworker";
+import { JobStatus, TokenAPI } from "zkcloudworker";
 import {
   DeployTransaction,
   JobResult,
@@ -19,21 +19,25 @@ function getAPI(): TokenAPI {
   });
 }
 
-export async function sendDeployTransaction(
-  params: DeployTransaction
+export async function proveTransactions(
+  params: (DeployTransaction | TokenTransaction)[]
 ): Promise<string | undefined> {
   const api = getAPI();
-  return api.sendDeployTransaction(params);
+  return api.proveTransactions(params);
 }
 
-export async function sendTokenTransaction(
-  params: TokenTransaction
-): Promise<string | undefined> {
+export async function getResult(jobId: string): Promise<
+  | {
+      success: true;
+      results?: JobResult[];
+      jobStatus?: JobStatus;
+    }
+  | {
+      success: false;
+      error?: string;
+      jobStatus?: JobStatus;
+    }
+> {
   const api = getAPI();
-  return api.sendTransaction(params);
-}
-
-export async function getResult(jobId: string): Promise<JobResult> {
-  const api = getAPI();
-  return await api.getResult(jobId);
+  return await api.getResults(jobId);
 }
