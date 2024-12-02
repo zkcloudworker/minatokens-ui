@@ -175,7 +175,7 @@ function showResult(params: {
         </a>
       </span>
     );
-  if (endpoint === "result" && result)
+  if (endpoint === "proof" && result)
     if (JobStatus.find((s) => s.name === result))
       return (
         <span
