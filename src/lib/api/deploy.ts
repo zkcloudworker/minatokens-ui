@@ -90,7 +90,7 @@ export async function deployToken(
   if (!uri || typeof uri !== "string" || uri.length === 0) {
     return {
       status: 400,
-      json: { error: "Invalid image" },
+      json: { error: "Invalid uri" }, // TODO: enable base64 encoded image after testing
     };
   }
 

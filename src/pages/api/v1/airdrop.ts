@@ -1,9 +1,9 @@
 "use server";
 import { apiHandler } from "@/lib/api";
-import { tokenTransaction } from "@/lib/api/transaction";
-import { AirdropTransactionParams, TokenTransaction } from "@minatokens/api";
+import { airdropTransaction, tokenTransaction } from "@/lib/api/transaction";
+import { AirdropTransactionParams, TokenTransactions } from "@minatokens/api";
 
-export default apiHandler<AirdropTransactionParams, TokenTransaction>({
+export default apiHandler<AirdropTransactionParams, TokenTransactions>({
   name: "airdrop",
-  handler: tokenTransaction,
+  handler: airdropTransaction,
 });
