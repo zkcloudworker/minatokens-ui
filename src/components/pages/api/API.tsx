@@ -372,6 +372,15 @@ const API: React.FC = () => {
                 >
                   https://docs.minatokens.com
                 </a>
+                . Try our @minatokens/api library by testing it out with{" "}
+                <a
+                  href="https://github.com/zkcloudworker/tokens-api-example/blob/main/tests/token.test.ts"
+                  className="text-accent"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  https://github.com/zkcloudworker/tokens-api-example
+                </a>
                 . Explore proof generation jobs at{" "}
                 <a
                   href="https://jobs.minatokens.com"
