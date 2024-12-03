@@ -463,7 +463,7 @@ export default function TokenList({
                           <Highlight item={elm} attribute="name" />
                         </span>
                       </Link>
-                      <div className="dropup rounded-full hover:bg-jacarta-100 dark:hover:bg-jacarta-600">
+                      {/* <div className="dropup rounded-full hover:bg-jacarta-100 dark:hover:bg-jacarta-600">
                         <a
                           href="#"
                           className="dropdown-toggle inline-flex h-8 w-8 items-center justify-center text-sm"
@@ -503,8 +503,9 @@ export default function TokenList({
                             Report
                           </button>
                         </div>
-                      </div>
+                      </div>*/}
                     </div>
+
                     <div className="mt-2 text-sm">
                       <span className="text-jacarta-500 dark:text-jacarta-300 float-left">
                         <Highlight item={elm} attribute="symbol" />
@@ -512,20 +513,17 @@ export default function TokenList({
                       <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
                         {`Supply: ${elm.totalSupply}`}
                       </span>
-                      {/* <span className="text-jacarta-500 dark:text-jacarta-300">
-                    {elm.bidCount}
-                  </span> */}
                     </div>
 
                     <div className="mt-8 flex items-center justify-between">
-                      <button
+                      {/* <button
                         className="font-display text-sm font-semibold text-accent"
                         data-bs-toggle="modal"
                         data-bs-target="#buyNowModal"
                       >
                         Buy now
-                      </button>
-                      <Link
+                      </button> */}
+                      {/* <Link
                         href={`/token/${elm.tokenAddress}`}
                         className="group flex items-center"
                       >
@@ -542,7 +540,7 @@ export default function TokenList({
                         <span className=" rtl:mr-1 font-display text-sm font-semibold group-hover:text-accent dark:text-jacarta-200">
                           View History
                         </span>
-                      </Link>
+                      </Link> */}
                     </div>
                   </div>
                 </article>

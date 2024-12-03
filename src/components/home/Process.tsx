@@ -6,8 +6,9 @@ import { generateSubscription } from "@/lib/api/key";
 import { FormEvent, useState, useEffect } from "react";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import { log } from "@/lib/log";
+import Link from "next/link";
 
-export const process = [
+export const process: ProcessItem[] = [
   {
     id: 1,
     backgroundColor: "#CDBCFF",
@@ -33,16 +34,18 @@ export const process = [
     backgroundColor: "#FFD0D0",
     iconSrc: "/img/process/process8.svg",
     alt: "process",
-    title: "3. Mint and Trade your tokens",
+    title: "3. Sell your tokens",
     bgClass: "bg-red",
     description:
-      "Mint your tokens and start trading them on MinaTokens with the help from Mina Developers Alliance!",
+      "To enable selling your tokens, please contact the Authorized Developers of Mina Developers Alliance.",
   },
 ];
 interface ProcessItem {
+  id: number;
   backgroundColor: string;
   bgClass: string;
   iconSrc: string;
+  alt: string;
   title: string;
   description: string;
 }
@@ -127,6 +130,11 @@ export default function Process(): JSX.Element {
                     {elm.title}
                   </h3>
                   <p className="dark:text-jacarta-300">{elm.description}</p>
+                  {elm.id === 3 && (
+                    <button className="mt-4 rounded-full bg-accent px-6 py-2 font-display text-sm text-white hover:bg-accent-dark">
+                      <Link href="/authorized">Contact</Link>
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
