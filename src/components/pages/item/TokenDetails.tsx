@@ -13,7 +13,7 @@ import { algoliaWriteLike, algoliaGetLike } from "@/lib/likes";
 //import tippy from "tippy.js";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
-import { socials } from "@/data/socials";
+import { socials_item } from "@/data/socials";
 import {
   BlockberryTokenHolder,
   getTokenHoldersByTokenId,
@@ -24,7 +24,7 @@ import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 export function Socials({ i }: { i: number }) {
-  const elm = socials[i];
+  const elm = socials_item[i];
   return (
     <div key={i} className="group rtl:ml-4 rtl:mr-0">
       <svg
