@@ -78,7 +78,7 @@ export async function checkAvailability(
     return unavailableCountry;
   } catch (error: any) {
     if (retry) {
-      log.error(
+      log.info(
         `checkAvailability error : ${
           typeof error?.message === "string" ? error?.message : "unknown"
         }`,
