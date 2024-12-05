@@ -121,9 +121,10 @@ export function deleteTimelineGroup(params: {
 
 export interface TimeLineProps {
   items: TimelineGroupDated[];
+  dark?: boolean;
 }
 
-export function TimeLine({ items }: TimeLineProps) {
+export function TimeLine({ items, dark }: TimeLineProps) {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [sortedItems, setSortedItems] = useState<TimelineGroupDated[]>([]);
 
@@ -184,7 +185,9 @@ export function TimeLine({ items }: TimeLineProps) {
       {sortedItems.map((elm, i) => (
         <div
           key={i}
-          className="relative flex items-center rounded-2.5xl border border-jacarta-100 bg-white p-4 transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700"
+          className={`relative flex items-center rounded-2.5xl border border-jacarta-100 bg-white p-4 transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-${
+            dark === true ? "900" : "700"
+          }`}
         >
           <div>
             <h3 className="mb-1 font-display font-semibold text-jacarta-700 dark:text-white">

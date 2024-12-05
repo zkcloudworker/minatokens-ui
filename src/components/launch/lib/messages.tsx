@@ -115,12 +115,12 @@ export const messages: { [key in LineId]: TimeLineItem } = {
   },
   txPrepared: {
     lineId: "txPrepared",
-    content: "Preparing the transaction for token deployment...",
+    content: "Preparing the transaction...",
     status: "waiting",
   },
   txMint: {
     lineId: "txMint",
-    content: "Preparing the transaction for token minting...",
+    content: "Preparing the transaction...",
     status: "waiting",
   },
   txSigned: {

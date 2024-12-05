@@ -1,3 +1,4 @@
+"use client";
 import type { TokenState } from "@/lib/token";
 import Link from "next/link";
 import { useEffect, useState } from "react";

@@ -1,3 +1,4 @@
+"use client";
 import Tabs from "./Tabs";
 import { allItems } from "@/data/item";
 import Image from "next/image";

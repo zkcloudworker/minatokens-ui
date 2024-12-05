@@ -27,9 +27,9 @@ export async function waitForProveJob(params: {
   jobId: string;
   groupId: string;
   updateTimelineItem: UpdateTimelineItemFunction;
-  type: "deploy" | "mint";
+  type: "deploy" | "mint" | "airdrop";
   tokenContractAddress: string;
-  address?: string;
+  addresses?: string[];
 }): Promise<boolean> {
   const {
     jobId,
@@ -37,14 +37,14 @@ export async function waitForProveJob(params: {
     updateTimelineItem,
     type,
     tokenContractAddress,
-    address,
+    addresses = [],
   } = params;
-  if (type === "mint" && !address) {
-    log.error("waitForProveJob: Address is required for minting", {
-      address,
-    });
-    throw new Error("Address is required for minting");
-  }
+  // if (type === "mint" && !address) {
+  //   log.error("waitForProveJob: Address is required for minting", {
+  //     address,
+  //   });
+  //   throw new Error("Address is required for minting");
+  // }
 
   await sleep(10000);
   let result = await getResult(jobId);
@@ -79,8 +79,6 @@ export async function waitForProveJob(params: {
     return false;
   }
 
-  const transaction = result?.results[0].tx;
-
   const txSuccessMsg = (
     <>
       Transaction is{" "}
@@ -103,136 +101,160 @@ export async function waitForProveJob(params: {
       status: "success",
     },
   });
-  updateTimelineItem({
-    groupId,
-    update: messages.txSent,
-  });
 
-  if (DEBUG) console.log("Transaction proved:", transaction?.slice(0, 50));
-  if (!transaction) {
-    log.error("waitForProveJob: Transaction is undefined");
-    return false;
-  }
-
-  const start = Date.now();
-  let sendResult = await sendTransaction(transaction);
-  const TIMEOUT = 1000 * 60 * 30;
-  let attempt = 1;
-  while (
-    (sendResult.success === false || sendResult.hash === undefined) &&
-    Date.now() - start < TIMEOUT
-  ) {
-    attempt++;
-    console.log(`Sending transaction (${attempt})...`, sendResult);
-    await sleep(10000 * attempt);
-    sendResult = await sendTransaction(transaction);
-  }
-  if (DEBUG)
-    console.log(
-      "Transaction sent:",
-      sendResult,
-      "in",
-      attempt,
-      "attempt after",
-      Date.now() - start,
-      "ms"
-    );
-  if (sendResult.success === false || sendResult.hash === undefined) {
+  const includedPromises: any[] = [];
+  const length = result?.results?.length ?? 0;
+  for (let i = 0; i < length; i++) {
+    const txResult = result?.results[i];
+    const transaction = txResult.tx;
+    const msg = messages.txSent;
+    const lineId = length > 1 ? ` ${i + 1}` : "";
+    msg.lineId = "txSent" + lineId;
     updateTimelineItem({
       groupId,
-      update: {
-        lineId: "txSent",
-        content: `Failed to send transaction to Mina blockchain: ${
-          sendResult.status ? "status: " + sendResult.status + ", " : ""
-        } ${String(sendResult.error ?? "error D437")}`,
-        status: "error",
-      },
+      update: msg,
     });
-    log.error(
-      "waitForProveJob: Failed to send transaction to Mina blockchain",
-      {
+
+    if (!transaction) {
+      log.error("waitForProveJob: Transaction is undefined");
+      return false;
+    }
+
+    const start = Date.now();
+    let sendResult = await sendTransaction(transaction);
+    const TIMEOUT = 1000 * 60 * 30;
+    let attempt = 1;
+    while (
+      (sendResult.success === false || sendResult.hash === undefined) &&
+      Date.now() - start < TIMEOUT
+    ) {
+      attempt++;
+      console.log(`Sending transaction (${attempt})...`, sendResult);
+      await sleep(10000 * attempt);
+      sendResult = await sendTransaction(transaction);
+    }
+    if (DEBUG)
+      console.log(
+        "Transaction sent:",
         sendResult,
-      }
+        "in",
+        attempt,
+        "attempt after",
+        Date.now() - start,
+        "ms"
+      );
+    if (sendResult.success === false || sendResult.hash === undefined) {
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "txSent" + lineId,
+          content: `Failed to send transaction to Mina blockchain: ${
+            sendResult.status ? "status: " + sendResult.status + ", " : ""
+          } ${String(sendResult.error ?? "error D437")}`,
+          status: "error",
+        },
+      });
+      log.error(
+        "waitForProveJob: Failed to send transaction to Mina blockchain",
+        {
+          sendResult,
+        }
+      );
+      return false;
+    }
+    includedPromises.push(
+      waitForMinaTx({
+        hash: sendResult.hash,
+        groupId,
+        lineId,
+        updateTimelineItem,
+        type,
+      })
     );
-    return false;
   }
 
-  const txIncluded = await waitForMinaTx({
-    hash: sendResult.hash,
-    groupId,
-    updateTimelineItem,
-    type,
-  });
+  // const txIncluded = await waitForMinaTx({
+  //   hash: sendResult.hash,
+  //   groupId,
+  //   updateTimelineItem,
+  //   type,
+  // });
 
-  if (!txIncluded) {
-    return false;
+  for (const includedPromise of includedPromises) {
+    if (!(await includedPromise)) {
+      return false;
+    }
   }
 
   if (type === "deploy") {
     return true;
   } else {
-    if (!address) {
-      log.error("waitForProveJob: Address is required for minting", {
-        address,
-      });
-      throw new Error("Address is required for minting");
-    }
-    const start = Date.now();
-    const TIMEOUT = 1000 * 60 * 30;
-    let attempt = 1;
-    let balanceResult = await balance(
-      {
-        tokenAddress: tokenContractAddress,
-        address,
-      },
-      ""
-    );
-    while (
-      (balanceResult.status !== 200 || balanceResult.json.balance === null) &&
-      Date.now() - start < TIMEOUT
-    ) {
-      attempt++;
-      balanceResult = await balance(
+    const length = addresses?.length ?? 0;
+    for (let i = 0; i < length; i++) {
+      const address = addresses[i];
+      if (!address) {
+        log.error("waitForProveJob: Address is required for minting", {
+          address,
+        });
+        throw new Error("Address is required for minting");
+      }
+      const start = Date.now();
+      const TIMEOUT = 1000 * 60 * 30;
+      let attempt = 1;
+      let balanceResult = await balance(
         {
           tokenAddress: tokenContractAddress,
           address,
         },
         ""
       );
-      await sleep(5000 * attempt);
-    }
-    console.log(
-      "balanceResult",
-      balanceResult,
-      "received in ",
-      Date.now() - start,
-      "ms in attempt:",
-      attempt
-    );
-    if (balanceResult.status !== 200 || balanceResult.json.balance === null) {
+      while (
+        (balanceResult.status !== 200 || balanceResult.json.balance === null) &&
+        Date.now() - start < TIMEOUT
+      ) {
+        attempt++;
+        balanceResult = await balance(
+          {
+            tokenAddress: tokenContractAddress,
+            address,
+          },
+          ""
+        );
+        await sleep(5000 * attempt);
+      }
+      console.log(
+        "balanceResult",
+        balanceResult,
+        "received in ",
+        Date.now() - start,
+        "ms in attempt:",
+        attempt
+      );
+      if (balanceResult.status !== 200 || balanceResult.json.balance === null) {
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: `mintBalance-${i}`,
+            content: "Failed to get token balance",
+            status: "error",
+          },
+        });
+        log.error("waitForProveJob: Failed to get token balance", {
+          balanceResult,
+        });
+        return false;
+      }
       updateTimelineItem({
         groupId,
         update: {
-          lineId: "mintBalance",
-          content: "Failed to get token balance",
-          status: "error",
+          lineId: `mintBalance${i === length - 1 ? "" : `-${i}`}`,
+          content: `Token balance of ${address} is ${
+            balanceResult.json.balance / 1_000_000_000
+          }`,
+          status: "success",
         },
       });
-      log.error("waitForProveJob: Failed to get token balance", {
-        balanceResult,
-      });
-      return false;
     }
-    updateTimelineItem({
-      groupId,
-      update: {
-        lineId: "mintBalance",
-        content: `Token balance of ${address} is ${
-          balanceResult.json.balance / 1_000_000_000
-        }`,
-        status: "success",
-      },
-    });
     return true;
   }
 }
@@ -240,13 +262,14 @@ export async function waitForProveJob(params: {
 export async function waitForMinaTx(params: {
   hash: string;
   groupId: string;
+  lineId: string;
   updateTimelineItem: UpdateTimelineItemFunction;
-  type: "deploy" | "mint";
+  type: "deploy" | "mint" | "airdrop";
 }): Promise<boolean> {
-  const { hash, groupId, updateTimelineItem, type } = params;
+  const { hash, groupId, lineId, updateTimelineItem, type } = params;
   const txSentMsg = (
     <>
-      Transaction is{" "}
+      Transaction{lineId} is{" "}
       <a
         href={`${explorerTransactionUrl()}${hash}`}
         className="text-accent hover:underline"
@@ -261,14 +284,16 @@ export async function waitForMinaTx(params: {
   updateTimelineItem({
     groupId,
     update: {
-      lineId: "txSent",
+      lineId: "txSent" + lineId,
       content: txSentMsg,
       status: "success",
     },
   });
+  const msg = messages.txIncluded;
+  msg.lineId = "txIncluded" + lineId;
   updateTimelineItem({
     groupId,
-    update: messages.txIncluded,
+    update: msg,
   });
 
   let delay = 10000;
@@ -295,8 +320,8 @@ export async function waitForMinaTx(params: {
     updateTimelineItem({
       groupId,
       update: {
-        lineId: "txIncluded",
-        content: "Transaction is not included in the block",
+        lineId: "txIncluded" + lineId,
+        content: `Transaction${lineId} is not included in the block`,
         status: "error",
       },
     });
@@ -307,7 +332,7 @@ export async function waitForMinaTx(params: {
   }
   const successSentMsg = (
     <>
-      Transaction is{" "}
+      Transaction{lineId} is{" "}
       <a
         href={`${explorerTransactionUrl()}${hash}`}
         className="text-accent hover:underline"
@@ -323,7 +348,7 @@ export async function waitForMinaTx(params: {
   updateTimelineItem({
     groupId,
     update: {
-      lineId: "txIncluded",
+      lineId: "txIncluded" + lineId,
       content: successSentMsg,
       status: "success",
     },

@@ -1,19 +1,19 @@
-import { Addresses } from "@/components/token/Addresses";
-import { MintAddress, TokenState, TokenAction } from "@/lib/token";
+"use client";
+import { TokenActionForm } from "@/components/token/TokenActionForm";
+import { useStore } from "zustand";
 import {
-  TimeLine,
-  TimelineGroup,
-  TimeLineItem,
-  TimelineItemStatus,
-} from "@/components/launch/TimeLine";
-import { useTokenAction } from "@/context/tokenAction";
-import { useEffect } from "react";
-import {
-  tokenAction,
-  getActionStatistics,
-  setActionStatistics,
-} from "./lib/action";
+  MintAddress,
+  TokenAction,
+  TokenState,
+  TokenActionData,
+  TokenActionTransactionParams,
+} from "@/lib/token";
+import { TransactionTokenState, TokenActionFormData } from "@/context/action";
+import { TimeLine } from "@/components/launch/TimeLine";
+import { tokenAction } from "./lib/action";
 import { debug } from "@/lib/debug";
+import { useTransactionStore } from "@/context/tx-provider";
+import { AirdropTransactionParams } from "@minatokens/api";
 const DEBUG = debug();
 
 const MINT_TEST = process.env.NEXT_PUBLIC_MINT_TEST === "true";
@@ -35,122 +35,166 @@ const initialAddresses: MintAddress[] = MINT_TEST
       },
     ];
 
-let isErrorNow = false;
-export function isError(): boolean {
-  // if (DEBUG) console.log("isErrorNow called", isErrorNow);
-  return isErrorNow;
-}
-
 export type TokenActionProps = {
   tokenAddress: string;
   tokenState: TokenState;
-  action: TokenAction;
+  tab: TokenAction;
 };
+
+function initialTokenActionData(params: {
+  tokenState: TokenState;
+  tab: TokenAction;
+  formData: TokenActionFormData;
+}): TokenActionData {
+  const { tokenState, tab, formData } = params;
+  const txs: TokenActionTransactionParams[] = [];
+
+  switch (tab) {
+    case "mint":
+      txs.push(
+        ...formData.addresses.map(
+          (address) =>
+            ({
+              tokenAddress: tokenState.tokenAddress,
+              sender: tokenState.adminAddress,
+              txType: "mint",
+              to: address.address,
+              amount:
+                (address.amount ? Number(address.amount) : 0) * 1_000_000_000,
+            } as TokenActionTransactionParams)
+        )
+      );
+      break;
+    case "transfer":
+      txs.push(
+        ...formData.addresses.map(
+          (address) =>
+            ({
+              tokenAddress: tokenState.tokenAddress,
+              sender: tokenState.adminAddress,
+              txType: "transfer",
+              to: address.address,
+              amount:
+                (address.amount ? Number(address.amount) : 0) * 1_000_000_000,
+            } as TokenActionTransactionParams)
+        )
+      );
+      break;
+    case "airdrop":
+      txs.push({
+        tokenAddress: tokenState.tokenAddress,
+        sender: tokenState.adminAddress,
+        txType: "airdrop",
+        recipients: formData.addresses.map((address) => ({
+          address: address.address,
+          amount: (address.amount ? Number(address.amount) : 0) * 1_000_000_000,
+        })),
+      } as AirdropTransactionParams);
+      break;
+  }
+  return {
+    symbol: tokenState.tokenSymbol,
+    txs,
+  };
+}
 
 export function TokenActionComponent({
   tokenAddress,
   tokenState,
-  action,
+  tab,
 }: TokenActionProps) {
-  const { state, dispatch } = useTokenAction();
+  const { transactionStates, setTokenData, setFormData } = useTransactionStore(
+    (state) => state
+  );
 
-  // Use the full action path to get addresses
-  const addresses =
-    state[tokenAddress]?.[action]?.addresses || initialAddresses;
-  const isProcessing = state[tokenAddress]?.[action]?.isProcessing || false;
-  const timelineItems = state[tokenAddress]?.[action]?.timelineItems || [];
+  console.log(
+    "TokenActionComponent transactionStates",
+    transactionStates[tokenAddress]?.[tab]
+  );
 
-  function onChange(addresses: MintAddress[]) {
-    if (DEBUG) console.log("onChange", { tokenAddress, action, addresses });
-    // Ensure we're explicitly setting addresses for this specific action
-    dispatch({
-      type: "SET_ADDRESSES",
-      payload: {
-        tokenAddress,
-        action, // This ensures we're saving to the correct action path
-        addresses,
-      },
-    });
-  }
-
-  useEffect(() => {
-    if (DEBUG) console.log("state", state);
-    const timelineItems = state[tokenAddress]?.[action]?.timelineItems || [];
-    isErrorNow = timelineItems.some((item) => item.status === "error");
-    if (DEBUG) console.log("isErrorNow", isErrorNow);
-    const mintItems = timelineItems.filter((item) =>
-      item.groupId.startsWith("minting")
-    );
-    if (DEBUG) console.log("mintItems", mintItems);
-    const newStatistics = {
+  const state: TransactionTokenState = transactionStates[tokenAddress]?.[
+    tab
+  ] ?? {
+    tokenAddress,
+    tab,
+    timelineItems: [],
+    isProcessing: false,
+    formData: {
+      addresses: initialAddresses.slice(
+        0,
+        tab === "mint" || tab === "airdrop" ? 2 : 1
+      ),
+    },
+    statistics: {
       success: 0,
       error: 0,
       waiting: 0,
-    };
-    mintItems.forEach((item) => {
-      if (item.status === "success") {
-        newStatistics.success++;
-      } else if (item.status === "error") {
-        newStatistics.error++;
-      } else if (item.status === "waiting") {
-        newStatistics.waiting++;
-      }
-    });
+    },
+    isErrorNow: false,
+  };
+  const isProcessing = state?.isProcessing || false;
+  const timelineItems = state?.timelineItems || [];
 
-    setActionStatistics({
+  function onChange(formData: TokenActionFormData) {
+    if (DEBUG) console.log("onChange", { tokenAddress, tab, formData });
+    setFormData({
       tokenAddress,
-      action,
-      statistics: newStatistics,
-    });
-    // if (DEBUG) console.log("Updated statistics:", newStatistics);
-  }, [state]);
-
-  function addLog(group: TimelineGroup) {
-    dispatch({
-      type: "ADD_TIMELINE_GROUP",
-      payload: { tokenAddress, action, group },
+      tab,
+      formData,
     });
   }
 
-  function updateTimelineItem(params: {
-    groupId: string;
-    update: TimeLineItem;
-  }) {
-    const { groupId, update } = params;
-    dispatch({
-      type: "UPDATE_TIMELINE_ITEM",
-      payload: { tokenAddress, action, groupId, update },
-    });
-  }
-
-  async function onSubmit(mintAddresses: MintAddress[]) {
-    console.log("Minting", mintAddresses);
-    isErrorNow = false;
-    dispatch({
-      type: "SET_IS_PROCESSING",
-      payload: { tokenAddress, action, isProcessing: true },
-    });
-    await tokenAction({
+  async function onSubmit(formData: TokenActionFormData) {
+    if (DEBUG) console.log("Processing", formData);
+    const tokenData = initialTokenActionData({
       tokenState,
-      mintAddresses,
-      addLog,
-      updateTimelineItem,
-      isError,
-      action,
+      tab,
+      formData,
+    });
+    setTokenData({
+      tokenAddress,
+      tab,
+      tokenData,
+      timelineItems: [],
+      formData,
+      isProcessing: true,
+      statistics: {
+        success: 0,
+        error: 0,
+        waiting: 0,
+      },
+      isErrorNow: false,
+    });
+    tokenAction({
+      tokenState,
+      tokenData,
+      tab,
     });
   }
 
   return (
     <>
-      {isProcessing && <TimeLine items={timelineItems} />}
+      {isProcessing && (
+        <div className="container rounded-t-2lg rounded-b-2lg rounded-tl-none border border-jacarta-100 p-6 dark:border-jacarta-600">
+          <TimeLine items={timelineItems} dark={true} />
+        </div>
+      )}
       {!isProcessing && (
-        <Addresses
-          key={"tokenAction-" + tokenAddress + "-" + action}
-          onSubmit={onSubmit}
-          onChange={onChange}
-          addresses={addresses}
-          buttonText={action === "mint" ? "Mint" : "Transfer"}
-        />
+        <div className="container rounded-t-2lg rounded-b-2lg rounded-tl-none border border-jacarta-100 p-6 dark:border-jacarta-600">
+          <TokenActionForm
+            key={"tokenAction-" + tokenAddress + "-" + tab}
+            onSubmit={onSubmit}
+            onChange={onChange}
+            data={state.formData}
+            buttonText={tab.slice(0, 1).toUpperCase() + tab.slice(1)}
+            showPrice={tab === "offer" || tab === "bid"}
+            showAmount={tab === "offer" || tab === "bid"}
+            showAddMore={tab === "mint" || tab === "airdrop"}
+            showAddress={
+              tab === "transfer" || tab === "airdrop" || tab === "mint"
+            }
+          />
+        </div>
       )}
     </>
   );

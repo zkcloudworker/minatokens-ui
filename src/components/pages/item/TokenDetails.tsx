@@ -355,7 +355,8 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                   {item?.symbol ?? ""}
                 </span>
                 <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
-                  Supply: {item?.totalSupply ? item?.totalSupply : ""}
+                  Supply:{" "}
+                  {item?.totalSupply ? item?.totalSupply.toFixed(0) : ""}
                 </span>
                 <div className="flex items-center space-x-1 rounded-xl border border-jacarta-100 bg-white py-2 px-4 dark:border-jacarta-600 dark:bg-jacarta-700">
                   <span

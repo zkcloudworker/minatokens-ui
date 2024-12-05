@@ -1,3 +1,4 @@
+"use client";
 import { Holders } from "./Holders";
 import type { TokenState } from "@/lib/token";
 //import Properties from "./Properties";

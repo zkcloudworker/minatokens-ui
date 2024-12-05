@@ -11,18 +11,22 @@ import { LaunchTokenProvider } from "@/context/launch";
 import { TokenDetailsProvider } from "@/context/details";
 import { SearchProvider } from "@/context/search";
 import { AddressProvider } from "@/context/address";
-import { TokenActionProvider } from "@/context/tokenAction";
+import { TransactionStoreProvider } from "@/context/tx-provider";
 import { Analytics } from "@vercel/analytics/next";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 if (typeof window !== "undefined") {
   // Import the script only on the client side
-  import("bootstrap/dist/js/bootstrap.esm").then((module) => {
+  import("bootstrap/dist/js/bootstrap.esm" as any).then((module) => {
     // Module is imported, you can access any exported functionality if
   });
 }
 
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <>
       <html lang="en" className="dark">
@@ -40,11 +44,11 @@ export default function RootLayout({ children }) {
             <AddressProvider>
               <LaunchTokenProvider>
                 <TokenDetailsProvider>
-                  <TokenActionProvider>
+                  <TransactionStoreProvider>
                     <ModeChanger />
                     {children}
-                    <MintAddressesModal />
-                  </TokenActionProvider>
+                    <MintAddressesModal onSubmit={() => {}} />
+                  </TransactionStoreProvider>
                 </TokenDetailsProvider>
               </LaunchTokenProvider>
             </AddressProvider>

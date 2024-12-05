@@ -1,3 +1,4 @@
+"use client";
 import { accessoryData } from "@/data/itemDetails";
 import Link from "next/link";
 

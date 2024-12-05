@@ -1,3 +1,4 @@
+"use client";
 import type { TokenState } from "@/lib/token";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -165,34 +166,23 @@ export function TokenActionsTab({
       </div>
 
       <div className="p-6 md:p-10">
-        {/* {tab === "mint" && (
+        {(tab === "mint" || tab === "transfer" || tab === "airdrop") && (
           <>
             {tokenState && (
               <TokenActionComponent
-                key={"tokenActionComponent-" + tokenAddress + "-mint"}
+                key={"tokenActionComponent-" + tokenAddress + tab}
                 tokenAddress={tokenAddress}
                 tokenState={tokenState}
-                action="mint"
+                tab={tab}
               />
             )}
             {!tokenState && <TokenStateTabLoading />}
           </>
         )}
-        {tab === "transfer" && (
-          <>
-            {tokenState && (
-              <TokenActionComponent
-                key={"tokenActionComponent-" + tokenAddress + "-transfer"}
-                tokenAddress={tokenAddress}
-                tokenState={tokenState}
-                action="transfer"
-              />
-            )}
-            {!tokenState && <TokenStateTabLoading />}
-          </>
+
+        {tab !== "mint" && tab !== "transfer" && tab !== "airdrop" && (
+          <ContactAuthorized />
         )}
-        {tab !== "mint" && tab !== "transfer" && <NotImplemented />} */}
-        <ContactAuthorized />
       </div>
     </div>
   );
