@@ -16,11 +16,16 @@
     };
 */
 
-import { FungibleTokenTransactionType } from "@minatokens/api";
-export type TokenAction = FungibleTokenTransactionType;
+import {
+  FungibleTokenTransactionType,
+  LaunchTokenStandardAdminParams,
+  LaunchTokenAdvancedAdminParams,
+  TransactionParams,
+} from "@minatokens/api";
+export type TokenAction = Exclude<FungibleTokenTransactionType, "launch">;
 
 export interface MintAddress {
-  amount: number | "";
+  amount: number | "" | undefined;
   address: string;
 }
 
@@ -46,6 +51,16 @@ export interface LaunchTokenData {
   imageURL?: string;
   adminAddress: string;
   mintAddresses: MintAddress[];
+}
+
+export type TokenActionTransactionParams = Exclude<
+  TransactionParams,
+  LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams
+>;
+
+export interface TokenActionData {
+  symbol: string;
+  txs: TokenActionTransactionParams[];
 }
 
 export interface TokenInfo {

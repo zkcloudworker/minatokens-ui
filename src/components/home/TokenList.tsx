@@ -511,7 +511,7 @@ export default function TokenList({
                         <Highlight item={elm} attribute="symbol" />
                       </span>
                       <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                        {`Supply: ${elm.totalSupply}`}
+                        {`Supply: ${elm.totalSupply.toFixed(0)}`}
                       </span>
                     </div>
 

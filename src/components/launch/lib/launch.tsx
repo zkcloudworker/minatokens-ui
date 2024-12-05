@@ -627,14 +627,7 @@ export async function launchToken(params: {
       successTitle: `Token ${data.symbol} launched`,
       errorTitle: `Failed to launch token ${data.symbol}`,
       lines: [messages.txPrepared],
-      requiredForSuccess: [
-        "txPrepared",
-        "txSigned",
-        "txProved",
-        "txSent",
-        "txIncluded",
-        "contractStateVerified",
-      ],
+      requiredForSuccess: ["contractStateVerified"],
       keepOnTop: true,
     });
     const deployResult = await deployToken({
@@ -844,14 +837,7 @@ export async function launchToken(params: {
               status: "success",
             },
           ],
-          requiredForSuccess: [
-            "txMint",
-            "txSigned",
-            "txProved",
-            "txSent",
-            "txIncluded",
-            "mintBalance",
-          ],
+          requiredForSuccess: ["mintBalance"],
         });
 
         const mintResult = await tokenTransaction({
@@ -882,7 +868,7 @@ export async function launchToken(params: {
           updateTimelineItem,
           type: "mint",
           tokenContractAddress: tokenPublicKey,
-          address: item.address,
+          addresses: [item.address],
         });
         mintPromises.push(waitForMintJobPromise);
         if (isError()) {

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { BlockberryTokenHolder } from "@/lib/blockberry-tokens";
 import { explorerAccountUrl } from "@/lib/chain";

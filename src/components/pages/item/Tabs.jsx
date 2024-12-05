@@ -1,3 +1,4 @@
+"use client";
 import Offers from "./Offers";
 import Properties from "./Properties";
 import Details from "./DetailsTab";

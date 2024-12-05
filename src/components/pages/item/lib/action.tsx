@@ -1,12 +1,14 @@
 "use client";
-
 import confetti from "canvas-confetti";
 import {
   TokenState,
   MintAddress,
   MintAddressVerified,
   TokenAction,
+  TokenActionData,
 } from "@/lib/token";
+import { TokenActionStatistics, transactionStore } from "@/context/action";
+import { TokenActionFormData } from "@/context/action";
 import { checkMintData } from "@/lib/address";
 import {
   explorerAccountUrl,
@@ -16,10 +18,9 @@ import {
   getLaunchpadUrl,
 } from "@/lib/chain";
 import { getWalletInfo } from "@/lib/wallet";
-import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
 import { sleep } from "@/lib/sleep";
-import { tokenTransaction } from "../../../launch/lib/transaction";
+import { apiTokenTransaction } from "../../../launch/lib/api-transaction";
 import {
   TimeLineItem,
   TimelineGroup,
@@ -33,12 +34,8 @@ import {
   GroupId,
   UpdateTimelineItemFunction,
 } from "../../../launch/lib/messages";
-import { loadLib } from "../../../launch/lib/libraries";
 import { getAccountNonce } from "@/lib/nonce";
-import {
-  waitForProveJob,
-  waitForContractVerification,
-} from "../../../launch/lib/mina-tx";
+import { waitForProveJob } from "../../../launch/lib/mina-tx";
 import { log } from "@/lib/log";
 const chain = getChain();
 const DEBUG = debug();
@@ -73,16 +70,16 @@ async function stopProcessUpdateRequests() {
   processRequests = false;
 }
 
-type TokenActionStatistics = { [key in TimelineItemStatus]: number };
-let statistics: {
-  [key: string]: { [key in TokenAction]: TokenActionStatistics };
-} = {};
-
 export function getActionStatistics(params: {
   tokenAddress: string;
-  action: TokenAction;
+  tab: TokenAction;
 }): TokenActionStatistics {
-  const result = statistics[params.tokenAddress]?.[params.action] || {
+  if (!transactionStore) return { success: 0, error: 0, waiting: 0 };
+  const store = transactionStore;
+  const currentState = store.getState()?.transactionStates;
+  console.log("getActionStatistics currentState", currentState);
+  const result = currentState?.[params.tokenAddress]?.[params.tab]
+    ?.statistics || {
     success: 0,
     error: 0,
     waiting: 0,
@@ -91,45 +88,51 @@ export function getActionStatistics(params: {
   return result;
 }
 
-export function setActionStatistics(params: {
-  tokenAddress: string;
-  action: TokenAction;
-  statistics: TokenActionStatistics;
-}) {
-  if (DEBUG) console.log("setActionStatistics", params);
-  const { tokenAddress, action } = params;
-  if (!statistics[tokenAddress]) {
-    statistics[tokenAddress] = {} as {
-      [key in TokenAction]: TokenActionStatistics;
-    };
-  }
-  statistics[tokenAddress][action] = params.statistics;
-}
-
 export async function tokenAction(params: {
   tokenState: TokenState;
-  mintAddresses: MintAddress[];
-  addLog: (item: TimelineGroup) => void;
-  updateTimelineItem: UpdateTimelineItemFunction;
-  isError: IsErrorFunction;
-  action: TokenAction;
+  tokenData: TokenActionData;
+  tab: TokenAction;
 }) {
-  const {
-    tokenState,
-    mintAddresses,
-    addLog,
-    updateTimelineItem: updateTimeLineItemInternal,
-    isError,
-    action,
-  } = params;
-  const {
-    tokenId,
-    adminAddress,
-    adminContractAddress,
-    tokenSymbol: symbol,
-    tokenAddress,
-  } = tokenState;
+  const { tokenState, tokenData, tab } = params;
+  const { tokenId, tokenSymbol: symbol, tokenAddress } = tokenState;
+  const { txs } = tokenData;
+  if (DEBUG) console.log("tokenAction start", { tokenAddress, tab, tokenData });
 
+  function updateTimeLineItemInternal(params: {
+    groupId: string;
+    update: TimeLineItem;
+  }) {
+    const { groupId, update } = params;
+    if (!transactionStore) return;
+    const store = transactionStore;
+    const currentState = store.getState();
+    currentState.updateTimelineItem({
+      tokenAddress,
+      tab,
+      groupId,
+      update,
+    });
+  }
+
+  function isError(): boolean {
+    if (!transactionStore) return false;
+    const store = transactionStore;
+    const currentState = store.getState();
+    return (
+      currentState.transactionStates[tokenAddress]?.[tab]?.isErrorNow ?? false
+    );
+  }
+
+  function addLog(timelineGroup: TimelineGroup) {
+    if (!transactionStore) return;
+    const store = transactionStore;
+    const currentState = store.getState();
+    currentState.addTimelineGroup({
+      tokenAddress,
+      tab,
+      timelineGroup,
+    });
+  }
   startProcessUpdateRequests(updateTimeLineItemInternal);
 
   function updateTimelineItem(params: {
@@ -142,41 +145,36 @@ export async function tokenAction(params: {
     else updateRequests.push({ groupId, update });
   }
 
-  let isMintedShown = false;
+  let isProcessedShown = false;
   let isWaitingShown = false;
   let isErrorShown = false;
 
-  function showStatistics(
-    tokensToProcess: number,
-    action: TokenAction
-  ): boolean {
-    const statistics = getActionStatistics({
+  function showStatistics(txsToProcess: number, tab: TokenAction): boolean {
+    const newStatistics = getActionStatistics({
       tokenAddress,
-      action,
+      tab,
     });
-    if (DEBUG) console.log("showStatistics", { params, statistics });
-    if (statistics.success > 0 || isMintedShown) {
-      if (DEBUG) console.log("showStatistics update", isMintedShown);
+    if (DEBUG) console.log("showStatistics", { params, newStatistics });
+    if (newStatistics.success > 0 || isProcessedShown) {
+      if (DEBUG) console.log("showStatistics update", isProcessedShown);
       updateTimelineItem({
         groupId: "mint",
         update: {
           lineId: "minted",
-          content: `${action[0].toUpperCase() + action.slice(1)}ed ${
-            statistics.success
-          } ${symbol} tokens to ${statistics.success} addresses`,
+          content: `Processed ${newStatistics.success} ${tab} ${symbol} transactions`,
           status:
-            statistics.success === tokensToProcess ? "success" : "waiting",
+            newStatistics.success === txsToProcess ? "success" : "waiting",
         },
       });
-      isMintedShown = true;
+      isProcessedShown = true;
     }
-    if (statistics.error > 0 || isErrorShown) {
+    if (newStatistics.error > 0 || isErrorShown) {
       updateTimelineItem({
         groupId: "mint",
         update: {
           lineId: "notMinted",
-          content: `${action[0].toUpperCase() + action.slice(1)} failed for ${
-            statistics.error
+          content: `${tab[0].toUpperCase() + tab.slice(1)} failed for ${
+            newStatistics.error
           } addresses`,
           status: "error",
         },
@@ -191,31 +189,30 @@ export async function tokenAction(params: {
       });
       isErrorShown = true;
     }
-    if (statistics.waiting > 0 || isWaitingShown) {
+    if (newStatistics.waiting > 0 || isWaitingShown) {
       updateTimelineItem({
         groupId: "mint",
         update: {
           lineId: "waitToMint",
           content:
-            statistics.waiting === 0
-              ? `Processed all ${action} transactions`
-              : `Processing ${action} transactions for ${statistics.waiting} addresses`,
-          status: statistics.waiting === 0 ? "success" : "waiting",
+            newStatistics.waiting === 0
+              ? `Processed all ${tab} transactions`
+              : `Processing ${newStatistics.waiting} ${tab} transactions`,
+          status: newStatistics.waiting === 0 ? "success" : "waiting",
         },
       });
       isWaitingShown = true;
     }
-    return statistics.success === tokensToProcess;
+    return newStatistics.success === txsToProcess;
   }
 
   try {
-    if (DEBUG) console.log("mintTokens token:", tokenState, mintAddresses);
-    let minted = 0;
-    let tokensToProcess = mintAddresses.length;
+    if (DEBUG) console.log("tokenAction:", tokenState, tokenData);
+    let txsToProcess = txs.length;
 
-    const mintingTokensMsg = (
+    const buildingMsg = (
       <>
-        {action[0].toUpperCase() + action.slice(1)}ing{" "}
+        Building {txsToProcess}{" "}
         <a
           href={`${explorerTokenUrl()}/${tokenId}`}
           className="text-accent hover:underline"
@@ -224,31 +221,31 @@ export async function tokenAction(params: {
         >
           {symbol}
         </a>{" "}
-        tokens to {tokensToProcess} addresses...
+        transactions...
       </>
     );
+
     addLog({
       groupId: "mint",
       status: "waiting",
-      title: `${action[0].toUpperCase() + action.slice(1)}ing ${symbol} tokens`,
-      successTitle: `${symbol} tokens ${action}ed`,
-      errorTitle: `Failed to ${action} ${symbol} tokens`,
+      title: `Processing ${symbol} transactions`,
+      successTitle: `Processed ${symbol} transactions`,
+      errorTitle: `Failed to process ${symbol} transactions`,
       lines: [
         {
-          lineId: "mintingTokens",
-          content: mintingTokensMsg,
+          lineId: "build",
+          content: buildingMsg,
           status: "waiting",
         },
       ],
-      requiredForSuccess: ["mintingTokens", "minted", "o1js"],
+      requiredForSuccess: ["build", "minted"],
       keepOnTop: true,
     });
     const walletInfo = await getWalletInfo();
     if (DEBUG) console.log("launchToken: Wallet Info:", walletInfo);
-    const systemInfo = await getSystemInfo();
-    if (DEBUG) console.log("launchToken: System Info:", systemInfo);
-    const adminPublicKey = walletInfo.address;
-    if (!adminPublicKey) {
+    const senderAddress = walletInfo.address;
+    if (DEBUG) console.log("senderAddress", senderAddress);
+    if (!senderAddress) {
       updateTimelineItem({
         groupId: "mint",
         update: messages.adminRequired,
@@ -263,25 +260,26 @@ export async function tokenAction(params: {
       });
       return;
     }
-    if (adminPublicKey !== walletInfo.address) {
-      updateTimelineItem({
-        groupId: "mint",
-        update: {
-          lineId: "adminRequired",
-          content: messages.adminAddressDoNotMatch.content,
-          status: "error",
-        },
-      });
-      updateTimelineItem({
-        groupId: "mint",
-        update: {
-          lineId: "verifyData",
-          content: "Data verification failed",
-          status: "error",
-        },
-      });
-      return;
-    }
+    // TODO: check admin address in case of mint with standard admin
+    // if (adminPublicKey !== walletInfo.address) {
+    //   updateTimelineItem({
+    //     groupId: "mint",
+    //     update: {
+    //       lineId: "adminRequired",
+    //       content: messages.adminAddressDoNotMatch.content,
+    //       status: "error",
+    //     },
+    //   });
+    //   updateTimelineItem({
+    //     groupId: "mint",
+    //     update: {
+    //       lineId: "verifyData",
+    //       content: "Data verification failed",
+    //       status: "error",
+    //     },
+    //   });
+    //   return;
+    // }
     if (isError()) return;
     const mina = (window as any).mina;
     if (mina === undefined || mina?.isAuro !== true) {
@@ -305,167 +303,183 @@ export async function tokenAction(params: {
     }
     if (isError()) return;
 
-    const mintItems: MintAddressVerified[] = [];
-    if (DEBUG) console.log("Mint addresses:", mintAddresses);
-    for (const item of mintAddresses) {
-      if (item.amount === "" || item.address === "") {
-        if (DEBUG) console.log("Empty mint item skipped:", item);
-      } else {
-        const verified = await checkMintData(item);
-        if (verified !== undefined) {
-          if (DEBUG) console.log("Mint item verified:", verified, item);
-          mintItems.push(verified);
-        } else {
-          if (DEBUG) console.log("Mint item skipped:", item);
-          updateTimelineItem({
-            groupId: "mint",
-            update: {
-              lineId: "mintDataError",
-              content: `Cannot ${action} ${item.amount} ${symbol} tokens to ${item.address} because of wrong amount or address`,
-              status: "error",
-            },
-          });
-          updateTimelineItem({
-            groupId: "mint",
-            update: {
-              lineId: "verifyData",
-              content: "Data verification failed",
-              status: "error",
-            },
-          });
-          return;
-        }
+    // const mintItems: MintAddressVerified[] = [];
+    // for (const item of addresses) {
+    //   if (item.amount === "" || item.address === "") {
+    //     if (DEBUG) console.log("Empty mint item skipped:", item);
+    //   } else {
+    //     const verified = await checkMintData(item);
+    //     if (verified !== undefined) {
+    //       if (DEBUG) console.log("Mint item verified:", verified, item);
+    //       mintItems.push(verified);
+    //     } else {
+    //       if (DEBUG) console.log("Mint item skipped:", item);
+    //       updateTimelineItem({
+    //         groupId: "mint",
+    //         update: {
+    //           lineId: "mintDataError",
+    //           content: `Cannot ${tab} ${item.amount} ${symbol} tokens to ${item.address} because of wrong amount or address`,
+    //           status: "error",
+    //         },
+    //       });
+    //       updateTimelineItem({
+    //         groupId: "mint",
+    //         update: {
+    //           lineId: "verifyData",
+    //           content: "Data verification failed",
+    //           status: "error",
+    //         },
+    //       });
+    //       return;
+    //     }
+    //   }
+    // }
+    // if (DEBUG) console.log("Mint items filtered:", mintItems);
+    // if (isError()) return;
+
+    // updateTimelineItem({
+    //   groupId: "mint",
+    //   update: {
+    //     lineId: "build",
+    //     content: `Built ${txsToProcess} ${symbol} transactions`,
+    //     status: "success",
+    //   },
+    // });
+    // updateTimelineItem({
+    //   groupId: "mint",
+    //   update: messages.o1js,
+    // });
+
+    let nonce = await getAccountNonce(senderAddress);
+    let txPromises: Promise<boolean>[] = [];
+
+    for (let i = 0; i < txs.length; i++) {
+      const item = txs[i];
+      const groupId = `tx-${symbol}-${tab}-${i}`;
+      const timeLineItems: TimeLineItem[] = [];
+      if ("amount" in item) {
+        const amountMsg = (
+          <>
+            Amount: {item.amount / 1_000_000_000}{" "}
+            <a
+              href={`${explorerTokenUrl()}${tokenId}`}
+              className="text-accent hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {symbol}
+            </a>{" "}
+            tokens
+          </>
+        );
+        timeLineItems.push({
+          lineId: "amount",
+          content: amountMsg,
+          status: "success",
+        });
       }
-    }
-    if (DEBUG) console.log("Mint items filtered:", mintItems);
-    if (isError()) return;
-
-    updateTimelineItem({
-      groupId: "mint",
-      update: {
-        lineId: "verifyData",
-        content: `${
-          action[0].toUpperCase() + action.slice(1)
-        } addresses are verified`,
-        status: "success",
-      },
-    });
-    updateTimelineItem({
-      groupId: "mint",
-      update: messages.o1js,
-    });
-    const libPromise = loadLib(updateTimelineItem, "mint");
-
-    let nonce = await getAccountNonce(adminPublicKey);
-    let mintPromises: Promise<boolean>[] = [];
-    const lib = await libPromise;
-
-    for (let i = 0; i < mintItems.length; i++) {
-      const item = mintItems[i];
-      const groupId = `minting-${symbol}-${i}`;
-      const amountMsg = (
-        <>
-          Amount: {item.amount}{" "}
-          <a
-            href={`${explorerTokenUrl()}${tokenId}`}
-            className="text-accent hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {symbol}
-          </a>{" "}
-          tokens
-        </>
-      );
       const tokenAddressMsg = (
         <>
           Address:{" "}
           <a
-            href={`${explorerAccountUrl()}${item.address}`}
+            href={`${explorerAccountUrl()}${item.tokenAddress}`}
             className="text-accent hover:underline"
             target="_blank"
             rel="noopener noreferrer"
           >
-            {item.address}
+            {item.tokenAddress}
           </a>
         </>
       );
+      timeLineItems.push({
+        lineId: "address",
+        content: tokenAddressMsg,
+        status: "success",
+      });
       addLog({
         groupId,
         status: "waiting",
-        title: `${action[0].toUpperCase() + action.slice(1)}ing ${
-          item.amount
-        } ${symbol} tokens`,
-        successTitle: `${item.amount} ${symbol} tokens ${action}ed`,
-        errorTitle: `Failed to ${action} ${item.amount} ${symbol} tokens`,
-        lines: [
-          messages.txMint,
-          {
-            lineId: "amount",
-            content: amountMsg,
-            status: "success",
-          },
-          {
-            lineId: "address",
-            content: tokenAddressMsg,
-            status: "success",
-          },
-        ],
-        requiredForSuccess: [
-          "txMint",
-          "txSigned",
-          "txProved",
-          "txSent",
-          "txIncluded",
-          "mintBalance",
-        ],
+        title: `${tab[0].toUpperCase() + tab.slice(1)}ing ${symbol} tokens`,
+        successTitle: `${symbol} tokens ${tab}ed`,
+        errorTitle: `Failed to ${tab} ${symbol} tokens`,
+        lines: [messages.txMint, ...timeLineItems],
+        requiredForSuccess: ["mintBalance"],
       });
 
-      const mintResult = await tokenTransaction({
-        tokenPublicKey: tokenAddress,
-        adminContractPublicKey: adminContractAddress,
-        adminPublicKey,
-        to: item.address,
-        amount: item.amount,
+      const mintResult = await apiTokenTransaction({
+        symbol: tokenData.symbol,
+        updateTimelineItem,
+        sender: senderAddress,
         nonce: nonce++,
         groupId,
-        updateTimelineItem,
-        symbol,
-        lib,
-
-        action,
+        action: tab,
+        data: item,
       });
       if (mintResult.success === false || mintResult.jobId === undefined) {
         return;
       }
       const mintJobId = mintResult.jobId;
       await sleep(1000);
-      showStatistics(tokensToProcess, action);
+      showStatistics(txsToProcess, tab);
       await sleep(1000);
       const waitForMintJobPromise = waitForProveJob({
         jobId: mintJobId,
         groupId,
         updateTimelineItem,
-
         type: "mint",
         tokenContractAddress: tokenAddress,
-        address: item.address,
+        addresses:
+          item.txType === "airdrop"
+            ? item.recipients.map((recipient) => recipient.address)
+            : item.txType === "mint" || item.txType === "transfer"
+            ? [item.to]
+            : [],
       });
-      mintPromises.push(waitForMintJobPromise);
+      txPromises.push(waitForMintJobPromise);
       if (isError()) return;
     }
-    while (!showStatistics(tokensToProcess, action) && !isError()) {
+    const builtMsg = (
+      <>
+        Built {txsToProcess}{" "}
+        <a
+          href={`${explorerTokenUrl()}/${tokenId}`}
+          className="text-accent hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {symbol}
+        </a>{" "}
+        transactions.
+      </>
+    );
+    updateTimelineItem({
+      groupId: "mint",
+      update: {
+        lineId: "build",
+        content: builtMsg,
+        status: "success",
+      },
+    });
+    // updateTimelineItem({
+    //   groupId: "mint",
+    //   update: {
+    //     lineId: "wait",
+    //     content: `Waiting for ${txsToProcess} ${symbol} transactions to be processed`,
+    //     status: "waiting",
+    //   },
+    // });
+    while (!showStatistics(txsToProcess, tab) && !isError()) {
       await sleep(5000);
     }
 
-    await Promise.all(mintPromises);
-    const statistics = getActionStatistics({
+    await Promise.all(txPromises);
+    const finalStatistics = getActionStatistics({
       tokenAddress,
-      action,
+      tab,
     });
     const mintedTokensMsg = (
       <>
-        Successfully minted{" "}
+        Successfully processed {finalStatistics.success}{" "}
         <a
           href={`${explorerTokenUrl()}${tokenId}`}
           className="text-accent hover:underline"
@@ -474,15 +488,15 @@ export async function tokenAction(params: {
         >
           {symbol}
         </a>{" "}
-        tokens to {statistics.success} addresses
+        {tab} transaction(s)
       </>
     );
     updateTimelineItem({
       groupId: "mint",
       update: {
-        lineId: "mintingTokens",
+        lineId: "minted",
         content: mintedTokensMsg,
-        status: statistics.success === tokensToProcess ? "success" : "error",
+        status: finalStatistics.success === txsToProcess ? "success" : "error",
       },
     });
 
@@ -507,11 +521,11 @@ export async function tokenAction(params: {
     }, 250); // Fire confetti every 250 milliseconds
     await stopProcessUpdateRequests();
   } catch (error) {
-    log.error(`tokenAction catch: ${action}`, { error });
+    log.error(`tokenAction catch: ${tab}`, { error });
     addLog({
       groupId: "error",
       status: "error",
-      title: `Error ${action}ing token`,
+      title: `Error ${tab}ing token`,
       lines: [
         {
           lineId: "error",
