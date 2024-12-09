@@ -27,7 +27,7 @@
     "@logtail/types": "^0.5.2",
     "@minatokens/api": "^0.5.1",
     "@minatokens/storage": "^0.5.0",
-    "@minatokens/token": "^0.5.1",
+    "@minatokens/token": "^0.5.2",
     "@popperjs/core": "^2.11.8",
     "@prisma/client": "^6.0.1",
     "@radix-ui/react-dialog": "^1.1.2",
