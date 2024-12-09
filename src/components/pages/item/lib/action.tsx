@@ -417,12 +417,14 @@ export async function tokenAction(params: {
         content: tokenAddressMsg,
         status: "success",
       });
+      const action = item.txType;
+
       addLog({
         groupId,
         status: "waiting",
-        title: `${tab[0].toUpperCase() + tab.slice(1)}ing ${symbol} tokens`,
-        successTitle: `${symbol} tokens ${tab}ed`,
-        errorTitle: `Failed to ${tab} ${symbol} tokens`,
+        title: `${action.toUpperCase() + action.slice(1)}ing ${symbol} tokens`,
+        successTitle: `${symbol} tokens ${action}ed`,
+        errorTitle: `Failed to ${action} ${symbol} tokens`,
         lines: [messages.txMint, ...timeLineItems],
         requiredForSuccess: ["txIncluded"],
       });
@@ -433,7 +435,7 @@ export async function tokenAction(params: {
         sender: senderAddress,
         nonce: nonce++,
         groupId,
-        action: tab,
+        action,
         data: item,
       });
       if (DEBUG) console.log("mintResult", mintResult);
