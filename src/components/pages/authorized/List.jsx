@@ -74,6 +74,7 @@ export default function List() {
                   href="https://x.com/satyambnsal"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="hover:underline"
                 >
                   @satyambnsal
                 </Link>
@@ -84,6 +85,7 @@ export default function List() {
                   href="https://github.com/satyambnsal"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="hover:underline"
                 >
                   https://github.com/satyambnsal
                 </Link>

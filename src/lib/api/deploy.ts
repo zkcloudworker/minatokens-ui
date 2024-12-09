@@ -5,9 +5,9 @@ import {
   fetchMinaAccount,
 } from "@/lib/blockchain";
 import { PrivateKey, PublicKey, UInt64, Mina, UInt8 } from "o1js";
-import { buildTokenDeployTransaction, LAUNCH_FEE } from "@minatokens/token";
+import { buildTokenLaunchTransaction, LAUNCH_FEE } from "@minatokens/token";
 import {
-  DeployTransaction,
+  TokenTransaction,
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
   ApiResponse,
@@ -26,7 +26,7 @@ const ISSUE_FEE = 1e9;
 export async function deployToken(
   params: LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams,
   apiKeyAddress: string
-): Promise<ApiResponse<DeployTransaction>> {
+): Promise<ApiResponse<TokenTransaction>> {
   const { symbol, decimals, uri } = params;
   if (DEBUG) console.log("Deploying token", params);
   console.log("chain", chain);
@@ -140,21 +140,21 @@ export async function deployToken(
   const sender = PublicKey.fromBase58(params.sender);
   if (DEBUG) console.log("Sender", sender.toBase58());
 
-  const tokenContractPrivateKey = PrivateKey.random();
-  const adminContractPrivateKey = PrivateKey.random();
-  const contractAddress = tokenContractPrivateKey.toPublicKey();
-  if (DEBUG) console.log("Contract", contractAddress.toBase58());
-  const adminContractPublicKey = adminContractPrivateKey.toPublicKey();
-  if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
+  // const tokenContractPrivateKey = PrivateKey.random();
+  // const adminContractPrivateKey = PrivateKey.random();
+  // const contractAddress = tokenContractPrivateKey.toPublicKey();
+  // if (DEBUG) console.log("Contract", contractAddress.toBase58());
+  // const adminContractPublicKey = adminContractPrivateKey.toPublicKey();
+  // if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
   const wallet = PublicKey.fromBase58(WALLET);
   const fee = 100_000_000;
-  const memo = params.memo
+  params.memo = params.memo
     ? params.memo.substring(0, 30)
     : `deploy token ${symbol}`;
-  const developerFee = params.developerFee
-    ? UInt64.from(params.developerFee)
-    : undefined;
-  const developerAddress = PublicKey.fromBase58(apiKeyAddress);
+  // const developerFee = params.developerFee
+  //   ? UInt64.from(params.developerFee)
+  //   : undefined;
+  // const developerAddress = PublicKey.fromBase58(apiKeyAddress);
   await fetchMinaAccount({
     publicKey: sender,
     force: true,
@@ -183,29 +183,50 @@ export async function deployToken(
     };
   }
 
-  const nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
-
-  const { tx, whitelist } = await buildTokenDeployTransaction({
-    adminType: params.adminContract,
+  params.nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
+  params.tokenContractPrivateKey =
+    params.tokenContractPrivateKey ?? PrivateKey.random().toBase58();
+  params.tokenAddress =
+    params.tokenAddress ??
+    PrivateKey.fromBase58(params.tokenContractPrivateKey)
+      .toPublicKey()
+      .toBase58();
+  params.adminContractPrivateKey =
+    params.adminContractPrivateKey ?? PrivateKey.random().toBase58();
+  params.adminContractAddress =
+    params.adminContractAddress ??
+    PrivateKey.fromBase58(params.adminContractPrivateKey)
+      .toPublicKey()
+      .toBase58();
+  const { tx, request } = await buildTokenLaunchTransaction({
     chain,
-    fee: UInt64.from(fee),
-    sender,
-    nonce,
-    memo,
-    adminContractAddress: adminContractPublicKey,
-    adminAddress: sender,
-    tokenAddress: contractAddress,
-    uri,
-    symbol,
-    whitelist: "whitelist" in params ? params.whitelist : undefined,
-    provingKey: wallet,
-    provingFee: UInt64.from(LAUNCH_FEE),
-    decimals: UInt8.from(decimals ?? 9),
-    developerAddress,
-    developerFee,
+    args: params,
+    developerAddress: apiKeyAddress,
+    provingKey: wallet.toBase58(),
+    provingFee: LAUNCH_FEE,
+    // adminType: params.adminContract,
+    // chain,
+    // fee: UInt64.from(fee),
+    // sender,
+    // nonce,
+    // memo,
+    // adminContractAddress: adminContractPublicKey,
+    // adminAddress: sender,
+    // tokenAddress: contractAddress,
+    // uri,
+    // symbol,
+    // whitelist: "whitelist" in params ? params.whitelist : undefined,
+    // provingKey: wallet,
+    // provingFee: UInt64.from(LAUNCH_FEE),
+    // decimals: UInt8.from(decimals ?? 9),
+    // developerAddress,
+    // developerFee,
   });
 
-  tx.sign([tokenContractPrivateKey, adminContractPrivateKey]);
+  tx.sign([
+    PrivateKey.fromBase58(params.tokenContractPrivateKey),
+    PrivateKey.fromBase58(params.adminContractPrivateKey),
+  ]);
   const payloads = createTransactionPayloads(tx);
 
   console.timeEnd("prepared tx");
@@ -214,20 +235,10 @@ export async function deployToken(
     status: 200,
     json: {
       txType: "launch",
-      adminType: params.adminContract,
       ...payloads,
-      sender: sender.toBase58(),
-      tokenAddress: contractAddress.toBase58(),
-      adminContractAddress: adminContractPublicKey.toBase58(),
-      tokenContractPrivateKey: tokenContractPrivateKey.toBase58(),
-      adminContractPrivateKey: adminContractPrivateKey.toBase58(),
-      symbol,
-      uri,
-      memo,
-      nonce,
-      whitelist,
+      request,
       developerAddress: apiKeyAddress,
-      developerFee: params.developerFee,
-    } satisfies DeployTransaction,
+      symbol,
+    } satisfies TokenTransaction,
   };
 }

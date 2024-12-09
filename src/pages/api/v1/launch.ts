@@ -4,12 +4,12 @@ import { deployToken } from "@/lib/api/deploy";
 import {
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
-  DeployTransaction,
+  TokenTransaction,
 } from "@minatokens/api";
 
 export default apiHandler<
   LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams,
-  DeployTransaction
+  TokenTransaction
 >({
   name: "launch",
   handler: deployToken,

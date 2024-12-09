@@ -21,7 +21,15 @@ import {
   getTransactionsByToken,
 } from "@/lib/blockberry-tokens";
 import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
+import { getOrderbook } from "@/lib/trade";
+import { Order } from "@/components/orderbook/OrderBook";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
+
+function formatBalance(num: number | undefined): string {
+  if (num === undefined) return "-";
+  const fixed = num.toFixed(2);
+  return fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed;
+}
 
 export function Socials({ i }: { i: number }) {
   const elm = socials_item[i];
@@ -49,9 +57,45 @@ interface ItemDetailsProps {
 
 export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   const { state, dispatch } = useTokenDetails();
-
   const tokenDetails = state[tokenAddress] || {};
   const item = tokenDetails.info;
+  const [bid, setBid] = useState<Order | null>(null);
+  const [offer, setOffer] = useState<Order | null>(null);
+  const [isPriceLoaded, setIsPriceLoaded] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchOrderbook = async () => {
+      const { offers, bids } = await getOrderbook({
+        tokenAddress,
+        maxItems: 1,
+      });
+
+      const offer: Order | null =
+        offers.length === 0
+          ? null
+          : ({
+              amount: Number(offers[0].amount) / 10 ** (item?.decimals ?? 9),
+              price: Number(offers[0].price) / 10 ** 9,
+              address: offers[0].offerAddress,
+              type: "offer",
+            } as Order);
+
+      setOffer(offer);
+      const bid: Order | null =
+        bids.length === 0
+          ? null
+          : ({
+              amount: Number(bids[0].amount) / 10 ** (item?.decimals ?? 9),
+              price: Number(bids[0].price) / 10 ** 9,
+              address: bids[0].bidAddress,
+              type: "bid",
+            } as Order);
+      setBid(bid);
+      setIsPriceLoaded(offer !== null || bid !== null);
+    };
+    fetchOrderbook();
+  }, [tokenAddress]);
+
   const setItem = (info: DeployedTokenInfo) =>
     dispatch({ type: "SET_TOKEN_INFO", payload: { tokenAddress, info } });
 
@@ -556,98 +600,77 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                 )}
               </div>
 
-              {/* Bid */}
-              {/* <div className="rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
-                <div className="mb-8 sm:flex sm:flex-wrap">
-                  
-                  <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
-                    <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
-                      <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
-                        Highest bid by{" "}
-                      </span>
-                      <Link
-                        href={`/user/9`}
-                        className="text-sm font-bold text-accent"
-                      >
-                        0x695d2ef170ce69e794707eeef9497af2de25df82
-                      </Link>
-                    </div>
-                    <div className="mt-3 flex">
-                      <figure className="mr-4 shrink-0">
-                        <Link href={`/user/8`} className="relative block">
-                          <Image
-                            width={48}
-                            height={48}
-                            src="/img/avatars/avatar_4.jpg"
-                            alt="avatar"
-                            className="rounded-2lg"
-                            loading="lazy"
-                          />
-                        </Link>
-                      </figure>
-                      <div>
-                        <div className="flex items-center whitespace-nowrap">
-                          <span className="-ml-1" data-tippy-content="ETH">
-                            <svg
-                              version="1.1"
-                              xmlns="http://www.w3.org/2000/svg"
-                              x="0"
-                              y="0"
-                              viewBox="0 0 1920 1920"
-                              // xml:space="preserve"
-                              className="h-5 w-5"
-                            >
-                              <path
-                                fill="#8A92B2"
-                                d="M959.8 80.7L420.1 976.3 959.8 731z"
-                              ></path>
-                              <path
-                                fill="#62688F"
-                                d="M959.8 731L420.1 976.3l539.7 319.1zm539.8 245.3L959.8 80.7V731z"
-                              ></path>
-                              <path
-                                fill="#454A75"
-                                d="M959.8 1295.4l539.8-319.1L959.8 731z"
-                              ></path>
-                              <path
-                                fill="#8A92B2"
-                                d="M420.1 1078.7l539.7 760.6v-441.7z"
-                              ></path>
-                              <path
-                                fill="#62688F"
-                                d="M959.8 1397.6v441.7l540.1-760.6z"
-                              ></path>
-                            </svg>
-                          </span>
-                          <span className="text-lg font-medium leading-tight tracking-tight text-green">
-                            4.7 ETH
-                          </span>
-                        </div>
-                        <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
-                          ~10,864.10
+              {/* Trade */}
+              {isPriceLoaded && (
+                <div className="min-w-80 max-w-md rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
+                  <div className="mb-8 sm:flex sm:flex-wrap">
+                    <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
+                      <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
+                        <span className="text-medium text-jacarta-400 dark:text-jacarta-300">
+                          Highest bid
                         </span>
+                      </div>
+                      <div className="mt-3 flex">
+                        <div>
+                          <div className="flex items-center whitespace-nowrap">
+                            <span className="text-lg font-medium leading-tight tracking-tight text-green">
+                              {formatBalance(bid?.price)} MINA
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
+                      <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
+                        <span className="text-medium text-jacarta-400 dark:text-jacarta-300">
+                          Lowest offer
+                        </span>
+                      </div>
+                      <div className="mt-3 flex">
+                        <div>
+                          <div className="flex items-center whitespace-nowrap">
+                            <span className="text-lg font-medium leading-tight tracking-tight text-red">
+                              {formatBalance(offer?.price)} MINA
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                 
-                  <div className="mt-4 dark:border-jacarta-600 sm:mt-0 sm:w-1/2 sm:border-l sm:border-jacarta-100 sm:pl-4 lg:pl-8">
-                    <span className="js-countdown-ends-label text-sm text-jacarta-400 dark:text-jacarta-300">
-                      Auction ends in
-                    </span>
-                    <Timer />
-                  </div>
-                </div>
+                  <button
+                    onClick={() => {
+                      const tradeTab = document.getElementById("trade-tab");
+                      const tradePane = document.getElementById("trade");
+                      if (tradeTab && tradePane) {
+                        // Remove active class from all tabs and panes
+                        document
+                          .querySelectorAll(".nav-link")
+                          .forEach((tab) => {
+                            tab.classList.remove("active");
+                            tab.setAttribute("aria-selected", "false");
+                          });
+                        document
+                          .querySelectorAll(".tab-pane")
+                          .forEach((pane) => {
+                            pane.classList.remove("show", "active");
+                          });
 
-                <a
-                  href="#"
-                  data-bs-toggle="modal"
-                  data-bs-target="#placeBidModal"
-                  className="inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
-                >
-                  Place Bid
-                </a>
-              </div> */}
+                        // Activate trade tab and pane
+                        tradeTab.classList.add("active");
+                        tradeTab.setAttribute("aria-selected", "true");
+                        tradePane.classList.add("show", "active");
+
+                        // Scroll to the trade section
+                        tradePane.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className="inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                  >
+                    Trade
+                  </button>
+                </div>
+              )}
               {/* end bid */}
             </div>
             {/* end details */}

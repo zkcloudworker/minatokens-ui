@@ -6,7 +6,12 @@ import { UpdateTimelineItemFunction, messages } from "./messages";
 import { debug } from "@/lib/debug";
 import { TokenAction } from "@/lib/token";
 import { log } from "@/lib/log";
-import { TransactionParams } from "@minatokens/api";
+import {
+  BidTransactionParams,
+  OfferTransactionParams,
+  TransactionParams,
+} from "@minatokens/api";
+import { writeBid, writeOffer } from "@/lib/trade";
 const DEBUG = debug();
 
 export async function apiTokenTransaction(params: {
@@ -21,13 +26,15 @@ export async function apiTokenTransaction(params: {
   success: boolean;
   error?: string;
   jobId?: string;
+  offerAddress?: string;
+  bidAddress?: string;
+  to?: string[];
 }> {
-  console.time("ready to sign");
   if (DEBUG) console.log(`token ${params.action}`, params);
   const { symbol, updateTimelineItem, nonce, groupId, action, data, sender } =
     params;
   const { txType } = data;
-  if (txType !== action) {
+  if (txType !== action && txType !== "buy" && txType !== "sell") {
     updateTimelineItem({
       groupId,
       update: {
@@ -177,7 +184,6 @@ export async function apiTokenTransaction(params: {
     //   signedData,
     // });
 
-    console.timeEnd("sent transaction");
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {
       console.error("JobId is undefined");
@@ -219,9 +225,73 @@ export async function apiTokenTransaction(params: {
         status: "waiting",
       },
     });
+    let offerAddress: string | undefined = undefined;
+    let bidAddress: string | undefined = undefined;
+    if (action === "offer") {
+      const payload = payloads[0].request as OfferTransactionParams;
+      const {
+        offerAddress: payloadOfferAddress,
+        tokenAddress,
+        sender,
+        amount,
+        price,
+      } = payload;
+      if (
+        amount === undefined ||
+        price === undefined ||
+        payloadOfferAddress === undefined
+      ) {
+        throw new Error(
+          "Amount or price or offerAddress is undefined for offer"
+        );
+      }
+      offerAddress = payloadOfferAddress;
+      await writeOffer({
+        offerAddress,
+        tokenAddress,
+        ownerAddress: sender,
+        amount,
+        price,
+      });
+    }
+    if (action === "bid") {
+      const payload = payloads[0].request as BidTransactionParams;
+      const {
+        bidAddress: payloadBidAddress,
+        tokenAddress,
+        sender,
+        amount,
+        price,
+      } = payload;
+      if (
+        amount === undefined ||
+        price === undefined ||
+        payloadBidAddress === undefined
+      ) {
+        throw new Error("Amount or price or bidAddress is undefined for bid");
+      }
+      bidAddress = payloadBidAddress;
+      await writeBid({
+        bidAddress,
+        tokenAddress,
+        ownerAddress: sender,
+        amount,
+        price,
+      });
+    }
+
+    const to: string[] = [];
+    for (const payload of payloads) {
+      if ("to" in payload.request && payload.request.to !== undefined)
+        to.push(payload.request.to);
+    }
+
     return {
       success: true,
       jobId,
+      offerAddress,
+      bidAddress,
+      to,
     };
   } catch (error) {
     console.error("Error in mintToken", error);

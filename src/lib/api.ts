@@ -11,9 +11,8 @@ import { jwtVerify } from "jose";
 import { Chain, PrismaClient } from "@prisma/client";
 import {
   ApiResponse,
-  DeployTransaction,
-  FaucetResponse,
   TokenTransaction,
+  FaucetResponse,
   TokenState,
   JobId,
   JobResult,
@@ -208,7 +207,7 @@ function apiHandlerInternal<T, V>(params: {
         case "prove":
           return (json as JobId)?.jobId;
         case "launch":
-          return (json as DeployTransaction)?.memo;
+          return (json as TokenTransaction)?.memo;
         case "info":
           return (json as TokenState)?.tokenSymbol;
         case "balance":

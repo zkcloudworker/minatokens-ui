@@ -165,3 +165,42 @@ model EmailSubscriptions {
   added DateTime @default(now())
   updated DateTime @updatedAt
 }
+
+model Offers {
+  offerAddress String
+  tokenAddress String
+  chain Chain
+  @@id([offerAddress, tokenAddress, chain])
+  ownerAddress String
+  amount BigInt
+  price BigInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chain])
+  @@index([offerAddress])
+  @@index([tokenAddress])
+  @@index([ownerAddress])
+  @@index([amount])
+  @@index([price])
+}
+
+model Bids {
+  bidAddress String
+  tokenAddress String
+  chain Chain
+  @@id([bidAddress, tokenAddress, chain])
+  ownerAddress String
+  amount BigInt
+  price BigInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chain])
+  @@index([bidAddress])
+  @@index([tokenAddress])
+  @@index([ownerAddress])
+  @@index([amount])
+  @@index([price])
+}
+

@@ -9,7 +9,6 @@ import {
   JobId,
   ApiResponse,
   tokenTransactionTypes,
-  DeployTransaction,
   TokenTransaction,
 } from "@minatokens/api";
 const chain = getChain();
@@ -19,13 +18,13 @@ export async function prove(
   transactions: ProveTokenTransactions,
   apiKeyAddress: string
 ): Promise<ApiResponse<JobId>> {
-  const txs: (DeployTransaction | TokenTransaction)[] = [];
+  const txs: TokenTransaction[] = [];
   for (const params of transactions.txs) {
     const { signedData, tx, sendTransaction = true } = params;
     if (DEBUG)
       console.log("Proving token tx", {
         txType: tx.txType,
-        tokenAddress: tx.tokenAddress,
+        tokenAddress: tx.request.tokenAddress,
         symbol: tx.symbol,
       });
     console.log("chain", chain);
@@ -82,13 +81,7 @@ export async function prove(
       };
     }
 
-    if ("from" in tx && !checkAddress(tx.from)) {
-      return {
-        status: 400,
-        json: { error: "Invalid from address" },
-      };
-    }
-    if (!checkAddress(tx.tokenAddress)) {
+    if (!checkAddress(tx.request.tokenAddress)) {
       return {
         status: 400,
         json: { error: "Invalid token address" },
@@ -107,7 +100,9 @@ export async function prove(
     // const symbol = symbolResponse.json.tokenSymbol;
     // const adminContractAddress = symbolResponse.json.adminContractAddress;
     const adminContractAddress =
-      "adminContractAddress" in tx ? tx.adminContractAddress : undefined;
+      "adminContractAddress" in tx.request
+        ? tx.request.adminContractAddress
+        : undefined;
 
     if (tx.txType === "launch" && !adminContractAddress) {
       return {

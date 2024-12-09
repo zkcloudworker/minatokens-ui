@@ -15,7 +15,7 @@ import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
 import { sleep } from "@/lib/sleep";
 import { deployToken } from "./deploy";
-import { tokenTransaction } from "./transaction";
+import { apiTokenTransaction } from "./api-transaction";
 import {
   TimeLineItem,
   TimelineGroup,
@@ -39,6 +39,7 @@ import { getAccountNonce } from "@/lib/nonce";
 import { waitForProveJob, waitForContractVerification } from "./mina-tx";
 import { deployTokenParams } from "@/lib/keys";
 import { log } from "@/lib/log";
+import { MintTransactionParams } from "@minatokens/api";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
 const chain = getChain();
@@ -652,6 +653,7 @@ export async function launchToken(params: {
         },
       });
       log.error("launchToken: failed to deploy token", { deployResult });
+      await stopProcessUpdateRequests();
       return;
     }
     if (isError()) {
@@ -677,8 +679,9 @@ export async function launchToken(params: {
       jobId: deployJobId,
       groupId: "deploy",
       updateTimelineItem,
-      type: "deploy",
-      tokenContractAddress: tokenPublicKey,
+      type: "launch",
+      tokenAddress: tokenPublicKey,
+      accounts: [],
     });
 
     if (!txIncluded) {
@@ -699,7 +702,7 @@ export async function launchToken(params: {
     }
     setLikes((likes += 10));
     const contractVerified = await waitForContractVerification({
-      tokenContractAddress: tokenPublicKey,
+      tokenAddress: tokenPublicKey,
       adminContractAddress: adminContractPublicKey,
       adminAddress: adminPublicKey,
       tokenId,
@@ -837,21 +840,48 @@ export async function launchToken(params: {
               status: "success",
             },
           ],
-          requiredForSuccess: ["mintBalance"],
+          requiredForSuccess: ["txIncluded"],
         });
 
-        const mintResult = await tokenTransaction({
-          tokenPublicKey,
-          adminContractPublicKey,
-          adminPublicKey,
+        /*
+export async function apiTokenTransaction(params: {
+  symbol: string;
+  updateTimelineItem: UpdateTimelineItemFunction;
+  sender: string;
+  nonce: number;
+  groupId: string;
+  action: TokenAction;
+  data: TransactionParams;
+
+        */
+
+        const mintParams: MintTransactionParams = {
+          txType: "mint",
           to: item.address,
           amount: item.amount,
+          tokenAddress: tokenPublicKey,
+          sender: adminPublicKey,
+        };
+
+        const mintResult = await apiTokenTransaction({
+          symbol,
+          updateTimelineItem,
+          sender: adminPublicKey,
           nonce: nonce++,
           groupId,
-          updateTimelineItem,
-          symbol,
-          lib,
           action: "mint",
+          data: mintParams,
+          // tokenAddress: tokenPublicKey,
+          // adminContractAddress: adminContractPublicKey,
+          // adminAddress: adminPublicKey,
+          // to: item.address,
+          // amount: item.amount,
+          // nonce: nonce++,
+          // groupId,
+          // updateTimelineItem,
+          // symbol,
+          // lib,
+          // action: "mint",
         });
         if (mintResult.success === false || mintResult.jobId === undefined) {
           break;
@@ -867,8 +897,8 @@ export async function launchToken(params: {
           groupId,
           updateTimelineItem,
           type: "mint",
-          tokenContractAddress: tokenPublicKey,
-          addresses: [item.address],
+          tokenAddress: tokenPublicKey,
+          accounts: [],
         });
         mintPromises.push(waitForMintJobPromise);
         if (isError()) {

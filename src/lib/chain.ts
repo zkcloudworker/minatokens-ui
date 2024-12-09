@@ -24,6 +24,23 @@ export function getChainId(): "mina:mainnet" | "mina:testnet" | "zeko:testnet" {
   return chainId;
 }
 
+export function getPrismaChainName():
+  | "mina_mainnet"
+  | "mina_devnet"
+  | "zeko_devnet" {
+  const chain = getChain();
+  switch (chain) {
+    case "mainnet":
+      return "mina_mainnet";
+    case "devnet":
+      return "mina_devnet";
+    case "zeko":
+      return "zeko_devnet";
+    default:
+      throw new Error("Chain not supported");
+  }
+}
+
 export function getLaunchpadUrl(): string {
   const chain = getChain();
   const launchpadUrl = [Mainnet, Devnet, Zeko].find(

@@ -43,17 +43,42 @@ export function TokenStats({
       <div className="min-w-fit">
         {/* Tabs Nav */}
         <ul className="nav nav-tabs flex items-center" role="tablist">
-          {/* State */}
+          {/* Trade */}
           <li className="nav-item" role="presentation">
             <button
               className="nav-link active relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
+              id="trade-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#trade"
+              type="button"
+              role="tab"
+              aria-controls="trade"
+              aria-selected="true"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                className="mr-1 h-5 w-5 fill-current"
+              >
+                <path fill="none" d="M0 0h24v24H0z" />
+                <path d="M11.95 7.95l-1.414 1.414L8 6.828 8 20H6V6.828L3.465 9.364 2.05 7.95 7 3l4.95 4.95zm10 8.1L17 21l-4.95-4.95 1.414-1.414 2.537 2.536L16 4h2v13.172l2.536-2.536 1.414 1.414z" />
+              </svg>
+              <span className="font-display text-base font-medium">Trade</span>
+            </button>
+          </li>
+          {/* State */}
+          <li className="nav-item" role="presentation">
+            <button
+              className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
               id="state-tab"
               data-bs-toggle="tab"
               data-bs-target="#state"
               type="button"
               role="tab"
               aria-controls="state"
-              aria-selected="true"
+              aria-selected="false"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -150,31 +175,6 @@ export function TokenStats({
               <span className="font-display text-base font-medium">
                 Transactions
               </span>
-            </button>
-          </li>
-          {/* Trade */}
-          <li className="nav-item" role="presentation">
-            <button
-              className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
-              id="trade-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#trade"
-              type="button"
-              role="tab"
-              aria-controls="trade"
-              aria-selected="false"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                className="mr-1 h-5 w-5 fill-current"
-              >
-                <path fill="none" d="M0 0h24v24H0z" />
-                <path d="M11.95 7.95l-1.414 1.414L8 6.828 8 20H6V6.828L3.465 9.364 2.05 7.95 7 3l4.95 4.95zm10 8.1L17 21l-4.95-4.95 1.414-1.414 2.537 2.536L16 4h2v13.172l2.536-2.536 1.414 1.414z" />
-              </svg>
-              <span className="font-display text-base font-medium">Trade</span>
             </button>
           </li>
 
@@ -286,7 +286,7 @@ export function TokenStats({
           {/* Details */}
 
           <div
-            className="tab-pane fade show active"
+            className="tab-pane fade "
             id="state"
             role="tabpanel"
             aria-labelledby="state-tab"
@@ -306,9 +306,9 @@ export function TokenStats({
             <Transactions transactions={transactions} />
           </div>
 
-          {/* Actions */}
+          {/* Trade */}
           <div
-            className="tab-pane fade"
+            className="tab-pane fade show active"
             id="trade"
             role="tabpanel"
             aria-labelledby="trade-tab"
