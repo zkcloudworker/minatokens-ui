@@ -450,32 +450,39 @@ export async function tokenTransaction(
       },
     };
   }
-  if ("offerPrivateKey" in params) {
+  if (txType === "offer") {
     params.offerPrivateKey =
       params.offerPrivateKey ?? PrivateKey.random().toBase58();
-  }
-  if (
-    "offerAddress" in params &&
-    "offerPrivateKey" in params &&
-    params.offerPrivateKey
-  ) {
     params.offerAddress =
       params.offerAddress ??
       PrivateKey.fromBase58(params.offerPrivateKey).toPublicKey().toBase58();
+
+    if (
+      PrivateKey.fromBase58(params.offerPrivateKey).toPublicKey().toBase58() !==
+      PublicKey.fromBase58(params.offerAddress).toBase58()
+    )
+      return {
+        status: 400,
+        json: { error: "Invalid offer private key" },
+      };
   }
 
-  if ("bidPrivateKey" in params) {
+  if (txType === "bid") {
     params.bidPrivateKey =
       params.bidPrivateKey ?? PrivateKey.random().toBase58();
-  }
-  if (
-    "bidAddress" in params &&
-    "bidPrivateKey" in params &&
-    params.bidPrivateKey
-  ) {
+
     params.bidAddress =
       params.bidAddress ??
       PrivateKey.fromBase58(params.bidPrivateKey).toPublicKey().toBase58();
+
+    if (
+      PrivateKey.fromBase58(params.bidPrivateKey).toPublicKey().toBase58() !==
+      PublicKey.fromBase58(params.bidAddress).toBase58()
+    )
+      return {
+        status: 400,
+        json: { error: "Invalid bid private key" },
+      };
   }
 
   params.nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
