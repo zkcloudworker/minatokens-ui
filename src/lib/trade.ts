@@ -54,9 +54,10 @@ export async function writeOffer(params: {
 
 export async function getOffers(params: {
   tokenAddress: string;
+  ownerAddress?: string;
   maxItems?: number;
 }) {
-  const { tokenAddress, maxItems = 5 } = params;
+  const { tokenAddress, ownerAddress, maxItems = 5 } = params;
   const offers = await prisma.offers.findMany({
     where: {
       tokenAddress,
@@ -64,6 +65,7 @@ export async function getOffers(params: {
       amount: {
         gt: 0,
       },
+      ...(ownerAddress !== undefined && { ownerAddress }),
     },
     orderBy: {
       price: "asc",
@@ -124,9 +126,10 @@ export async function writeBid(params: {
 
 export async function getBids(params: {
   tokenAddress: string;
+  ownerAddress?: string;
   maxItems?: number;
 }) {
-  const { tokenAddress, maxItems = 5 } = params;
+  const { tokenAddress, ownerAddress, maxItems = 5 } = params;
   const bids = await prisma.bids.findMany({
     where: {
       tokenAddress,
@@ -134,6 +137,7 @@ export async function getBids(params: {
       amount: {
         gt: 0,
       },
+      ...(ownerAddress !== undefined && { ownerAddress }),
     },
     orderBy: {
       price: "desc",
@@ -162,10 +166,11 @@ export async function getBid(params: {
 
 export async function getOrderbook(params: {
   tokenAddress: string;
+  ownerAddress?: string;
   maxItems?: number;
 }) {
-  const { tokenAddress, maxItems = 5 } = params;
-  const offers = await getOffers({ tokenAddress, maxItems });
-  const bids = await getBids({ tokenAddress, maxItems });
+  const { tokenAddress, ownerAddress, maxItems = 5 } = params;
+  const offers = await getOffers({ tokenAddress, ownerAddress, maxItems });
+  const bids = await getBids({ tokenAddress, ownerAddress, maxItems });
   return { offers, bids };
 }

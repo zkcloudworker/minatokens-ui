@@ -15,6 +15,7 @@ import {
 } from "./dialog";
 import { log } from "@/lib/log";
 import { explorerAccountUrl } from "@/lib/chain";
+import { TokenAction } from "@/lib/token";
 
 function formatBalance(num: number | undefined): string {
   if (num === undefined) return "0";
@@ -36,7 +37,9 @@ export type OrderbookProps = {
   offerSymbol: string;
   priceSymbol: string;
   onSubmit: (data: Order) => void;
-  type: "orderbook" | "withdraw";
+  tab: TokenAction;
+  offersTitle: string;
+  bidsTitle: string;
 };
 
 export function Orderbook({
@@ -45,7 +48,9 @@ export function Orderbook({
   bidSymbol,
   offerSymbol,
   priceSymbol,
-  type,
+  tab,
+  offersTitle,
+  bidsTitle,
   onSubmit,
 }: OrderbookProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(
@@ -89,7 +94,7 @@ export function Orderbook({
             {/* Offers Column */}
             <div className="min-w-[300px]">
               <h3 className="text-lg font-semibold mb-4 text-jacarta-700 dark:text-white text-center">
-                Offers
+                {offersTitle}
               </h3>
               <div className="grid grid-cols-2 gap-4 mb-2 ml-4 mr-4 text-base font-medium text-jacarta-700 dark:text-white">
                 <div>Amount in {offerSymbol}</div>
@@ -119,7 +124,7 @@ export function Orderbook({
             {/* Bids Column */}
             <div>
               <h3 className="text-lg font-semibold mb-4 text-jacarta-700 dark:text-white text-center">
-                Bids
+                {bidsTitle}
               </h3>
               <div className="grid grid-cols-2 gap-4 mb-2 ml-4 mr-4 text-base font-medium text-jacarta-700 dark:text-white">
                 <div>Amount in {bidSymbol}</div>
@@ -150,7 +155,8 @@ export function Orderbook({
           {selectedOrder && (
             <div className="mt-6 p-4 border border-jacarta-100 dark:border-jacarta-600 rounded-lg bg-white dark:bg-jacarta-700">
               <h3 className="text-lg font-semibold mb-4 text-jacarta-700 dark:text-white">
-                Accept {selectedOrder.type === "offer" ? "Offer" : "Bid"}
+                {tab === "orderbook" ? "Accept" : "Withdraw"}{" "}
+                {selectedOrder.type === "offer" ? "Offer" : "Bid"}
               </h3>
               <div className="flex items-center space-x-4">
                 <Input
@@ -164,7 +170,7 @@ export function Orderbook({
                   onClick={handleAccept}
                   className="rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"
                 >
-                  {type === "orderbook"
+                  {tab === "orderbook"
                     ? selectedOrder.type === "offer"
                       ? `Buy ${offerSymbol}`
                       : `Sell ${bidSymbol}`
@@ -183,9 +189,12 @@ export function Orderbook({
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleConfirm}
         order={selectedOrder}
+        tab={tab}
+        offerSymbol={offerSymbol}
+        bidSymbol={bidSymbol}
         amount={amount}
         symbol={
-          type === "orderbook"
+          tab === "orderbook"
             ? selectedOrder?.type === "offer"
               ? offerSymbol
               : bidSymbol
@@ -244,6 +253,9 @@ function ConfirmDialog({
   isOpen,
   onClose,
   onConfirm,
+  tab,
+  offerSymbol,
+  bidSymbol,
   order,
   amount,
   symbol,
@@ -251,6 +263,9 @@ function ConfirmDialog({
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  tab: TokenAction;
+  offerSymbol: string;
+  bidSymbol: string;
   order: Order | null;
   amount: string;
   symbol: string;
@@ -264,26 +279,32 @@ function ConfirmDialog({
           <DialogTitle>Confirm Order</DialogTitle>
           <DialogDescription>
             Are you sure you want to{" "}
-            {order.type === "offer"
-              ? `buy ${formatBalance(parseFloat(amount))} ${symbol}`
-              : `sell ${formatBalance(parseFloat(amount))} ${symbol}`}
+            {tab === "orderbook"
+              ? order.type === "offer"
+                ? `buy ${formatBalance(parseFloat(amount))} ${offerSymbol}`
+                : `sell ${formatBalance(parseFloat(amount))} ${bidSymbol}`
+              : order.type === "offer"
+              ? `withdraw ${formatBalance(parseFloat(amount))} ${offerSymbol}`
+              : `withdraw ${formatBalance(parseFloat(amount))} ${bidSymbol}`}
             ?
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          <p>
-            <strong className="inline-block w-32">Price:</strong>{" "}
-            {formatBalance(order.price)} MINA
-          </p>
-          <p>
-            <strong className="inline-block w-32">Amount:</strong> {amount}{" "}
-            {symbol}
-          </p>
-          <p>
-            <strong className="inline-block w-32">Total:</strong>{" "}
-            {formatBalance(order.price * parseFloat(amount))} MINA
-          </p>
-        </div>
+        {tab === "orderbook" && (
+          <div className="py-4">
+            <p>
+              <strong className="inline-block w-32">Price:</strong>{" "}
+              {formatBalance(order.price)} MINA
+            </p>
+            <p>
+              <strong className="inline-block w-32">Amount:</strong> {amount}{" "}
+              {symbol}
+            </p>
+            <p>
+              <strong className="inline-block w-32">Total:</strong>{" "}
+              {formatBalance(order.price * parseFloat(amount))} MINA
+            </p>
+          </div>
+        )}
         <DialogFooter>
           <button
             onClick={onClose}
@@ -295,7 +316,13 @@ function ConfirmDialog({
             onClick={onConfirm}
             className="rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"
           >
-            {order.type === "offer" ? `Buy ${symbol}` : `Sell ${symbol}`}
+            {tab === "orderbook"
+              ? order.type === "offer"
+                ? `Buy ${offerSymbol}`
+                : `Sell ${bidSymbol}`
+              : order.type === "offer"
+              ? `Withdraw ${offerSymbol}`
+              : `Withdraw ${bidSymbol}`}
           </button>
         </DialogFooter>
       </DialogContent>

@@ -10,6 +10,7 @@ import {
   BidTransactionParams,
   OfferTransactionParams,
   TransactionParams,
+  FungibleTokenTransactionType,
 } from "@minatokens/api";
 import { writeBid, writeOffer } from "@/lib/trade";
 const DEBUG = debug();
@@ -20,7 +21,7 @@ export async function apiTokenTransaction(params: {
   sender: string;
   nonce: number;
   groupId: string;
-  action: TokenAction;
+  action: FungibleTokenTransactionType;
   data: TransactionParams;
 }): Promise<{
   success: boolean;

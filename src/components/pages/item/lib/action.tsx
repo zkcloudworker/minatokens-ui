@@ -93,8 +93,9 @@ export async function tokenAction(params: {
   tokenState: TokenState;
   tokenData: TokenActionData;
   tab: TokenAction;
+  onBalanceUpdate: () => Promise<void>;
 }) {
-  const { tokenState, tokenData, tab } = params;
+  const { tokenState, tokenData, tab, onBalanceUpdate } = params;
   const { tokenId, tokenSymbol: symbol, tokenAddress } = tokenState;
   const { txs } = tokenData;
   if (DEBUG) console.log("tokenAction start", { tokenAddress, tab, tokenData });
@@ -381,7 +382,9 @@ export async function tokenAction(params: {
               target="_blank"
               rel="noopener noreferrer"
             >
-              {symbol}
+              {item.txType === "bid" || item.txType === "withdrawBid"
+                ? "MINA"
+                : symbol}
             </a>{" "}
             tokens
           </>
@@ -437,7 +440,7 @@ export async function tokenAction(params: {
         sender: senderAddress,
         nonce: nonce++,
         groupId,
-        action,
+        action: item.txType,
         data: item,
       });
       if (DEBUG) console.log("mintResult", mintResult);
@@ -456,6 +459,7 @@ export async function tokenAction(params: {
           },
         });
         await stopProcessUpdateRequests();
+        await onBalanceUpdate();
         return;
       }
       const mintJobId = mintResult.jobId;
@@ -519,11 +523,14 @@ export async function tokenAction(params: {
     //     status: "waiting",
     //   },
     // });
+    await onBalanceUpdate();
     while (!showStatistics(txsToProcess, tab) && !isError()) {
       await sleep(5000);
     }
+    await onBalanceUpdate();
 
     await Promise.all(txPromises);
+    await onBalanceUpdate();
     const finalStatistics = getActionStatistics({
       tokenAddress,
       tab,
@@ -586,5 +593,6 @@ export async function tokenAction(params: {
       ],
     });
     await stopProcessUpdateRequests();
+    await onBalanceUpdate();
   }
 }
