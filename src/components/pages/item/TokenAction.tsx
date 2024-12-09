@@ -1,6 +1,5 @@
 "use client";
 import { TokenActionForm } from "@/components/token/TokenActionForm";
-import { useStore } from "zustand";
 import {
   MintAddress,
   TokenAction,
@@ -14,6 +13,8 @@ import { tokenAction } from "./lib/action";
 import { debug } from "@/lib/debug";
 import { useTransactionStore } from "@/context/tx-provider";
 import { AirdropTransactionParams } from "@minatokens/api";
+import { OrderbookTab } from "./Orderbook";
+
 const DEBUG = debug();
 
 const MINT_TEST = process.env.NEXT_PUBLIC_MINT_TEST === "true";
@@ -91,6 +92,28 @@ function initialTokenActionData(params: {
         })),
       } as AirdropTransactionParams);
       break;
+    case "offer":
+      txs.push({
+        tokenAddress: tokenState.tokenAddress,
+        sender: tokenState.adminAddress,
+        txType: "offer",
+        amount: formData.amount ? Number(formData.amount) * 1_000_000_000 : 0,
+        price: formData.price
+          ? Number(formData.price) * 1_000_000_000
+          : 1_000_000_000, // TODO: fix price
+      });
+      break;
+    case "bid":
+      txs.push({
+        tokenAddress: tokenState.tokenAddress,
+        sender: tokenState.adminAddress,
+        txType: "bid",
+        amount: formData.amount ? Number(formData.amount) * 1_000_000_000 : 0,
+        price: formData.price
+          ? Number(formData.price) * 1_000_000_000
+          : 1_000_000_000, // TODO: fix price
+      });
+      break;
   }
   return {
     symbol: tokenState.tokenSymbol,
@@ -105,11 +128,6 @@ export function TokenActionComponent({
 }: TokenActionProps) {
   const { transactionStates, setTokenData, setFormData } = useTransactionStore(
     (state) => state
-  );
-
-  console.log(
-    "TokenActionComponent transactionStates",
-    transactionStates[tokenAddress]?.[tab]
   );
 
   const state: TransactionTokenState = transactionStates[tokenAddress]?.[
@@ -136,7 +154,6 @@ export function TokenActionComponent({
   const timelineItems = state?.timelineItems || [];
 
   function onChange(formData: TokenActionFormData) {
-    if (DEBUG) console.log("onChange", { tokenAddress, tab, formData });
     setFormData({
       tokenAddress,
       tab,
@@ -145,7 +162,7 @@ export function TokenActionComponent({
   }
 
   async function onSubmit(formData: TokenActionFormData) {
-    if (DEBUG) console.log("Processing", formData);
+    if (DEBUG) console.log("Processing form", formData);
     const tokenData = initialTokenActionData({
       tokenState,
       tab,
@@ -172,6 +189,32 @@ export function TokenActionComponent({
     });
   }
 
+  async function onSubmitOrder(tokenData: TokenActionData) {
+    if (DEBUG) console.log("Processing order", tokenData);
+
+    setTokenData({
+      tokenAddress,
+      tab,
+      tokenData,
+      timelineItems: [],
+      formData: {
+        addresses: [],
+      },
+      isProcessing: true,
+      statistics: {
+        success: 0,
+        error: 0,
+        waiting: 0,
+      },
+      isErrorNow: false,
+    });
+    tokenAction({
+      tokenState,
+      tokenData,
+      tab,
+    });
+  }
+
   return (
     <>
       {isProcessing && (
@@ -179,7 +222,7 @@ export function TokenActionComponent({
           <TimeLine items={timelineItems} dark={true} />
         </div>
       )}
-      {!isProcessing && (
+      {!isProcessing && tab !== "buy" && (
         <div className="container rounded-t-2lg rounded-b-2lg rounded-tl-none border border-jacarta-100 p-6 dark:border-jacarta-600">
           <TokenActionForm
             key={"tokenAction-" + tokenAddress + "-" + tab}
@@ -193,6 +236,16 @@ export function TokenActionComponent({
             showAddress={
               tab === "transfer" || tab === "airdrop" || tab === "mint"
             }
+          />
+        </div>
+      )}
+      {!isProcessing && tab === "buy" && (
+        <div className="container rounded-t-2lg rounded-b-2lg rounded-tl-none border border-jacarta-100 p-6 dark:border-jacarta-600">
+          <OrderbookTab
+            tokenAddress={tokenAddress}
+            tokenState={tokenState}
+            key={"tokenAction-" + tokenAddress + "-" + tab}
+            onSubmit={onSubmitOrder}
           />
         </div>
       )}

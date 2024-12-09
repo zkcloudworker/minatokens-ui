@@ -6,7 +6,7 @@ import {
   messages,
 } from "./messages";
 import { getResult } from "@/lib/token-api";
-import { TokenInfo } from "@/lib/token";
+import { TokenInfo, TokenAction } from "@/lib/token";
 import { getTxStatusFast } from "@/lib/txstatus-fast";
 import { verifyFungibleTokenState } from "@/lib/verify";
 import { sleep } from "@/lib/sleep";
@@ -18,8 +18,8 @@ import {
   explorerAccountUrl,
 } from "@/lib/chain";
 import { sendTransaction } from "@/lib/send";
-import { balance } from "@/lib/api/token-info";
 import { log } from "@/lib/log";
+import { AccountBalance, getBalances } from "@/lib/api/token-info";
 const chain = getChain();
 const DEBUG = debug();
 
@@ -27,18 +27,12 @@ export async function waitForProveJob(params: {
   jobId: string;
   groupId: string;
   updateTimelineItem: UpdateTimelineItemFunction;
-  type: "deploy" | "mint" | "airdrop";
-  tokenContractAddress: string;
-  addresses?: string[];
+  type: TokenAction | "launch";
+  tokenAddress: string;
+  accounts: AccountBalance[];
 }): Promise<boolean> {
-  const {
-    jobId,
-    groupId,
-    updateTimelineItem,
-    type,
-    tokenContractAddress,
-    addresses = [],
-  } = params;
+  const { jobId, groupId, updateTimelineItem, type, tokenAddress, accounts } =
+    params;
   // if (type === "mint" && !address) {
   //   log.error("waitForProveJob: Address is required for minting", {
   //     address,
@@ -186,75 +180,101 @@ export async function waitForProveJob(params: {
     }
   }
 
-  if (type === "deploy") {
+  if (type === "launch") {
     return true;
   } else {
-    const length = addresses?.length ?? 0;
+    if (DEBUG) console.log("accounts before getBalances", accounts);
+    const updatedAccounts = await getBalances({ accounts, tokenAddress });
+    if (DEBUG) console.log("accounts after getBalances", updatedAccounts);
+    const length = updatedAccounts.length;
     for (let i = 0; i < length; i++) {
-      const address = addresses[i];
-      if (!address) {
-        log.error("waitForProveJob: Address is required for minting", {
-          address,
-        });
-        throw new Error("Address is required for minting");
-      }
-      const start = Date.now();
-      const TIMEOUT = 1000 * 60 * 30;
-      let attempt = 1;
-      let balanceResult = await balance(
-        {
-          tokenAddress: tokenContractAddress,
-          address,
-        },
-        ""
-      );
-      while (
-        (balanceResult.status !== 200 || balanceResult.json.balance === null) &&
-        Date.now() - start < TIMEOUT
-      ) {
-        attempt++;
-        balanceResult = await balance(
-          {
-            tokenAddress: tokenContractAddress,
-            address,
-          },
-          ""
-        );
-        await sleep(5000 * attempt);
-      }
-      console.log(
-        "balanceResult",
-        balanceResult,
-        "received in ",
-        Date.now() - start,
-        "ms in attempt:",
-        attempt
-      );
-      if (balanceResult.status !== 200 || balanceResult.json.balance === null) {
+      const account = updatedAccounts[i];
+      if (account.balanceString)
         updateTimelineItem({
           groupId,
           update: {
-            lineId: `mintBalance-${i}`,
-            content: "Failed to get token balance",
-            status: "error",
+            lineId: `balance${i === length - 1 ? "" : `-${i}`}`,
+            content: account.balanceString,
+            status: "success",
           },
         });
-        log.error("waitForProveJob: Failed to get token balance", {
-          balanceResult,
+      if (account.tokenBalanceString)
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: `tokenBalance${i === length - 1 ? "" : `-${i}`}`,
+            content: account.tokenBalanceString,
+            status: "success",
+          },
         });
-        return false;
-      }
-      updateTimelineItem({
-        groupId,
-        update: {
-          lineId: `mintBalance${i === length - 1 ? "" : `-${i}`}`,
-          content: `Token balance of ${address} is ${
-            balanceResult.json.balance / 1_000_000_000
-          }`,
-          status: "success",
-        },
-      });
     }
+    // const length = addresses?.length ?? 0;
+    // for (let i = 0; i < length; i++) {
+    //   if (DEBUG) console.log("checking addresses balances", addresses[i]);
+    //   const address = addresses[i];
+    //   if (!address) {
+    //     log.error("waitForProveJob: Address is required for minting", {
+    //       address,
+    //     });
+    //     throw new Error("Address is required for minting");
+    //   }
+    //   const start = Date.now();
+    //   const TIMEOUT = 1000 * 60 * 30;
+    //   let attempt = 1;
+    //   let balanceResult = await balance(
+    //     {
+    //       tokenAddress: tokenAddress,
+    //       address,
+    //     },
+    //     ""
+    //   );
+    //   while (
+    //     (balanceResult.status !== 200 || balanceResult.json.balance === null) &&
+    //     Date.now() - start < TIMEOUT
+    //   ) {
+    //     attempt++;
+    //     balanceResult = await balance(
+    //       {
+    //         tokenAddress: tokenAddress,
+    //         address,
+    //       },
+    //       ""
+    //     );
+    //     await sleep(5000 * attempt);
+    //   }
+    //   console.log(
+    //     "balanceResult",
+    //     balanceResult,
+    //     "received in ",
+    //     Date.now() - start,
+    //     "ms in attempt:",
+    //     attempt
+    //   );
+    //   if (balanceResult.status !== 200 || balanceResult.json.balance === null) {
+    //     updateTimelineItem({
+    //       groupId,
+    //       update: {
+    //         lineId: `mintBalance-${i}`,
+    //         content: "Failed to get token balance",
+    //         status: "error",
+    //       },
+    //     });
+    //     log.error("waitForProveJob: Failed to get token balance", {
+    //       balanceResult,
+    //     });
+    //     return false;
+    //   }
+    //   updateTimelineItem({
+    //     groupId,
+    //     update: {
+    //       lineId: `mintBalance${i === length - 1 ? "" : `-${i}`}`,
+    //       content: `Token balance of ${address} is ${
+    //         balanceResult.json.balance / 1_000_000_000
+    //       }`,
+    //       status: "success",
+    //     },
+    //   });
+    // }
     return true;
   }
 }
@@ -264,7 +284,7 @@ export async function waitForMinaTx(params: {
   groupId: string;
   lineId: string;
   updateTimelineItem: UpdateTimelineItemFunction;
-  type: "deploy" | "mint" | "airdrop";
+  type: TokenAction | "launch";
 }): Promise<boolean> {
   const { hash, groupId, lineId, updateTimelineItem, type } = params;
   const txSentMsg = (
@@ -353,16 +373,25 @@ export async function waitForMinaTx(params: {
       status: "success",
     },
   });
-  updateTimelineItem({
-    groupId,
-    update:
-      type === "deploy" ? messages.contractStateVerified : messages.mintBalance,
-  });
+  // if (
+  //   type === "launch" ||
+  //   type === "mint" ||
+  //   type === "transfer" ||
+  //   type === "offer"
+  // ) {
+  //   updateTimelineItem({
+  //     groupId,
+  //     update:
+  //       type === "launch"
+  //         ? messages.contractStateVerified
+  //         : messages.mintBalance,
+  //   });
+  // }
   return true;
 }
 
 export async function waitForContractVerification(params: {
-  tokenContractAddress: string;
+  tokenAddress: string;
   adminContractAddress: string;
   adminAddress: string;
   tokenId: string;
@@ -373,7 +402,7 @@ export async function waitForContractVerification(params: {
   const {
     groupId,
     updateTimelineItem,
-    tokenContractAddress,
+    tokenAddress,
     adminContractAddress,
     adminAddress,
     info,
@@ -383,7 +412,7 @@ export async function waitForContractVerification(params: {
   let count = 0;
   const timestamp = Date.now();
   let verified = await verifyFungibleTokenState({
-    tokenContractAddress,
+    tokenContractAddress: tokenAddress,
     adminContractAddress,
     adminAddress,
     info,
@@ -398,7 +427,7 @@ export async function waitForContractVerification(params: {
       console.log("Waiting for contract state to be verified...", verified);
     await sleep(10000);
     verified = await verifyFungibleTokenState({
-      tokenContractAddress,
+      tokenContractAddress: tokenAddress,
       adminContractAddress,
       adminAddress,
       tokenId,

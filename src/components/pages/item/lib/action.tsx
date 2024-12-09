@@ -17,7 +17,7 @@ import {
   getChainId,
   getLaunchpadUrl,
 } from "@/lib/chain";
-import { getWalletInfo } from "@/lib/wallet";
+import { connectWallet, getWalletInfo } from "@/lib/wallet";
 import { debug } from "@/lib/debug";
 import { sleep } from "@/lib/sleep";
 import { apiTokenTransaction } from "../../../launch/lib/api-transaction";
@@ -37,6 +37,7 @@ import {
 import { getAccountNonce } from "@/lib/nonce";
 import { waitForProveJob } from "../../../launch/lib/mina-tx";
 import { log } from "@/lib/log";
+import { AccountBalance, getBalances } from "@/lib/api/token-info";
 const chain = getChain();
 const DEBUG = debug();
 
@@ -241,14 +242,23 @@ export async function tokenAction(params: {
       requiredForSuccess: ["build", "minted"],
       keepOnTop: true,
     });
-    const walletInfo = await getWalletInfo();
+    let walletInfo = await getWalletInfo();
+    if (!walletInfo.address) {
+      await connectWallet();
+      walletInfo = await getWalletInfo();
+    }
     if (DEBUG) console.log("launchToken: Wallet Info:", walletInfo);
     const senderAddress = walletInfo.address;
     if (DEBUG) console.log("senderAddress", senderAddress);
+
     if (!senderAddress) {
       updateTimelineItem({
         groupId: "mint",
-        update: messages.adminRequired,
+        update: {
+          lineId: "noWallet",
+          content: "Please connect the wallet",
+          status: "error",
+        },
       });
       updateTimelineItem({
         groupId: "mint",
@@ -258,6 +268,8 @@ export async function tokenAction(params: {
           status: "error",
         },
       });
+      log.error("tokenAction: no wallet address", { tokenAddress, tab });
+      await stopProcessUpdateRequests();
       return;
     }
     // TODO: check admin address in case of mint with standard admin
@@ -299,6 +311,8 @@ export async function tokenAction(params: {
           status: "error",
         },
       });
+      log.error("tokenAction: no Auro wallet", { tokenAddress, tab });
+      await stopProcessUpdateRequests();
       return;
     }
     if (isError()) return;
@@ -378,6 +392,13 @@ export async function tokenAction(params: {
           status: "success",
         });
       }
+      if ("price" in item) {
+        timeLineItems.push({
+          lineId: "price",
+          content: `Price: ${item.price / 1_000_000_000}`,
+          status: "success",
+        });
+      }
       const tokenAddressMsg = (
         <>
           Address:{" "}
@@ -403,7 +424,7 @@ export async function tokenAction(params: {
         successTitle: `${symbol} tokens ${tab}ed`,
         errorTitle: `Failed to ${tab} ${symbol} tokens`,
         lines: [messages.txMint, ...timeLineItems],
-        requiredForSuccess: ["mintBalance"],
+        requiredForSuccess: ["txIncluded"],
       });
 
       const mintResult = await apiTokenTransaction({
@@ -415,10 +436,36 @@ export async function tokenAction(params: {
         action: tab,
         data: item,
       });
+      if (DEBUG) console.log("mintResult", mintResult);
       if (mintResult.success === false || mintResult.jobId === undefined) {
+        log.error("tokenAction: mintResult error", {
+          tokenAddress,
+          tab,
+          mintResult,
+        });
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: "error",
+            content: "Error minting tokens",
+            status: "error",
+          },
+        });
+        await stopProcessUpdateRequests();
         return;
       }
       const mintJobId = mintResult.jobId;
+      const addresses: string[] = [];
+      if (mintResult.bidAddress) addresses.push(mintResult.bidAddress);
+      if (mintResult.offerAddress) addresses.push(mintResult.offerAddress);
+      if (item.txType === "airdrop")
+        addresses.push(
+          ...item.recipients.map((recipient) => recipient.address)
+        );
+      addresses.push(item.sender);
+      if ("to" in item && item.to) addresses.push(item.to);
+      if (mintResult.to) addresses.push(...mintResult.to);
+
       await sleep(1000);
       showStatistics(txsToProcess, tab);
       await sleep(1000);
@@ -427,16 +474,16 @@ export async function tokenAction(params: {
         groupId,
         updateTimelineItem,
         type: "mint",
-        tokenContractAddress: tokenAddress,
-        addresses:
-          item.txType === "airdrop"
-            ? item.recipients.map((recipient) => recipient.address)
-            : item.txType === "mint" || item.txType === "transfer"
-            ? [item.to]
-            : [],
+        tokenAddress,
+        accounts: await getBalances({
+          accounts: Array.from(new Set(addresses)).map((address) => ({
+            address,
+          })),
+          tokenAddress,
+        }),
       });
       txPromises.push(waitForMintJobPromise);
-      if (isError()) return;
+      if (isError()) return; // TODO: add error handling like in launch
     }
     const builtMsg = (
       <>

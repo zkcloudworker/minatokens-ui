@@ -1,11 +1,7 @@
 "use server";
 
 import { JobStatus, TokenAPI } from "zkcloudworker";
-import {
-  DeployTransaction,
-  JobResult,
-  TokenTransaction,
-} from "@minatokens/api";
+import { JobResult, TokenTransaction } from "@minatokens/api";
 import { getChain } from "./chain";
 
 const ZKCW_JWT = process.env.ZKCW_JWT;
@@ -19,8 +15,15 @@ function getAPI(): TokenAPI {
   });
 }
 
+export async function proveTransaction(
+  params: TokenTransaction
+): Promise<string | undefined> {
+  const api = getAPI();
+  return api.proveTransaction(params);
+}
+
 export async function proveTransactions(
-  params: (DeployTransaction | TokenTransaction)[]
+  params: TokenTransaction[]
 ): Promise<string | undefined> {
   const api = getAPI();
   return api.proveTransactions(params);

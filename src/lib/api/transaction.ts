@@ -4,14 +4,7 @@ import {
   accountBalanceMina,
   fetchMinaAccount,
 } from "@/lib/blockchain";
-import {
-  PublicKey,
-  UInt64,
-  Mina,
-  AccountUpdate,
-  TokenId,
-  PrivateKey,
-} from "o1js";
+import { PublicKey, UInt64, Mina, TokenId, PrivateKey } from "o1js";
 import { buildTokenTransaction, TRANSACTION_FEE } from "@minatokens/token";
 import { createTransactionPayloads } from "zkcloudworker";
 import {
@@ -23,6 +16,7 @@ import {
   LaunchTokenAdvancedAdminParams,
   AirdropTransactionParams,
   TransferTransactionParams,
+  MintTransactionParams,
 } from "@minatokens/api";
 import { getTokenSymbolAndAdmin } from "./symbol";
 import { checkAddress } from "./address";
@@ -301,36 +295,33 @@ export async function tokenTransaction(
     };
   }
 
-  /*
-// export function getTokenTransactionSender(params: {
-//   txType: FungibleTokenTransactionType;
-//   from: PublicKey;
-//   to: PublicKey;
-// }) {
-//   const { txType, from, to } = params;
-//   if (
-//     txType === "buy" ||
-//     txType === "withdrawOffer" ||
-//     txType === "withdrawBid"
-//   ) {
-//     return to;
-//   }
-//   return from;
-// }
-  */
-
   const sender = PublicKey.fromBase58(params.sender);
-  const newKey = PrivateKey.random();
-  const newAddress = newKey.toPublicKey();
-  const from =
-    txType === "buy" || txType === "withdrawOffer"
-      ? PublicKey.fromBase58(params.offerAddress)
-      : txType === "withdrawBid"
-      ? PublicKey.fromBase58(params.bidAddress)
-      : sender;
-  const to =
-    "to" in params && params.to ? PublicKey.fromBase58(params.to) : newAddress;
-  if (DEBUG) console.log("to:", to.toBase58());
+  // const newKey =
+  //   txType === "bid" && "bidPrivateKey" in params && params.bidPrivateKey
+  //     ? PrivateKey.fromBase58(params.bidPrivateKey)
+  //     : txType === "offer" &&
+  //       "offerPrivateKey" in params &&
+  //       params.offerPrivateKey
+  //     ? PrivateKey.fromBase58(params.offerPrivateKey)
+  //     : PrivateKey.random();
+  // const newAddress = newKey.toPublicKey();
+  // const from =
+  //   txType === "buy" || txType === "withdrawOffer"
+  //     ? PublicKey.fromBase58(params.offerAddress)
+  //     : txType === "withdrawBid" || txType === "sell"
+  //     ? PublicKey.fromBase58(params.bidAddress)
+  //     : sender;
+  // if (DEBUG) console.log("from:", from.toBase58());
+
+  // const to =
+  //   txType === "offer" || txType === "bid"
+  //     ? newAddress
+  //     : txType === "buy" || txType === "withdrawOffer"
+  //     ? sender
+  //     : "to" in params && params.to
+  //     ? PublicKey.fromBase58(params.to)
+  //     : newAddress;
+  // if (DEBUG) console.log("to:", to.toBase58());
 
   const symbolResponse = await getTokenSymbolAndAdmin({
     tokenAddress: params.tokenAddress,
@@ -389,11 +380,12 @@ export async function tokenTransaction(
       tokenId,
       force: false,
     });
-    await fetchMinaAccount({
-      publicKey: to,
-      tokenId,
-      force: false,
-    });
+    if ("to" in params && params.to)
+      await fetchMinaAccount({
+        publicKey: PublicKey.fromBase58(params.to),
+        tokenId,
+        force: false,
+      });
   } catch (error) {
     return {
       status: 400,
@@ -445,7 +437,10 @@ export async function tokenTransaction(
   }
 
   const balance = await accountBalanceMina(sender);
-  const isNewAccount = Mina.hasAccount(to, tokenId) === false;
+  const isNewAccount =
+    "to" in params && params.to
+      ? Mina.hasAccount(PublicKey.fromBase58(params.to), tokenId) === false
+      : false;
   const requiredBalance = isNewAccount ? 1 : 0 + (FEE + fee) / 1_000_000_000;
   if (requiredBalance > balance) {
     return {
@@ -455,37 +450,51 @@ export async function tokenTransaction(
       },
     };
   }
+  if ("offerPrivateKey" in params) {
+    params.offerPrivateKey =
+      params.offerPrivateKey ?? PrivateKey.random().toBase58();
+  }
+  if (
+    "offerAddress" in params &&
+    "offerPrivateKey" in params &&
+    params.offerPrivateKey
+  ) {
+    params.offerAddress =
+      params.offerAddress ??
+      PrivateKey.fromBase58(params.offerPrivateKey).toPublicKey().toBase58();
+  }
 
-  const nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
-  if (DEBUG) console.log("nonce:", nonce);
+  if ("bidPrivateKey" in params) {
+    params.bidPrivateKey =
+      params.bidPrivateKey ?? PrivateKey.random().toBase58();
+  }
+  if (
+    "bidAddress" in params &&
+    "bidPrivateKey" in params &&
+    params.bidPrivateKey
+  ) {
+    params.bidAddress =
+      params.bidAddress ??
+      PrivateKey.fromBase58(params.bidPrivateKey).toPublicKey().toBase58();
+  }
 
-  const { tx, whitelist } = await buildTokenTransaction({
-    txType,
-    sender,
-    from:
-      txType === "buy" || txType === "withdrawOffer"
-        ? PublicKey.fromBase58(params.offerAddress)
-        : sender,
+  params.nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
+
+  const { tx, request } = await buildTokenTransaction({
     chain,
-    fee: UInt64.from(fee),
-    nonce,
-    memo,
-    tokenAddress,
-    to:
-      txType === "offer"
-        ? newAddress
-        : txType === "buy" || txType === "withdrawOffer"
-        ? sender
-        : to,
-    amount,
-    price,
-    developerFee,
-    developerAddress: PublicKey.fromBase58(apiKeyAddress),
-    whitelist: "whitelist" in params ? params.whitelist : undefined,
-    provingKey: wallet,
-    provingFee: UInt64.from(TRANSACTION_FEE),
+    args: params,
+    developerAddress: apiKeyAddress,
+    provingKey: wallet.toBase58(),
+    provingFee: TRANSACTION_FEE,
   });
-  if (txType === "offer") tx.sign([newKey]);
+  if (
+    txType === "offer" &&
+    "offerPrivateKey" in params &&
+    params.offerPrivateKey
+  )
+    tx.sign([PrivateKey.fromBase58(params.offerPrivateKey)]);
+  if (txType === "bid" && "bidPrivateKey" in params && params.bidPrivateKey)
+    tx.sign([PrivateKey.fromBase58(params.bidPrivateKey)]);
   const payloads = createTransactionPayloads(tx);
   console.timeEnd("prepared tx");
 
@@ -494,19 +503,9 @@ export async function tokenTransaction(
     json: {
       txType,
       ...payloads,
-      tokenAddress: tokenAddress.toBase58(),
       symbol,
-      to: to.toBase58(),
-      from: from.toBase58(),
-      toPrivateKey:
-        "to" in params && !params.to ? undefined : newKey.toBase58(),
-      amount: Number(amount.toBigInt()),
-      price: price ? Number(price.toBigInt()) : undefined,
-      memo,
-      nonce,
-      whitelist,
+      request,
       developerAddress: apiKeyAddress,
-      developerFee: params.developerFee,
     } satisfies TokenTransaction,
   };
 }

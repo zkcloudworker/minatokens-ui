@@ -10,8 +10,10 @@ import {
 import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
-import { proveTransactions } from "@/lib/token-api";
+import { proveTransaction } from "@/lib/token-api";
 import { log } from "@/lib/log";
+import { LaunchTokenStandardAdminParams } from "@minatokens/api";
+import { deployToken as deployTokenApi } from "@/lib/api/deploy";
 const DEBUG = debug();
 const chain = getChain();
 
@@ -62,7 +64,7 @@ export async function deployToken(params: {
         Bool,
         Field,
       },
-      tokens: { buildTokenDeployTransaction, LAUNCH_FEE },
+      tokens: { buildTokenLaunchTransaction, LAUNCH_FEE },
       zkcloudworker: {
         createTransactionPayloads,
         initBlockchain,
@@ -151,25 +153,37 @@ export async function deployToken(params: {
     const nonce = await getAccountNonce(sender.toBase58());
     const decimals = 9;
 
-    const { tx, whitelist } = await buildTokenDeployTransaction({
-      adminType: "standard",
-      chain,
-      sender,
-      fee: UInt64.from(fee),
+    const launchParams: LaunchTokenStandardAdminParams = {
+      txType: "launch",
+      adminContract: "standard",
       nonce,
       memo,
-      adminContractAddress: adminContractPublicKey,
-      adminAddress: sender,
-      tokenAddress: contractAddress,
+      adminContractAddress: adminContractPublicKey.toBase58(),
+      sender: sender.toBase58(),
+      tokenAddress: contractAddress.toBase58(),
       uri,
       symbol,
-      whitelist: undefined,
-      provingKey: wallet,
-      provingFee: UInt64.from(LAUNCH_FEE),
-      decimals: UInt8.from(decimals),
-      developerAddress: undefined,
-      developerFee: undefined,
-    });
+      decimals,
+    };
+
+    const launchReply = await deployTokenApi(launchParams, sender.toBase58());
+    if (launchReply.status !== 200) {
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "error",
+          content: launchReply.json.error,
+          status: "error",
+        },
+      });
+      log.error("deployToken: Error while deploying token", {
+        error: launchReply.json.error,
+      });
+      return {
+        success: false,
+        error: launchReply.json.error,
+      };
+    }
 
     // const tx = await Mina.transaction(
     //   { sender, fee, memo, nonce },
@@ -197,13 +211,14 @@ export async function deployToken(params: {
     //     );
     //   }
     // );
-    tx.sign(
-      AURO_TEST
-        ? [contractPrivateKey, adminContractPrivateKey, adminPrivateKey]
-        : [contractPrivateKey, adminContractPrivateKey]
-    );
+    // tx.sign(
+    //   AURO_TEST
+    //     ? [contractPrivateKey, adminContractPrivateKey, adminPrivateKey]
+    //     : [contractPrivateKey, adminContractPrivateKey]
+    // );
 
-    const payloads = createTransactionPayloads(tx);
+    // const payloads = createTransactionPayloads(tx);
+    const payloads = launchReply.json;
 
     console.timeEnd("prepared tx");
     console.timeEnd("ready to sign");
@@ -258,22 +273,7 @@ export async function deployToken(params: {
       update: messages.txProved,
     });
 
-    const jobId = await proveTransactions([
-      {
-        txType: "launch",
-        adminType: "standard",
-        ...payloads,
-        adminContractAddress: adminContractPublicKey.toBase58(),
-        tokenAddress: contractAddress.toBase58(),
-        sender: sender.toBase58(),
-        symbol,
-        uri,
-        sendTransaction: false,
-        developerFee: undefined,
-        developerAddress: undefined,
-        whitelist,
-      },
-    ]);
+    const jobId = await proveTransaction(payloads);
 
     // const jobId = await sendDeployTransaction({
     //   txType: "deploy",

@@ -8,12 +8,36 @@ import {
   BalanceRequestParams,
   BalanceResponse,
 } from "@minatokens/api";
+import {
+  FungibleTokenOfferContract,
+  FungibleTokenBidContract,
+} from "@minatokens/token";
 import { checkAddress } from "./address";
 import { updateTokenInfo } from "../state";
+import {
+  OfferInfo,
+  writeOffer,
+  getOffer,
+  BidInfo,
+  writeBid,
+  getBid,
+} from "../trade";
+import { debug } from "@/lib/debug";
+const DEBUG = debug();
+
+export async function formatBalance(num: number): Promise<string> {
+  const fixed = num.toFixed(2);
+  return fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed;
+}
+
+function formatBalanceInternal(num: number): string {
+  const fixed = num.toFixed(2);
+  return fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed;
+}
 
 export async function balance(
   params: BalanceRequestParams,
-  apiKeyAddress: string
+  apiKeyAddress: string = ""
 ): Promise<ApiResponse<BalanceResponse>> {
   const { tokenAddress, address } = params;
 
@@ -27,24 +51,47 @@ export async function balance(
       };
     }
 
-    if (!tokenAddress || !checkAddress(tokenAddress)) {
+    if (tokenAddress && !checkAddress(tokenAddress)) {
       return {
         status: 400,
         json: { error: "Invalid token address" },
       };
     }
 
-    const tokenContractPublicKey = PublicKey.fromBase58(tokenAddress);
+    const tokenContractPublicKey = tokenAddress
+      ? PublicKey.fromBase58(tokenAddress)
+      : undefined;
     const publicKey = PublicKey.fromBase58(address);
-    const tokenId = TokenId.derive(tokenContractPublicKey);
+    const tokenIdDerived = tokenContractPublicKey
+      ? TokenId.derive(tokenContractPublicKey)
+      : undefined;
+
+    if (
+      tokenIdDerived &&
+      params.tokenId &&
+      TokenId.toBase58(tokenIdDerived) !== params.tokenId
+    ) {
+      return {
+        status: 400,
+        json: { error: "TokenId does not match tokenAddress" },
+      };
+    }
+    const tokenId =
+      tokenIdDerived ??
+      (params.tokenId ? TokenId.fromBase58(params.tokenId) : undefined);
 
     try {
-      await fetchMinaAccount({ publicKey, tokenId, force: false });
+      await fetchMinaAccount({
+        publicKey,
+        tokenId,
+        force: false,
+      });
       return {
         status: 200,
         json: {
           tokenAddress,
           address,
+          tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
           balance: Mina.hasAccount(publicKey, tokenId)
             ? Number(Mina.getAccount(publicKey, tokenId).balance.toBigInt())
             : null,
@@ -52,11 +99,13 @@ export async function balance(
       };
     } catch (error) {
       console.error("Cannot fetch account balance", params, error);
+
       return {
         status: 200,
         json: {
           tokenAddress,
           address,
+          tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
           balance: null,
         },
       };
@@ -66,6 +115,244 @@ export async function balance(
     return {
       status: 500,
       json: { error: "Failed to get balance" },
+    };
+  }
+}
+
+export interface AccountBalance {
+  name?: string;
+  address: string;
+  balance?: number;
+  balanceDiff?: number;
+  tokenBalance?: number;
+  tokenBalanceDiff?: number;
+  balanceString?: string;
+  tokenBalanceString?: string;
+}
+
+export async function getBalances({
+  accounts,
+  tokenId,
+  tokenAddress,
+}: {
+  accounts: AccountBalance[];
+  tokenId?: string;
+  tokenAddress: string;
+}) {
+  for (const account of accounts) {
+    const b = await balance({ address: account.address });
+    const tb = await balance({
+      address: account.address,
+      tokenAddress,
+      tokenId,
+    });
+    if (
+      (b.status === 200 && account.balance !== b.json.balance) ||
+      (tb.status === 200 && account.tokenBalance !== tb.json.balance)
+    ) {
+      const newB = b.status === 200 ? b.json.balance ?? undefined : undefined;
+      const newTB =
+        tb.status === 200 ? tb.json.balance ?? undefined : undefined;
+      account.balanceDiff =
+        account.balance && newB ? newB - account.balance : newB;
+      account.tokenBalanceDiff =
+        tb !== undefined
+          ? account.tokenBalance && newTB
+            ? newTB - account.tokenBalance
+            : newTB
+          : 0;
+      account.balanceString = newB
+        ? `Balance of ${account.address}: ${formatBalanceInternal(
+            newB / 1_000_000_000
+          )} MINA ${
+            account.balanceDiff
+              ? "(" +
+                (account.balanceDiff >= 0 ? "+" : "") +
+                formatBalanceInternal(account.balanceDiff / 1_000_000_000) +
+                ")"
+              : ""
+          }`
+        : undefined;
+
+      account.tokenBalanceString = `Balance of ${account.address}: ${
+        newTB ? formatBalanceInternal(newTB / 1_000_000_000) : 0
+      } TEST ${
+        account.tokenBalanceDiff
+          ? "(" +
+            (account.tokenBalanceDiff >= 0 ? "+" : "") +
+            formatBalanceInternal(account.tokenBalanceDiff / 1_000_000_000) +
+            ")"
+          : ""
+      }`;
+      account.balance = newB;
+      account.tokenBalance = newTB;
+    }
+  }
+  console.log("getBalances accounts", accounts);
+  return accounts;
+}
+
+export interface OfferInfoRequest {
+  tokenAddress: string;
+  offerAddress: string;
+}
+
+export interface BidInfoRequest {
+  tokenAddress: string;
+  bidAddress: string;
+}
+
+export async function offerInfo(
+  params: OfferInfoRequest,
+  apiKeyAddress: string
+): Promise<ApiResponse<OfferInfo>> {
+  const { tokenAddress, offerAddress } = params;
+
+  try {
+    await initBlockchain();
+
+    if (!offerAddress || !checkAddress(offerAddress)) {
+      return {
+        status: 400,
+        json: { error: "Invalid offer address" },
+      };
+    }
+
+    if (!tokenAddress || !checkAddress(tokenAddress)) {
+      return {
+        status: 400,
+        json: { error: "Invalid token address" },
+      };
+    }
+
+    const tokenContractPublicKey = PublicKey.fromBase58(tokenAddress);
+    const offerPublicKey = PublicKey.fromBase58(offerAddress);
+    const tokenId = TokenId.derive(tokenContractPublicKey);
+
+    await fetchMinaAccount({
+      publicKey: offerPublicKey,
+      tokenId,
+      force: false,
+    });
+    if (!Mina.hasAccount(offerPublicKey, tokenId)) {
+      return {
+        status: 400,
+        json: { error: "Offer account not found" },
+      };
+    }
+    const offer = new FungibleTokenOfferContract(offerPublicKey, tokenId);
+    const price = Number(offer.price.get().toBigInt());
+    const amount = Number(
+      Mina.getAccount(offerPublicKey, tokenId).balance.toBigInt()
+    );
+    const ownerAddress = offer.seller.get().toBase58();
+    const offerInfo = await getOffer({ tokenAddress, offerAddress });
+    if (
+      offerInfo === null ||
+      amount !== Number(offerInfo?.amount) ||
+      price !== Number(offerInfo?.price) ||
+      ownerAddress !== offerInfo?.ownerAddress
+    ) {
+      writeOffer({
+        tokenAddress,
+        offerAddress,
+        amount,
+        price,
+        ownerAddress,
+      });
+    }
+
+    return {
+      status: 200,
+      json: {
+        tokenAddress,
+        offerAddress,
+        ownerAddress,
+        amount,
+        price,
+      },
+    };
+  } catch (error) {
+    console.error("Cannot fetch offer info", params, error);
+    return {
+      status: 500,
+      json: { error: "Failed to get offer info" },
+    };
+  }
+}
+
+export async function bidInfo(
+  params: BidInfoRequest,
+  apiKeyAddress: string
+): Promise<ApiResponse<BidInfo>> {
+  const { tokenAddress, bidAddress } = params;
+
+  try {
+    await initBlockchain();
+
+    if (!bidAddress || !checkAddress(bidAddress)) {
+      return {
+        status: 400,
+        json: { error: "Invalid bid address" },
+      };
+    }
+
+    if (!tokenAddress || !checkAddress(tokenAddress)) {
+      return {
+        status: 400,
+        json: { error: "Invalid token address" },
+      };
+    }
+
+    const tokenContractPublicKey = PublicKey.fromBase58(tokenAddress);
+    const bidPublicKey = PublicKey.fromBase58(bidAddress);
+    const tokenId = TokenId.derive(tokenContractPublicKey);
+
+    await fetchMinaAccount({
+      publicKey: bidPublicKey,
+      force: false,
+    });
+    if (!Mina.hasAccount(bidPublicKey)) {
+      return {
+        status: 400,
+        json: { error: "Bid account not found" },
+      };
+    }
+    const bid = new FungibleTokenBidContract(bidPublicKey);
+    const price = Number(bid.price.get().toBigInt());
+    const amount = Number(Mina.getAccount(bidPublicKey).balance.toBigInt());
+    const ownerAddress = bid.buyer.get().toBase58();
+    const bidInfo = await getBid({ tokenAddress, bidAddress });
+    if (
+      bidInfo === null ||
+      amount !== Number(bidInfo?.amount) ||
+      price !== Number(bidInfo?.price) ||
+      ownerAddress !== bidInfo?.ownerAddress
+    ) {
+      writeBid({
+        tokenAddress,
+        bidAddress,
+        amount,
+        price,
+        ownerAddress,
+      });
+    }
+
+    return {
+      status: 200,
+      json: {
+        tokenAddress,
+        bidAddress,
+        ownerAddress,
+        amount,
+        price,
+      },
+    };
+  } catch (error) {
+    console.error("Cannot fetch bid info", params, error);
+    return {
+      status: 500,
+      json: { error: "Failed to get bid info" },
     };
   }
 }
