@@ -401,7 +401,7 @@ export async function tokenAction(params: {
       }
       const tokenAddressMsg = (
         <>
-          Address:{" "}
+          Token address:{" "}
           <a
             href={`${explorerAccountUrl()}${item.tokenAddress}`}
             className="text-accent hover:underline"
