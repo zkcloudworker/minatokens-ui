@@ -160,7 +160,9 @@ export function OrderbookTab({
           <Orderbook
             bids={bids}
             offers={offers}
-            bidSymbol={"MINA"}
+            bidSymbol={
+              tab === "withdraw" ? "MINA" : tokenState.tokenSymbol ?? ""
+            }
             offerSymbol={tokenState.tokenSymbol ?? ""}
             priceSymbol={"MINA"}
             tab={tab}
