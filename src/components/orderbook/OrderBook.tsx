@@ -32,11 +32,22 @@ export type Order = {
 export type OrderbookProps = {
   bids: Order[];
   offers: Order[];
-  symbol: string;
+  bidSymbol: string;
+  offerSymbol: string;
+  priceSymbol: string;
   onSubmit: (data: Order) => void;
+  type: "orderbook" | "withdraw";
 };
 
-export function Orderbook({ bids, offers, symbol, onSubmit }: OrderbookProps) {
+export function Orderbook({
+  bids,
+  offers,
+  bidSymbol,
+  offerSymbol,
+  priceSymbol,
+  type,
+  onSubmit,
+}: OrderbookProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(
     offers.length > 0 ? offers[0] : bids.length > 0 ? bids[0] : null
   );
@@ -77,12 +88,12 @@ export function Orderbook({ bids, offers, symbol, onSubmit }: OrderbookProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Offers Column */}
             <div className="min-w-[300px]">
-              <h3 className="text-lg font-semibold mb-4 text-jacarta-700 dark:text-white">
+              <h3 className="text-lg font-semibold mb-4 text-jacarta-700 dark:text-white text-center">
                 Offers
               </h3>
               <div className="grid grid-cols-2 gap-4 mb-2 ml-4 mr-4 text-base font-medium text-jacarta-700 dark:text-white">
-                <div>Amount</div>
-                <div className="text-right">Price</div>
+                <div>Amount in {offerSymbol}</div>
+                <div className="text-right">Price in {priceSymbol}</div>
               </div>
 
               <div className="space-y-2">
@@ -107,12 +118,12 @@ export function Orderbook({ bids, offers, symbol, onSubmit }: OrderbookProps) {
 
             {/* Bids Column */}
             <div>
-              <h3 className="text-lg font-semibold mb-4 text-jacarta-700 dark:text-white">
+              <h3 className="text-lg font-semibold mb-4 text-jacarta-700 dark:text-white text-center">
                 Bids
               </h3>
               <div className="grid grid-cols-2 gap-4 mb-2 ml-4 mr-4 text-base font-medium text-jacarta-700 dark:text-white">
-                <div>Amount</div>
-                <div className="text-right">Price</div>
+                <div>Amount in {bidSymbol}</div>
+                <div className="text-right">Price in {priceSymbol}</div>
               </div>
               {bids.length > 0 && (
                 <div className="space-y-2">
@@ -153,9 +164,13 @@ export function Orderbook({ bids, offers, symbol, onSubmit }: OrderbookProps) {
                   onClick={handleAccept}
                   className="rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"
                 >
-                  {selectedOrder.type === "offer"
-                    ? `Buy ${symbol}`
-                    : `Sell ${symbol}`}
+                  {type === "orderbook"
+                    ? selectedOrder.type === "offer"
+                      ? `Buy ${offerSymbol}`
+                      : `Sell ${bidSymbol}`
+                    : selectedOrder.type === "offer"
+                    ? `Withdraw ${offerSymbol}`
+                    : `Withdraw ${bidSymbol}`}
                 </Button>
               </div>
             </div>
@@ -169,7 +184,15 @@ export function Orderbook({ bids, offers, symbol, onSubmit }: OrderbookProps) {
         onConfirm={handleConfirm}
         order={selectedOrder}
         amount={amount}
-        symbol={symbol}
+        symbol={
+          type === "orderbook"
+            ? selectedOrder?.type === "offer"
+              ? offerSymbol
+              : bidSymbol
+            : selectedOrder?.type === "offer"
+            ? offerSymbol
+            : bidSymbol
+        }
       />
     </section>
   );

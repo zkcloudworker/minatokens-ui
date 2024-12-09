@@ -14,8 +14,11 @@ const chainId = getChainId();
 
 function formatBalance(num: number | undefined): string {
   if (num === undefined) return "0";
-  const fixed = num.toFixed(2);
-  return fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed;
+  const fixed = num.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return fixed.endsWith(".00") ? fixed.slice(0, fixed.length - 3) : fixed;
 }
 
 export const actions_types = {

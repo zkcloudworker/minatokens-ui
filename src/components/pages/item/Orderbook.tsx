@@ -44,7 +44,10 @@ export function OrderbookTab({
         .map(
           (bid) =>
             ({
-              amount: Number(bid.amount) / 10 ** (tokenState.decimals ?? 9),
+              amount:
+                Number(bid.amount) /
+                10 ** (tokenState.decimals ?? 9) /
+                (Number(bid.price) / 10 ** 9),
               price: Number(bid.price) / 10 ** 9,
               address: bid.bidAddress,
               type: "bid",
@@ -88,11 +91,13 @@ export function OrderbookTab({
           if (
             info.status === 200 &&
             (info.json.price !== bids[i].price * 10 ** 9 ||
-              info.json.amount !== bids[i].amount * 10 ** tokenState.decimals)
+              info.json.amount !==
+                bids[i].amount * 10 ** tokenState.decimals * bids[i].price)
           ) {
             if (info.json.amount !== 0) {
               bids[i].price = info.json.price / 10 ** 9;
-              bids[i].amount = info.json.amount / 10 ** tokenState.decimals;
+              bids[i].amount =
+                info.json.amount / 10 ** tokenState.decimals / bids[i].price;
             } else {
               bids.splice(i, 1);
             }
@@ -128,7 +133,10 @@ export function OrderbookTab({
           <Orderbook
             bids={bids}
             offers={offers}
-            symbol={tokenState.tokenSymbol ?? ""}
+            bidSymbol={tokenState.tokenSymbol ?? ""}
+            offerSymbol={tokenState.tokenSymbol ?? ""}
+            priceSymbol={"MINA"}
+            type="orderbook"
             onSubmit={handleSubmit}
           />
         </div>
