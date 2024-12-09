@@ -422,7 +422,9 @@ export async function tokenAction(params: {
       addLog({
         groupId,
         status: "waiting",
-        title: `${action.toUpperCase() + action.slice(1)}ing ${symbol} tokens`,
+        title: `${
+          action[0].toUpperCase() + action.slice(1)
+        }ing ${symbol} tokens`,
         successTitle: `${symbol} tokens ${action}ed`,
         errorTitle: `Failed to ${action} ${symbol} tokens`,
         lines: [messages.txMint, ...timeLineItems],
