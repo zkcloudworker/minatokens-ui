@@ -1,7 +1,7 @@
 "use client";
 import type { TokenState } from "@/lib/token";
 import Link from "next/link";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { getChainId } from "@/lib/chain";
 import { explorerAccountUrl, explorerTokenUrl } from "@/lib/chain";
 import { NotImplemented } from "./NotImplemented";
@@ -10,6 +10,8 @@ import { TokenActionComponent } from "./TokenAction";
 import { TokenStateTabLoading } from "./TokenStateLoading";
 import { AddressContext } from "@/context/address";
 import { balance } from "@/lib/api/token-info";
+import { debug } from "@/lib/debug";
+const DEBUG = debug();
 const chainId = getChainId();
 
 function formatBalance(num: number | undefined): string {
@@ -90,7 +92,7 @@ export const actions_types = {
     {
       id: 11,
       action: "Orderbook",
-      tab: "buy",
+      tab: "orderbook",
       svgPath: `M6.5 2h11a1 1 0 0 1 .8.4L21 6v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6l2.7-3.6a1 1 0 0 1 .8-.4zM19 8H5v12h14V8zm-.5-2L17 4H7L5.5 6h13zM9 10v2a3 3 0 0 0 6 0v-2h2v2a5 5 0 0 1-10 0v-2h2z`,
     },
     {
@@ -107,14 +109,8 @@ export const actions_types = {
     },
     {
       id: 16,
-      action: "Withdraw Offer",
-      tab: "withdraw_offer",
-      svgPath: `M6.5 2h11a1 1 0 0 1 .8.4L21 6v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6l2.7-3.6a1 1 0 0 1 .8-.4zM19 8H5v12h14V8zm-.5-2L17 4H7L5.5 6h13zM9 10v2a3 3 0 0 0 6 0v-2h2v2a5 5 0 0 1-10 0v-2h2z`,
-    },
-    {
-      id: 17,
-      action: "Withdraw Bid",
-      tab: "withdraw_bid",
+      action: "Withdraw",
+      tab: "withdraw",
       svgPath: `M6.5 2h11a1 1 0 0 1 .8.4L21 6v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6l2.7-3.6a1 1 0 0 1 .8-.4zM19 8H5v12h14V8zm-.5-2L17 4H7L5.5 6h13zM9 10v2a3 3 0 0 0 6 0v-2h2v2a5 5 0 0 1-10 0v-2h2z`,
     },
   ],
@@ -138,31 +134,36 @@ export function TokenActionsTab({
   );
   const [minaBalance, setMinaBalance] = useState<number | undefined>(undefined);
 
+  const fetchBalance = useCallback(async () => {
+    if (DEBUG) console.log("fetchBalance", address);
+    if (!address) {
+      setTokenBalance(undefined);
+      setMinaBalance(undefined);
+      return;
+    }
+
+    const tokenBalance = await balance({ address, tokenAddress });
+    console.log(tokenBalance);
+    if (tokenBalance.status === 200 && tokenBalance.json.balance !== null) {
+      setTokenBalance(
+        tokenBalance.json.balance / 10 ** (tokenState?.decimals ?? 9)
+      );
+    } else {
+      setTokenBalance(undefined);
+    }
+
+    const minaBalance = await balance({ address });
+    if (minaBalance.status === 200 && minaBalance.json.balance !== null) {
+      setMinaBalance(minaBalance.json.balance / 10 ** 9);
+    } else {
+      setMinaBalance(undefined);
+    }
+    if (DEBUG) console.log("fetchBalance done", { minaBalance, tokenBalance });
+  }, [address, tokenAddress, tokenState, setTokenBalance, setMinaBalance]);
+
   useEffect(() => {
-    const fetchBalance = async () => {
-      if (address) {
-        const tokenBalance = await balance({ address, tokenAddress });
-        console.log(tokenBalance);
-        if (tokenBalance.status === 200 && tokenBalance.json.balance !== null) {
-          setTokenBalance(
-            tokenBalance.json.balance / 10 ** (tokenState?.decimals ?? 9)
-          );
-        } else {
-          setTokenBalance(undefined);
-        }
-        const minaBalance = await balance({ address });
-        if (minaBalance.status === 200 && minaBalance.json.balance !== null) {
-          setMinaBalance(minaBalance.json.balance / 10 ** 9);
-        } else {
-          setMinaBalance(undefined);
-        }
-      } else {
-        setTokenBalance(undefined);
-        setMinaBalance(undefined);
-      }
-    };
     fetchBalance();
-  }, [address, tokenAddress, tokenState]);
+  }, [fetchBalance]);
 
   return (
     <div className="rounded-t-2lg rounded-b-2lg rounded-tl-none border border-jacarta-100 bg-white dark:border-jacarta-600 dark:bg-jacarta-700">
@@ -237,8 +238,9 @@ export function TokenActionsTab({
           tab === "transfer" ||
           tab === "airdrop" ||
           tab === "offer" ||
-          tab === "buy" ||
-          tab === "bid") && (
+          tab === "orderbook" ||
+          tab === "bid" ||
+          tab === "withdraw") && (
           <>
             {tokenState && (
               <TokenActionComponent
@@ -246,6 +248,7 @@ export function TokenActionsTab({
                 tokenAddress={tokenAddress}
                 tokenState={tokenState}
                 tab={tab}
+                onBalanceUpdate={fetchBalance}
               />
             )}
             {!tokenState && <TokenStateTabLoading />}
@@ -256,7 +259,8 @@ export function TokenActionsTab({
           tab !== "transfer" &&
           tab !== "airdrop" &&
           tab !== "offer" &&
-          tab !== "buy" &&
+          tab !== "orderbook" &&
+          tab !== "withdraw" &&
           tab !== "bid" && <ContactAuthorized />}
       </div>
     </div>

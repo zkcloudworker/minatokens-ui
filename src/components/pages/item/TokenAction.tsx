@@ -36,12 +36,6 @@ const initialAddresses: MintAddress[] = MINT_TEST
       },
     ];
 
-export type TokenActionProps = {
-  tokenAddress: string;
-  tokenState: TokenState;
-  tab: TokenAction;
-};
-
 function initialTokenActionData(params: {
   tokenState: TokenState;
   tab: TokenAction;
@@ -120,11 +114,18 @@ function initialTokenActionData(params: {
     txs,
   };
 }
+export type TokenActionProps = {
+  tokenAddress: string;
+  tokenState: TokenState;
+  tab: TokenAction;
+  onBalanceUpdate: () => Promise<void>;
+};
 
 export function TokenActionComponent({
   tokenAddress,
   tokenState,
   tab,
+  onBalanceUpdate,
 }: TokenActionProps) {
   const { transactionStates, setTokenData, setFormData } = useTransactionStore(
     (state) => state
@@ -186,6 +187,7 @@ export function TokenActionComponent({
       tokenState,
       tokenData,
       tab,
+      onBalanceUpdate,
     });
   }
 
@@ -212,6 +214,7 @@ export function TokenActionComponent({
       tokenState,
       tokenData,
       tab,
+      onBalanceUpdate,
     });
   }
 
@@ -222,7 +225,7 @@ export function TokenActionComponent({
           <TimeLine items={timelineItems} dark={true} />
         </div>
       )}
-      {!isProcessing && tab !== "buy" && (
+      {!isProcessing && tab !== "orderbook" && tab !== "withdraw" && (
         <div className="container rounded-t-2lg rounded-b-2lg rounded-tl-none border border-jacarta-100 p-6 dark:border-jacarta-600">
           <TokenActionForm
             key={"tokenAction-" + tokenAddress + "-" + tab}
@@ -239,11 +242,12 @@ export function TokenActionComponent({
           />
         </div>
       )}
-      {!isProcessing && tab === "buy" && (
+      {!isProcessing && (tab === "orderbook" || tab === "withdraw") && (
         <div className="container rounded-t-2lg rounded-b-2lg rounded-tl-none border border-jacarta-100 p-6 dark:border-jacarta-600">
           <OrderbookTab
             tokenAddress={tokenAddress}
             tokenState={tokenState}
+            tab={tab}
             key={"tokenAction-" + tokenAddress + "-" + tab}
             onSubmit={onSubmitOrder}
           />

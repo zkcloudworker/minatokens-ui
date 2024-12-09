@@ -10,22 +10,38 @@ import { useState, useEffect } from "react";
 import { getOrderbook } from "@/lib/trade";
 import { bidInfo, offerInfo } from "@/lib/api/token-info";
 import { BuyTransactionParams, SellTransactionParams } from "@minatokens/api";
+import { useContext } from "react";
+import { AddressContext } from "@/context/address";
 
 export function OrderbookTab({
   tokenAddress,
   tokenState,
   onSubmit,
+  tab,
 }: {
   tokenAddress: string;
   tokenState: TokenState;
   onSubmit: (data: TokenActionData) => void;
+  tab: TokenAction;
 }) {
   const [bids, setBids] = useState<Order[]>([]);
   const [offers, setOffers] = useState<Order[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { address } = useContext(AddressContext);
+
   useEffect(() => {
     const fetchOrderbook = async () => {
-      const orderbook = await getOrderbook({ tokenAddress });
+      if (!address && tab === "withdraw") {
+        setBids([]);
+        setOffers([]);
+        setIsLoaded(true);
+        return;
+      }
+      const orderbook = await getOrderbook({
+        tokenAddress,
+        ownerAddress: tab === "withdraw" ? address : undefined,
+        maxItems: tab === "withdraw" ? 100 : undefined,
+      });
       //setBids(orderbook.bids);
 
       const offers: Order[] = orderbook.offers
@@ -47,13 +63,13 @@ export function OrderbookTab({
               amount:
                 Number(bid.amount) /
                 10 ** (tokenState.decimals ?? 9) /
-                (Number(bid.price) / 10 ** 9),
+                (tab === "orderbook" ? Number(bid.price) / 10 ** 9 : 1),
               price: Number(bid.price) / 10 ** 9,
               address: bid.bidAddress,
               type: "bid",
             } as Order)
         )
-        .sort((a, b) => a.price - b.price);
+        .sort((a, b) => b.price - a.price);
       setBids(bids);
       setIsLoaded(true);
       const length = Math.max(offers.length, bids.length);
@@ -92,12 +108,16 @@ export function OrderbookTab({
             info.status === 200 &&
             (info.json.price !== bids[i].price * 10 ** 9 ||
               info.json.amount !==
-                bids[i].amount * 10 ** tokenState.decimals * bids[i].price)
+                bids[i].amount *
+                  10 ** tokenState.decimals *
+                  (tab === "orderbook" ? bids[i].price : 1))
           ) {
             if (info.json.amount !== 0) {
               bids[i].price = info.json.price / 10 ** 9;
               bids[i].amount =
-                info.json.amount / 10 ** tokenState.decimals / bids[i].price;
+                info.json.amount /
+                10 ** tokenState.decimals /
+                (tab === "orderbook" ? bids[i].price : 1);
             } else {
               bids.splice(i, 1);
             }
@@ -115,7 +135,14 @@ export function OrderbookTab({
       symbol: tokenState.tokenSymbol ?? "",
       txs: [
         {
-          txType: order.type === "offer" ? "buy" : "sell",
+          txType:
+            tab === "orderbook"
+              ? order.type === "offer"
+                ? "buy"
+                : "sell"
+              : order.type === "offer"
+              ? "withdrawOffer"
+              : "withdrawBid",
           amount: order.amount * 10 ** tokenState.decimals,
           tokenAddress,
           sender: tokenState.adminAddress,
@@ -133,11 +160,13 @@ export function OrderbookTab({
           <Orderbook
             bids={bids}
             offers={offers}
-            bidSymbol={tokenState.tokenSymbol ?? ""}
+            bidSymbol={"MINA"}
             offerSymbol={tokenState.tokenSymbol ?? ""}
             priceSymbol={"MINA"}
-            type="orderbook"
+            tab={tab}
             onSubmit={handleSubmit}
+            offersTitle={tab === "withdraw" ? "My Offers" : "Offers"}
+            bidsTitle={tab === "withdraw" ? "My Bids" : "Bids"}
           />
         </div>
       ) : (

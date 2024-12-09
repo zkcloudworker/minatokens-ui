@@ -22,7 +22,18 @@ import {
   LaunchTokenAdvancedAdminParams,
   TransactionParams,
 } from "@minatokens/api";
-export type TokenAction = Exclude<FungibleTokenTransactionType, "launch">;
+//export type TokenAction = Exclude<FungibleTokenTransactionType, "launch">;
+export type TokenAction =
+  | "mint"
+  | "transfer"
+  | "airdrop"
+  | "burn"
+  | "orderbook"
+  | "offer"
+  | "bid"
+  | "withdraw"
+  | "pause"
+  | "resume";
 
 export interface MintAddress {
   amount: number | "" | undefined;
