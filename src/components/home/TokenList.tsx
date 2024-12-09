@@ -199,6 +199,12 @@ export default function TokenList({
       issuedByAddress: onlyIssued ? userAddress : undefined,
     });
     let newItems: DeployedTokenInfo[] = searchResult?.hits ?? [];
+    // Sort to put TESTME token first
+    newItems.sort((a, b) => {
+      if (a.symbol === "TESTME") return -1;
+      if (b.symbol === "TESTME") return 1;
+      return 0;
+    });
     setItems(newItems);
     setTotalPages(searchResult?.nbPages ?? 1);
     console.timeEnd("fetchTokenList");

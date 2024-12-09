@@ -164,6 +164,8 @@ export async function deployToken(params: {
       uri,
       symbol,
       decimals,
+      tokenContractPrivateKey: tokenPrivateKey,
+      adminContractPrivateKey: params.adminContractPrivateKey,
     };
 
     const launchReply = await deployTokenApi(launchParams, sender.toBase58());
@@ -272,6 +274,7 @@ export async function deployToken(params: {
       groupId,
       update: messages.txProved,
     });
+    payloads.sendTransaction = false;
 
     const jobId = await proveTransaction(payloads);
 
