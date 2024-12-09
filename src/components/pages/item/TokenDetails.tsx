@@ -455,6 +455,8 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                       <Link
                         href={`https://twitter.com/${item?.twitter}`}
                         className="relative block"
+                        rel="noopener noreferrer"
+                        target="_blank"
                       >
                         <Socials i={1} />
 
@@ -479,7 +481,12 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                       <span className="block text-sm text-jacarta-400 dark:text-white">
                         <strong>Twitter:</strong>
                       </span>
-                      <Link href={`/user/2`} className="block text-accent">
+                      <Link
+                        href={`https://twitter.com/${item?.twitter}`}
+                        className="block text-accent"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <span className="text-sm font-bold">
                           @{item?.twitter ?? ""}
                         </span>
