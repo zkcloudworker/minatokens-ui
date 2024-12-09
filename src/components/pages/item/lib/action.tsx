@@ -382,9 +382,7 @@ export async function tokenAction(params: {
               target="_blank"
               rel="noopener noreferrer"
             >
-              {item.txType === "bid" || item.txType === "withdrawBid"
-                ? "MINA"
-                : symbol}
+              {item.txType === "withdrawBid" ? "MINA" : symbol}
             </a>{" "}
             tokens
           </>
