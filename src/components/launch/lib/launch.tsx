@@ -858,7 +858,7 @@ export async function apiTokenTransaction(params: {
         const mintParams: MintTransactionParams = {
           txType: "mint",
           to: item.address,
-          amount: item.amount,
+          amount: item.amount * 1_000_000_000,
           tokenAddress: tokenPublicKey,
           sender: adminPublicKey,
         };
