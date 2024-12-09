@@ -168,7 +168,7 @@ export async function tokenTransaction(
   try {
     const { txType } = params;
     if (DEBUG) console.log("Token transaction", params);
-    console.log("chain", chain);
+    if (DEBUG) console.log("chain", chain);
     await initBlockchain();
     const FEE = txType === "mint" ? MINT_FEE : TRANSFER_FEE;
 
@@ -489,6 +489,7 @@ export async function tokenTransaction(
 
     params.nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
 
+    console.log("building tx", params);
     const { tx, request } = await buildTokenTransaction({
       chain,
       args: params,
