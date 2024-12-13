@@ -362,34 +362,56 @@ const API: React.FC = () => {
 
             <div className="flex items-center justify-between mb-10 gap-20">
               <p className="text-md leading-normal dark:text-jacarta-300">
-                Explore our comprehensive API documentation and try out live API
-                endpoints at{" "}
+                <strong>Ready to get started?</strong>
+                <br />
+                Explore our comprehensive API documentation at{" "}
                 <a
                   href="https://docs.minatokens.com"
                   className="text-accent"
                   target="_blank"
                   rel="noreferrer noopener"
                 >
-                  https://docs.minatokens.com
-                </a>
-                . Try our @minatokens/api library by testing it out with{" "}
+                  docs.minatokens.com
+                </a>{" "}
+                and interact with live API endpoints. Test the{" "}
+                <a
+                  href="https://www.npmjs.com/package/@minatokens/api"
+                  className="text-accent"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  @minatokens/api
+                </a>{" "}
+                library using our{" "}
                 <a
                   href="https://github.com/zkcloudworker/tokens-api-example/blob/main/tests/token.test.ts"
                   className="text-accent"
                   target="_blank"
                   rel="noreferrer noopener"
                 >
-                  https://github.com/zkcloudworker/tokens-api-example
+                  GitHub example
                 </a>
-                . Explore proof generation jobs at{" "}
+                , browse proof generation jobs at{" "}
                 <a
                   href="https://jobs.minatokens.com"
                   className="text-accent"
                   target="_blank"
                   rel="noreferrer noopener"
                 >
-                  https://jobs.minatokens.com
+                  jobs.minatokens.com
                 </a>
+                , and see a Next.js integration example at{" "}
+                <a
+                  href="https://zerocraft.minatokens.com"
+                  className="text-accent"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  zerocraft.minatokens.com
+                </a>
+                .<br />
+                <br />
+                <strong>Get your API key now to begin!</strong>
               </p>
 
               <button

@@ -16,11 +16,15 @@ import { AddressContext } from "@/context/address";
 export function OrderbookTab({
   tokenAddress,
   tokenState,
+  symbol,
+  decimals,
   onSubmit,
   tab,
 }: {
   tokenAddress: string;
-  tokenState: TokenState;
+  tokenState: TokenState | undefined;
+  symbol: string;
+  decimals: number;
   onSubmit: (data: TokenActionData) => void;
   tab: TokenAction;
 }) {
@@ -48,7 +52,7 @@ export function OrderbookTab({
         .map(
           (offer) =>
             ({
-              amount: Number(offer.amount) / 10 ** (tokenState.decimals ?? 9),
+              amount: Number(offer.amount) / 10 ** decimals,
               price: Number(offer.price) / 10 ** 9,
               address: offer.offerAddress,
               type: "offer",
@@ -62,7 +66,7 @@ export function OrderbookTab({
             ({
               amount:
                 Number(bid.amount) /
-                10 ** (tokenState.decimals ?? 9) /
+                10 ** decimals /
                 (tab === "orderbook" ? Number(bid.price) / 10 ** 9 : 1),
               price: Number(bid.price) / 10 ** 9,
               address: bid.bidAddress,
@@ -85,11 +89,11 @@ export function OrderbookTab({
           if (
             info.status === 200 &&
             (info.json.price !== offers[i].price * 10 ** 9 ||
-              info.json.amount !== offers[i].amount * 10 ** tokenState.decimals)
+              info.json.amount !== offers[i].amount * 10 ** decimals)
           ) {
             if (info.json.amount !== 0) {
               offers[i].price = info.json.price / 10 ** 9;
-              offers[i].amount = info.json.amount / 10 ** tokenState.decimals;
+              offers[i].amount = info.json.amount / 10 ** decimals;
             } else {
               offers.splice(i, 1);
             }
@@ -109,14 +113,14 @@ export function OrderbookTab({
             (info.json.price !== bids[i].price * 10 ** 9 ||
               info.json.amount !==
                 bids[i].amount *
-                  10 ** tokenState.decimals *
+                  10 ** decimals *
                   (tab === "orderbook" ? bids[i].price : 1))
           ) {
             if (info.json.amount !== 0) {
               bids[i].price = info.json.price / 10 ** 9;
               bids[i].amount =
                 info.json.amount /
-                10 ** tokenState.decimals /
+                10 ** decimals /
                 (tab === "orderbook" ? bids[i].price : 1);
             } else {
               bids.splice(i, 1);
@@ -132,7 +136,7 @@ export function OrderbookTab({
 
   const handleSubmit = (order: Order) => {
     onSubmit({
-      symbol: tokenState.tokenSymbol ?? "",
+      symbol,
       txs: [
         {
           txType:
@@ -143,9 +147,9 @@ export function OrderbookTab({
               : order.type === "offer"
               ? "withdrawOffer"
               : "withdrawBid",
-          amount: order.amount * 10 ** tokenState.decimals,
+          amount: order.amount * 10 ** decimals,
           tokenAddress,
-          sender: tokenState.adminAddress,
+          sender: tokenState?.adminAddress,
           offerAddress: order.type === "offer" ? order.address : undefined,
           bidAddress: order.type === "bid" ? order.address : undefined,
         } as BuyTransactionParams | SellTransactionParams,
@@ -160,12 +164,11 @@ export function OrderbookTab({
           <Orderbook
             bids={bids}
             offers={offers}
-            bidSymbol={
-              tab === "withdraw" ? "MINA" : tokenState.tokenSymbol ?? ""
-            }
-            offerSymbol={tokenState.tokenSymbol ?? ""}
+            bidSymbol={tab === "withdraw" ? "MINA" : symbol}
+            offerSymbol={symbol}
             priceSymbol={"MINA"}
             tab={tab}
+            enableButtons={tokenState !== undefined}
             onSubmit={handleSubmit}
             offersTitle={tab === "withdraw" ? "My Offers" : "Offers"}
             bidsTitle={tab === "withdraw" ? "My Bids" : "Bids"}

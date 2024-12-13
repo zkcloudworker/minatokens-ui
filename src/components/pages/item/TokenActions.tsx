@@ -118,13 +118,17 @@ export const actions_types = {
 
 export type TokenActionsTabProps = {
   tokenState: TokenState | undefined;
+  tokenSymbol: string;
   tokenAddress: string;
+  decimals: number;
   actions: "actions" | "administrative_actions" | "trade_actions";
 };
 
 export function TokenActionsTab({
   tokenState,
   tokenAddress,
+  tokenSymbol,
+  decimals,
   actions,
 }: TokenActionsTabProps) {
   const [tab, setTab] = useState<string>(actions_types[actions][0].tab);
@@ -133,6 +137,8 @@ export function TokenActionsTab({
     undefined
   );
   const [minaBalance, setMinaBalance] = useState<number | undefined>(undefined);
+
+  const symbol = tokenState?.tokenSymbol ?? tokenSymbol ?? "tokens";
 
   const fetchBalance = useCallback(async () => {
     if (DEBUG) console.log("fetchBalance", address);
@@ -145,9 +151,7 @@ export function TokenActionsTab({
     const tokenBalance = await balance({ address, tokenAddress });
     console.log(tokenBalance);
     if (tokenBalance.status === 200 && tokenBalance.json.balance !== null) {
-      setTokenBalance(
-        tokenBalance.json.balance / 10 ** (tokenState?.decimals ?? 9)
-      );
+      setTokenBalance(tokenBalance.json.balance / 10 ** decimals);
     } else {
       setTokenBalance(undefined);
     }
@@ -222,8 +226,7 @@ export function TokenActionsTab({
                 </div>
                 {(tokenBalance !== undefined || minaBalance !== undefined) && (
                   <div className="ml-6 text-2x mt-2 dark:text-jacarta-200 md:text-left">
-                    Your balance: {formatBalance(tokenBalance)}{" "}
-                    {tokenState?.tokenSymbol ?? "tokens"} and{" "}
+                    Your balance: {formatBalance(tokenBalance)} {symbol} and{" "}
                     {formatBalance(minaBalance)} MINA
                   </div>
                 )}
@@ -242,16 +245,15 @@ export function TokenActionsTab({
           tab === "bid" ||
           tab === "withdraw") && (
           <>
-            {tokenState && (
-              <TokenActionComponent
-                key={"tokenActionComponent-" + tokenAddress + tab}
-                tokenAddress={tokenAddress}
-                tokenState={tokenState}
-                tab={tab}
-                onBalanceUpdate={fetchBalance}
-              />
-            )}
-            {!tokenState && <TokenStateTabLoading />}
+            <TokenActionComponent
+              key={"tokenActionComponent-" + tokenAddress + tab}
+              tokenAddress={tokenAddress}
+              tokenState={tokenState}
+              symbol={symbol}
+              decimals={decimals}
+              tab={tab}
+              onBalanceUpdate={fetchBalance}
+            />
           </>
         )}
 

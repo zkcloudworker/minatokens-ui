@@ -54,8 +54,9 @@ function initialTokenActionData(params: {
               sender: tokenState.adminAddress,
               txType: "mint",
               to: address.address,
-              amount:
-                (address.amount ? Number(address.amount) : 0) * 1_000_000_000,
+              amount: Math.round(
+                (address.amount ? Number(address.amount) : 0) * 1_000_000_000
+              ),
             } as TokenActionTransactionParams)
         )
       );
@@ -69,8 +70,9 @@ function initialTokenActionData(params: {
               sender: tokenState.adminAddress,
               txType: "transfer",
               to: address.address,
-              amount:
-                (address.amount ? Number(address.amount) : 0) * 1_000_000_000,
+              amount: Math.round(
+                (address.amount ? Number(address.amount) : 0) * 1_000_000_000
+              ),
             } as TokenActionTransactionParams)
         )
       );
@@ -82,7 +84,9 @@ function initialTokenActionData(params: {
         txType: "airdrop",
         recipients: formData.addresses.map((address) => ({
           address: address.address,
-          amount: (address.amount ? Number(address.amount) : 0) * 1_000_000_000,
+          amount: Math.round(
+            (address.amount ? Number(address.amount) : 0) * 1_000_000_000
+          ),
         })),
       } as AirdropTransactionParams);
       break;
@@ -91,10 +95,14 @@ function initialTokenActionData(params: {
         tokenAddress: tokenState.tokenAddress,
         sender: tokenState.adminAddress,
         txType: "offer",
-        amount: formData.amount ? Number(formData.amount) * 1_000_000_000 : 0,
-        price: formData.price
-          ? Number(formData.price) * 1_000_000_000
-          : 1_000_000_000, // TODO: fix price
+        amount: Math.round(
+          formData.amount ? Number(formData.amount) * 1_000_000_000 : 0
+        ),
+        price: Math.round(
+          formData.price
+            ? Number(formData.price) * 1_000_000_000
+            : 1_000_000_000
+        ),
       });
       break;
     case "bid":
@@ -102,10 +110,14 @@ function initialTokenActionData(params: {
         tokenAddress: tokenState.tokenAddress,
         sender: tokenState.adminAddress,
         txType: "bid",
-        amount: formData.amount ? Number(formData.amount) * 1_000_000_000 : 0,
-        price: formData.price
-          ? Number(formData.price) * 1_000_000_000
-          : 1_000_000_000, // TODO: fix price
+        amount: Math.round(
+          formData.amount ? Number(formData.amount) * 1_000_000_000 : 0
+        ),
+        price: Math.round(
+          formData.price
+            ? Number(formData.price) * 1_000_000_000
+            : 1_000_000_000
+        ),
       });
       break;
   }
@@ -116,7 +128,9 @@ function initialTokenActionData(params: {
 }
 export type TokenActionProps = {
   tokenAddress: string;
-  tokenState: TokenState;
+  tokenState: TokenState | undefined;
+  symbol: string;
+  decimals: number;
   tab: TokenAction;
   onBalanceUpdate: () => Promise<void>;
 };
@@ -124,6 +138,8 @@ export type TokenActionProps = {
 export function TokenActionComponent({
   tokenAddress,
   tokenState,
+  symbol,
+  decimals,
   tab,
   onBalanceUpdate,
 }: TokenActionProps) {
@@ -164,6 +180,7 @@ export function TokenActionComponent({
 
   async function onSubmit(formData: TokenActionFormData) {
     if (DEBUG) console.log("Processing form", formData);
+    if (!tokenState) return;
     const tokenData = initialTokenActionData({
       tokenState,
       tab,
@@ -193,7 +210,7 @@ export function TokenActionComponent({
 
   async function onSubmitOrder(tokenData: TokenActionData) {
     if (DEBUG) console.log("Processing order", tokenData);
-
+    if (!tokenState) return;
     setTokenData({
       tokenAddress,
       tab,
@@ -247,6 +264,8 @@ export function TokenActionComponent({
           <OrderbookTab
             tokenAddress={tokenAddress}
             tokenState={tokenState}
+            symbol={symbol}
+            decimals={decimals}
             tab={tab}
             key={"tokenAction-" + tokenAddress + "-" + tab}
             onSubmit={onSubmitOrder}
