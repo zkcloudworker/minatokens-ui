@@ -131,7 +131,16 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
       if (tokenAddress) {
         const item = await algoliaGetToken({ tokenAddress });
         if (item) setItem(item);
+        if (DEBUG) console.log("item", item);
+      }
+    };
+    fetchItem();
+  }, [tokenAddress]);
 
+  useEffect(() => {
+    if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
+    const fetchItem = async () => {
+      if (tokenAddress) {
         let userAddress = address;
         if (!userAddress) {
           if (DEBUG) console.log("getting wallet info");
@@ -147,7 +156,6 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
           setLike(like);
           if (DEBUG) console.log("like", like);
         }
-        if (DEBUG) console.log("item", item);
       }
     };
     fetchItem();
