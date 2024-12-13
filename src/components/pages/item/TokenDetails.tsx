@@ -3,14 +3,12 @@ import { useTokenDetails } from "@/context/details";
 import { TokenStats } from "./TokenStats";
 import Image from "next/image";
 import Link from "next/link";
-//import Timer from "./Timer";
 import { algoliaGetToken } from "@/lib/algolia";
 import { DeployedTokenInfo, TokenState } from "@/lib/token";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { algoliaWriteLike, algoliaGetLike } from "@/lib/likes";
-//import tippy from "tippy.js";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
 import { socials_item } from "@/data/socials";
@@ -133,10 +131,6 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
       if (tokenAddress) {
         const item = await algoliaGetToken({ tokenAddress });
         if (item) setItem(item);
-        const tokenStatePromise = getTokenState({
-          tokenAddress,
-          info: item,
-        });
 
         let userAddress = address;
         if (!userAddress) {
@@ -154,13 +148,26 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
           if (DEBUG) console.log("like", like);
         }
         if (DEBUG) console.log("item", item);
-        const tokenStateResult = await tokenStatePromise;
+      }
+    };
+    fetchItem();
+  }, [tokenAddress]);
+
+  useEffect(() => {
+    if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
+    const fetchItem = async () => {
+      if (tokenAddress && item) {
+        const tokenStateResult = await getTokenState({
+          tokenAddress,
+          info: item,
+        });
+
         if (tokenStateResult?.success)
           setTokenState(tokenStateResult.tokenState);
       }
     };
     fetchItem();
-  }, [tokenAddress]);
+  }, [tokenAddress, item]);
 
   useEffect(() => {
     const fetchHolders = async () => {
@@ -689,6 +696,8 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
             transactions={transactions}
             tokenState={tokenState}
             tokenAddress={tokenAddress}
+            tokenSymbol={tokenState?.tokenSymbol ?? item?.symbol ?? "tokens"}
+            decimals={tokenState?.decimals ?? item?.decimals ?? 9}
           />
           {/* end tabs */}
         </div>

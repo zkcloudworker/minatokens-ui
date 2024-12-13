@@ -36,6 +36,7 @@ export type OrderbookProps = {
   bidSymbol: string;
   offerSymbol: string;
   priceSymbol: string;
+  enableButtons: boolean;
   onSubmit: (data: Order) => void;
   tab: TokenAction;
   offersTitle: string;
@@ -52,6 +53,7 @@ export function Orderbook({
   offersTitle,
   bidsTitle,
   onSubmit,
+  enableButtons,
 }: OrderbookProps) {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(
     offers.length > 0 ? offers[0] : bids.length > 0 ? bids[0] : null
@@ -168,6 +170,7 @@ export function Orderbook({
                 />
                 <Button
                   onClick={handleAccept}
+                  disabled={!enableButtons}
                   className="rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"
                 >
                   {tab === "orderbook"

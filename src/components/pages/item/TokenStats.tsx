@@ -18,6 +18,8 @@ interface TokenStatsProps {
   transactions: BlockberryTokenTransaction[];
   tokenState: TokenState | undefined;
   tokenAddress: string;
+  tokenSymbol: string;
+  decimals: number;
 }
 
 /*
@@ -37,6 +39,8 @@ export function TokenStats({
   transactions,
   tokenState,
   tokenAddress,
+  tokenSymbol,
+  decimals,
 }: TokenStatsProps) {
   return (
     <div className="scrollbar-custom mt-14 overflow-x-auto rounded-lg">
@@ -315,6 +319,8 @@ export function TokenStats({
           >
             <TokenActionsTab
               tokenState={tokenState}
+              tokenSymbol={tokenSymbol}
+              decimals={decimals}
               tokenAddress={tokenAddress}
               actions="trade_actions"
             />
@@ -328,6 +334,8 @@ export function TokenStats({
             <TokenActionsTab
               tokenState={tokenState}
               tokenAddress={tokenAddress}
+              tokenSymbol={tokenSymbol}
+              decimals={decimals}
               actions="actions"
             />
           </div>
@@ -340,6 +348,8 @@ export function TokenStats({
             <TokenActionsTab
               tokenState={tokenState}
               tokenAddress={tokenAddress}
+              tokenSymbol={tokenSymbol}
+              decimals={decimals}
               actions="administrative_actions"
             />
           </div>
