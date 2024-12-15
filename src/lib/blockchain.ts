@@ -142,10 +142,14 @@ export async function fetchMinaAccount(params: {
   let result = { account: undefined };
   while (Date.now() - startTime < timeout) {
     try {
-      const result = await fetchAccount({
-        publicKey,
-        tokenId,
-      });
+      const result = await fetchAccount(
+        {
+          publicKey,
+          tokenId,
+        },
+        undefined,
+        { timeout: 1000 * 5 }
+      );
       return result;
     } catch (error: any) {
       if (force === true)
@@ -199,7 +203,7 @@ function sleep(ms: number) {
  * @returns the account balance
  */
 export async function accountBalance(address: PublicKey): Promise<UInt64> {
-  await fetchAccount({ publicKey: address });
+  await fetchAccount({ publicKey: address }, undefined, { timeout: 1000 * 5 });
   if (Mina.hasAccount(address)) return Mina.getBalance(address);
   else return UInt64.from(0);
 }
