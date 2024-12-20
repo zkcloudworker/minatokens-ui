@@ -78,8 +78,13 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
           scrolled ? "js-page-header--is-sticky" : ""
         }`}
       >
+        <div className="flex justify-center w-full">
+          MinaTokens is currently upgrading to the latest FungibleToken
+          standard. Some features may be temporarily unavailable.
+        </div>
         <div className="flex items-center justify-between px-6 py-6 xl:px-24 ">
           {/* Logo */}
+
           <Link href="/" className="shrink-0">
             <Image
               width={64}
@@ -99,7 +104,6 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
               {getSiteName()}
             </div>
           </Link>
-
           {isAvailable && (
             <nav className="navbar w-full hidden lg:block xl:ml-[8%] --border">
               <ul className="flex flex-col lg:flex-row">
@@ -107,7 +111,6 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
               </ul>
             </nav>
           )}
-
           {/* Search */}
           {showSearch && isAvailable && (
             <form
@@ -134,7 +137,6 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
               </span>
             </form>
           )}
-
           {/* Menu / Actions */}
           <div className="js-mobile-menu invisible lg:visible fixed inset-0 z-10 ml-auto rtl:mr-auto rtl:ml-0 items-center bg-white opacity-0 dark:bg-jacarta-800 lg:relative lg:inset-auto lg:flex lg:bg-transparent lg:opacity-100 dark:lg:bg-transparent ">
             {/* Mobile Logo / Menu Close */}
@@ -354,7 +356,6 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
               </div>
             </div>
           </div>
-
           {/* Mobile Menu Actions */}
           <div className="ml-auto flex lg:hidden rtl:ml-0 rtl:mr-auto ">
             {/* Profile */}
