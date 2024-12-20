@@ -37,7 +37,7 @@ import {
 import { getAccountNonce } from "@/lib/nonce";
 import { waitForProveJob } from "../../../launch/lib/mina-tx";
 import { log } from "@/lib/log";
-import { AccountBalance, getBalances } from "@/lib/api/token-info";
+import { AccountBalance, getBalances } from "@/lib/api/info/token-info";
 const chain = getChain();
 const DEBUG = debug();
 
@@ -382,7 +382,7 @@ export async function tokenAction(params: {
               target="_blank"
               rel="noopener noreferrer"
             >
-              {item.txType === "withdrawBid" ? "MINA" : symbol}
+              {item.txType === "token:bid:withdraw" ? "MINA" : symbol}
             </a>{" "}
             tokens
           </>
@@ -423,14 +423,24 @@ export async function tokenAction(params: {
       addLog({
         groupId,
         status: "waiting",
-        title: `${
-          action[0].toUpperCase() + action.slice(1)
-        }ing ${symbol} tokens`,
-        successTitle: `${symbol} tokens ${action}ed`,
-        errorTitle: `Failed to ${action} ${symbol} tokens`,
+        title: `${tab.toUpperCase() + tab.slice(1)}ing ${symbol} tokens`,
+        successTitle: `${symbol} tokens ${tab}ed`,
+        errorTitle: `Failed to ${tab} ${symbol} tokens`,
         lines: [messages.txMint, ...timeLineItems],
         requiredForSuccess: ["txIncluded"],
       });
+
+      if (item.txType === undefined) {
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: "error",
+            content: "Transaction type is undefined",
+            status: "error",
+          },
+        });
+        return;
+      }
 
       const mintResult = await apiTokenTransaction({
         symbol: tokenData.symbol,
@@ -464,7 +474,7 @@ export async function tokenAction(params: {
       const addresses: string[] = [];
       if (mintResult.bidAddress) addresses.push(mintResult.bidAddress);
       if (mintResult.offerAddress) addresses.push(mintResult.offerAddress);
-      if (item.txType === "airdrop")
+      if (item.txType === "token:airdrop")
         addresses.push(
           ...item.recipients.map((recipient) => recipient.address)
         );

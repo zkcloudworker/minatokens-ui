@@ -1,18 +1,16 @@
 "use server";
-import {
-  ApiResponse,
-  FaucetParams,
-  FaucetResponse,
-  TxStatus,
-} from "@minatokens/api";
-import { checkAddress } from "./address";
+import { FaucetParams, FaucetResponse, TxStatus } from "@minatokens/api";
+import { checkAddress } from "./utils/address";
 import { getChain } from "@/lib/chain";
+import { ApiName, ApiResponse } from "./api-types";
 const chain = getChain();
 
-export async function faucet(
-  params: FaucetParams,
-  apiKeyAddress: string
-): Promise<ApiResponse<FaucetResponse>> {
+export async function faucet(props: {
+  params: FaucetParams;
+  name: ApiName;
+  apiKeyAddress: string;
+}): Promise<ApiResponse<FaucetResponse>> {
+  const { params, apiKeyAddress } = props;
   const { address } = params;
   try {
     if (!address || !checkAddress(address)) {

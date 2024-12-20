@@ -9,7 +9,7 @@ import { ContactAuthorized } from "./ContactAuthorized";
 import { TokenActionComponent } from "./TokenAction";
 import { TokenStateTabLoading } from "./TokenStateLoading";
 import { AddressContext } from "@/context/address";
-import { balance } from "@/lib/api/token-info";
+import { balance } from "@/lib/api/info/token-info";
 import { debug } from "@/lib/debug";
 const DEBUG = debug();
 const chainId = getChainId();
@@ -148,7 +148,11 @@ export function TokenActionsTab({
       return;
     }
 
-    const tokenBalance = await balance({ address, tokenAddress });
+    const tokenBalance = await balance({
+      params: { address, tokenAddress },
+      name: "info:balance",
+      apiKeyAddress: "",
+    });
     console.log(tokenBalance);
     if (tokenBalance.status === 200 && tokenBalance.json.balance !== null) {
       setTokenBalance(tokenBalance.json.balance / 10 ** decimals);
@@ -156,7 +160,11 @@ export function TokenActionsTab({
       setTokenBalance(undefined);
     }
 
-    const minaBalance = await balance({ address });
+    const minaBalance = await balance({
+      params: { address },
+      name: "info:balance",
+      apiKeyAddress: "",
+    });
     if (minaBalance.status === 200 && minaBalance.json.balance !== null) {
       setMinaBalance(minaBalance.json.balance / 10 ** 9);
     } else {

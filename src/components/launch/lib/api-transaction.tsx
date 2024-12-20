@@ -1,16 +1,23 @@
 "use client";
 
-import { tokenTransaction, airdropTransaction } from "@/lib/api/transaction";
+import {
+  tokenTransaction,
+  airdropTransaction,
+  DeployedTokenTransactionParams,
+} from "@/lib/api/token/transaction";
 import { proveTransactions } from "@/lib/token-api";
 import { UpdateTimelineItemFunction, messages } from "./messages";
 import { debug } from "@/lib/debug";
 import { TokenAction } from "@/lib/token";
 import { log } from "@/lib/log";
 import {
-  BidTransactionParams,
-  OfferTransactionParams,
-  TransactionParams,
-  FungibleTokenTransactionType,
+  LaunchTokenAdvancedAdminParams,
+  LaunchTokenStandardAdminParams,
+  TokenAirdropTransactionParams,
+  TokenBidTransactionParams,
+  TokenOfferTransactionParams,
+  TokenTransactionParams,
+  TokenTransactionType,
 } from "@minatokens/api";
 import { writeBid, writeOffer } from "@/lib/trade";
 const DEBUG = debug();
@@ -21,8 +28,8 @@ export async function apiTokenTransaction(params: {
   sender: string;
   nonce: number;
   groupId: string;
-  action: FungibleTokenTransactionType;
-  data: TransactionParams;
+  action: Exclude<TokenTransactionType, "token:launch">;
+  data: DeployedTokenTransactionParams | TokenAirdropTransactionParams;
 }): Promise<{
   success: boolean;
   error?: string;
@@ -35,7 +42,11 @@ export async function apiTokenTransaction(params: {
   const { symbol, updateTimelineItem, nonce, groupId, action, data, sender } =
     params;
   const { txType } = data;
-  if (txType !== action && txType !== "buy" && txType !== "sell") {
+  if (
+    txType !== action &&
+    txType !== "token:offer:buy" &&
+    txType !== "token:bid:sell"
+  ) {
     updateTimelineItem({
       groupId,
       update: {
@@ -70,9 +81,17 @@ export async function apiTokenTransaction(params: {
     console.log("building transaction", data);
 
     const tx =
-      txType === "airdrop"
-        ? await airdropTransaction(data, sender)
-        : await tokenTransaction(data, sender);
+      txType === "token:airdrop"
+        ? await airdropTransaction({
+            params: data,
+            name: "token:airdrop",
+            apiKeyAddress: "",
+          })
+        : await tokenTransaction({
+            params: data as DeployedTokenTransactionParams,
+            name: txType,
+            apiKeyAddress: "",
+          });
 
     if (tx.status !== 200) {
       updateTimelineItem({
@@ -228,8 +247,8 @@ export async function apiTokenTransaction(params: {
     });
     let offerAddress: string | undefined = undefined;
     let bidAddress: string | undefined = undefined;
-    if (action === "offer") {
-      const payload = payloads[0].request as OfferTransactionParams;
+    if (action === "token:offer:create") {
+      const payload = payloads[0].request as TokenOfferTransactionParams;
       const {
         offerAddress: payloadOfferAddress,
         tokenAddress,
@@ -255,8 +274,8 @@ export async function apiTokenTransaction(params: {
         price,
       });
     }
-    if (action === "bid") {
-      const payload = payloads[0].request as BidTransactionParams;
+    if (action === "token:bid:create") {
+      const payload = payloads[0].request as TokenBidTransactionParams;
       const {
         bidAddress: payloadBidAddress,
         tokenAddress,

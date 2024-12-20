@@ -8,8 +8,11 @@ import {
 } from "@/lib/token";
 import { useState, useEffect } from "react";
 import { getOrderbook } from "@/lib/trade";
-import { bidInfo, offerInfo } from "@/lib/api/token-info";
-import { BuyTransactionParams, SellTransactionParams } from "@minatokens/api";
+import { bidInfo, offerInfo } from "@/lib/api/info/token-info";
+import {
+  TokenBuyTransactionParams,
+  TokenSellTransactionParams,
+} from "@minatokens/api";
 import { useContext } from "react";
 import { AddressContext } from "@/context/address";
 
@@ -142,17 +145,17 @@ export function OrderbookTab({
           txType:
             tab === "orderbook"
               ? order.type === "offer"
-                ? "buy"
-                : "sell"
+                ? "token:offer:buy"
+                : "token:bid:sell"
               : order.type === "offer"
-              ? "withdrawOffer"
-              : "withdrawBid",
+              ? "token:offer:withdraw"
+              : "token:bid:withdraw",
           amount: order.amount * 10 ** decimals,
           tokenAddress,
           sender: tokenState?.adminAddress,
           offerAddress: order.type === "offer" ? order.address : undefined,
           bidAddress: order.type === "bid" ? order.address : undefined,
-        } as BuyTransactionParams | SellTransactionParams,
+        } as TokenBuyTransactionParams | TokenSellTransactionParams,
       ],
     });
   };

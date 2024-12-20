@@ -17,10 +17,10 @@
 */
 
 import {
-  FungibleTokenTransactionType,
+  TokenTransactionType,
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
-  TransactionParams,
+  TokenTransactionParams,
 } from "@minatokens/api";
 //export type TokenAction = Exclude<FungibleTokenTransactionType, "launch">;
 export type TokenAction =
@@ -65,7 +65,7 @@ export interface LaunchTokenData {
 }
 
 export type TokenActionTransactionParams = Exclude<
-  TransactionParams,
+  TokenTransactionParams,
   LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams
 >;
 
