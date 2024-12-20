@@ -171,7 +171,7 @@ export async function deployToken(params: {
     const launchReply = await deployTokenApi({
       params: launchParams,
       name: "token:launch",
-      apiKeyAddress: "",
+      apiKeyAddress: sender.toBase58(),
     });
     if (launchReply.status !== 200) {
       updateTimelineItem({
