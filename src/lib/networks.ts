@@ -8,7 +8,7 @@ export interface MinaNetworkParams {
   /** The chain name */
   chain: "mainnet" | "devnet" | "zeko";
 
-  chainId: "mina:mainnet" | "mina:testnet" | "zeko:testnet";
+  chainId: "mina:mainnet" | "mina:devnet" | "zeko:testnet";
 
   /** The explorer account URL  */
   explorerAccountUrl: string;
@@ -52,7 +52,7 @@ export const Devnet: MinaNetworkParams = {
   explorerAccountUrl: "https://minascan.io/devnet/account/",
   explorerTransactionUrl: "https://minascan.io/devnet/tx/",
   chain: "devnet",
-  chainId: "mina:testnet",
+  chainId: "mina:devnet",
   explorerTokenUrl: "https://minascan.io/devnet/token/",
   launchpadUrl: "https://minatokens.com",
 };
