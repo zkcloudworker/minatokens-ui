@@ -1,9 +1,9 @@
 "use server";
-import { ApiResponse } from "@minatokens/api";
+import { ApiName, ApiResponse } from "./api-types";
 import { APIKey, PrismaClient } from "@prisma/client";
 import { SignJWT } from "jose";
 import formData from "form-data";
-import { checkAddress } from "./address";
+import { checkAddress } from "./utils/address";
 import { getBlockberryScamInfo } from "../blockberry-tokens";
 import { log as logtail } from "@logtail/next";
 import { getChain } from "@/lib/chain";
@@ -33,12 +33,13 @@ export interface KeyResponse {
   sent: boolean;
 }
 
-export async function generateApiKey(
-  formData: Record<string, any>,
-  apiKeyAddress: string
-): Promise<ApiResponse<KeyResponse>> {
-  console.log("Generating API key", formData);
-  const params = parseFormData(formData);
+export async function generateApiKey(props: {
+  params: Record<string, any>;
+  name: ApiName;
+  apiKeyAddress: string;
+}): Promise<ApiResponse<KeyResponse>> {
+  console.log("Generating API key", props);
+  const params = parseFormData(props.params);
   console.log("Parsed form data", params);
   const { address, email, name, discord } = params;
   try {

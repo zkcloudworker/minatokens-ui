@@ -39,7 +39,7 @@ import { getAccountNonce } from "@/lib/nonce";
 import { waitForProveJob, waitForContractVerification } from "./mina-tx";
 import { deployTokenParams } from "@/lib/keys";
 import { log } from "@/lib/log";
-import { MintTransactionParams } from "@minatokens/api";
+import { TokenMintTransactionParams } from "@minatokens/api";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
 const chain = getChain();
@@ -855,8 +855,8 @@ export async function apiTokenTransaction(params: {
 
         */
 
-        const mintParams: MintTransactionParams = {
-          txType: "mint",
+        const mintParams: TokenMintTransactionParams = {
+          txType: "token:mint",
           to: item.address,
           amount: item.amount * 1_000_000_000,
           tokenAddress: tokenPublicKey,
@@ -868,7 +868,7 @@ export async function apiTokenTransaction(params: {
           updateTimelineItem,
           sender: adminPublicKey,
           groupId,
-          action: "mint",
+          action: "token:mint",
           data: mintParams,
           nonce: nonce++,
           // tokenAddress: tokenPublicKey,

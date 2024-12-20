@@ -12,7 +12,7 @@ import { TimeLine } from "@/components/launch/TimeLine";
 import { tokenAction } from "./lib/action";
 import { debug } from "@/lib/debug";
 import { useTransactionStore } from "@/context/tx-provider";
-import { AirdropTransactionParams } from "@minatokens/api";
+import { TokenAirdropTransactionParams } from "@minatokens/api";
 import { OrderbookTab } from "./Orderbook";
 
 const DEBUG = debug();
@@ -52,7 +52,7 @@ function initialTokenActionData(params: {
             ({
               tokenAddress: tokenState.tokenAddress,
               sender: tokenState.adminAddress,
-              txType: "mint",
+              txType: "token:mint",
               to: address.address,
               amount: Math.round(
                 (address.amount ? Number(address.amount) : 0) * 1_000_000_000
@@ -68,7 +68,7 @@ function initialTokenActionData(params: {
             ({
               tokenAddress: tokenState.tokenAddress,
               sender: tokenState.adminAddress,
-              txType: "transfer",
+              txType: "token:transfer",
               to: address.address,
               amount: Math.round(
                 (address.amount ? Number(address.amount) : 0) * 1_000_000_000
@@ -81,20 +81,20 @@ function initialTokenActionData(params: {
       txs.push({
         tokenAddress: tokenState.tokenAddress,
         sender: tokenState.adminAddress,
-        txType: "airdrop",
+        txType: "token:airdrop",
         recipients: formData.addresses.map((address) => ({
           address: address.address,
           amount: Math.round(
             (address.amount ? Number(address.amount) : 0) * 1_000_000_000
           ),
         })),
-      } as AirdropTransactionParams);
+      } as TokenAirdropTransactionParams);
       break;
     case "offer":
       txs.push({
         tokenAddress: tokenState.tokenAddress,
         sender: tokenState.adminAddress,
-        txType: "offer",
+        txType: "token:offer:create",
         amount: Math.round(
           formData.amount ? Number(formData.amount) * 1_000_000_000 : 0
         ),
@@ -109,7 +109,7 @@ function initialTokenActionData(params: {
       txs.push({
         tokenAddress: tokenState.tokenAddress,
         sender: tokenState.adminAddress,
-        txType: "bid",
+        txType: "token:bid:create",
         amount: Math.round(
           formData.amount ? Number(formData.amount) * 1_000_000_000 : 0
         ),

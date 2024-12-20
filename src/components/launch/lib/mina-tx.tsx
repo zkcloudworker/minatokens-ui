@@ -19,7 +19,7 @@ import {
 } from "@/lib/chain";
 import { sendTransaction } from "@/lib/send";
 import { log } from "@/lib/log";
-import { AccountBalance, getBalances } from "@/lib/api/token-info";
+import { AccountBalance, getBalances } from "@/lib/api/info/token-info";
 const chain = getChain();
 const DEBUG = debug();
 

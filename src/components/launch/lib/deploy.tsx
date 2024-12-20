@@ -13,7 +13,7 @@ import { getChain, getWallet } from "@/lib/chain";
 import { proveTransaction } from "@/lib/token-api";
 import { log } from "@/lib/log";
 import { LaunchTokenStandardAdminParams } from "@minatokens/api";
-import { deployToken as deployTokenApi } from "@/lib/api/deploy";
+import { deployToken as deployTokenApi } from "@/lib/api/token/deploy";
 const DEBUG = debug();
 const chain = getChain();
 
@@ -154,7 +154,7 @@ export async function deployToken(params: {
     const decimals = 9;
 
     const launchParams: LaunchTokenStandardAdminParams = {
-      txType: "launch",
+      txType: "token:launch",
       adminContract: "standard",
       nonce,
       memo,
@@ -168,7 +168,11 @@ export async function deployToken(params: {
       adminContractPrivateKey: params.adminContractPrivateKey,
     };
 
-    const launchReply = await deployTokenApi(launchParams, sender.toBase58());
+    const launchReply = await deployTokenApi({
+      params: launchParams,
+      name: "token:launch",
+      apiKeyAddress: "",
+    });
     if (launchReply.status !== 200) {
       updateTimelineItem({
         groupId,
