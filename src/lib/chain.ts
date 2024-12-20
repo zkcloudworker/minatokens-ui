@@ -8,18 +8,18 @@ export function getChain(): "mainnet" | "devnet" | "zeko" {
   return chain;
 }
 
-export function getChainId(): "mina:mainnet" | "mina:testnet" | "zeko:testnet" {
+export function getChainId(): "mina:mainnet" | "mina:devnet" | "zeko:testnet" {
   const chain = getChain();
   const chainId = [Mainnet, Devnet, Zeko].find(
     (network) => network.chain === chain
   )?.chainId;
   if (
     chainId !== "mina:mainnet" &&
-    chainId !== "mina:testnet" &&
+    chainId !== "mina:devnet" &&
     chainId !== "zeko:testnet"
   )
     throw new Error(
-      "chainId must be mina:mainnet or mina:testnet or zeko:testnet"
+      "chainId must be mina:mainnet or mina:devnet or zeko:testnet"
     );
   return chainId;
 }
