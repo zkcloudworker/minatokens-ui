@@ -387,12 +387,29 @@ export async function tokenTransaction(props: {
 
     const tokenId = TokenId.derive(tokenAddress);
 
+    const action =
+      {
+        "token:mint": "mint",
+        "token:transfer": "transfer",
+        "token:airdrop": "airdrop",
+        "token:offer:create": "offer",
+        "token:bid:create": "bid",
+        "token:admin:whitelist": "whitelist",
+        "token:bid:sell": "sell",
+        "token:bid:whitelist": "whitelist",
+        "token:bid:withdraw": "withdraw",
+        "token:offer:buy": "buy",
+        "token:offer:whitelist": "whitelist",
+        "token:offer:withdraw": "withdraw",
+        "": "process",
+      }[txType ?? ""] || "process";
+
     const memo =
       txParams.memo ??
-      `${txType} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`
+      `${action} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`
         .length > 30
-        ? `${txType} ${symbol}`.substring(0, 30)
-        : `${txType} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`;
+        ? `${action} ${symbol}`.substring(0, 30)
+        : `${action} ${Number(amount.toBigInt()) / 1_000_000_000} ${symbol}`;
     if (DEBUG) console.log("memo:", memo);
     try {
       await fetchMinaAccount({

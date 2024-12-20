@@ -418,14 +418,31 @@ export async function tokenAction(params: {
         content: tokenAddressMsg,
         status: "success",
       });
-      const action = item.txType;
+      const action =
+        {
+          "token:mint": "mint",
+          "token:transfer": "transfer",
+          "token:airdrop": "airdrop",
+          "token:offer:create": "offer",
+          "token:bid:create": "bid",
+          "token:admin:whitelist": "whitelist",
+          "token:bid:sell": "sell",
+          "token:bid:whitelist": "whitelist",
+          "token:bid:withdraw": "withdraw",
+          "token:offer:buy": "buy",
+          "token:offer:whitelist": "whitelist",
+          "token:offer:withdraw": "withdraw",
+          "": "process",
+        }[item.txType ?? ""] || "process";
 
       addLog({
         groupId,
         status: "waiting",
-        title: `${tab[0].toUpperCase() + tab.slice(1)}ing ${symbol} tokens`,
-        successTitle: `${symbol} tokens ${tab}ed`,
-        errorTitle: `Failed to ${tab} ${symbol} tokens`,
+        title: `${
+          action[0].toUpperCase() + action.slice(1)
+        }ing ${symbol} tokens`,
+        successTitle: `${symbol} tokens ${action}ed`,
+        errorTitle: `Failed to ${action} ${symbol} tokens`,
         lines: [messages.txMint, ...timeLineItems],
         requiredForSuccess: ["txIncluded"],
       });
