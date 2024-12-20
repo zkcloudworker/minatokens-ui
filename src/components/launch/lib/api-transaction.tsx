@@ -85,12 +85,12 @@ export async function apiTokenTransaction(params: {
         ? await airdropTransaction({
             params: data,
             name: "token:airdrop",
-            apiKeyAddress: "",
+            apiKeyAddress: sender,
           })
         : await tokenTransaction({
             params: data as DeployedTokenTransactionParams,
             name: txType,
-            apiKeyAddress: "",
+            apiKeyAddress: sender,
           });
 
     if (tx.status !== 200) {
