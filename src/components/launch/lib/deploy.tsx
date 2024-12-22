@@ -64,7 +64,7 @@ export async function deployToken(params: {
         Bool,
         Field,
       },
-      tokens: { buildTokenLaunchTransaction, LAUNCH_FEE },
+      abi: { buildTokenLaunchTransaction, LAUNCH_FEE },
       zkcloudworker: {
         createTransactionPayloads,
         initBlockchain,

@@ -5,7 +5,7 @@ import {
   fetchMinaAccount,
 } from "@/lib/blockchain";
 import { PublicKey, UInt64, Mina, TokenId, PrivateKey } from "o1js";
-import { buildTokenTransaction, TRANSACTION_FEE } from "@minatokens/token";
+import { buildTokenTransaction, TRANSACTION_FEE } from "@minatokens/abi";
 import { createTransactionPayloads } from "zkcloudworker";
 import {
   TokenTransaction,
