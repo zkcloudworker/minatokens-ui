@@ -2,8 +2,8 @@
 import CopyToClipboardTip from "@/utils/AddClipboardTip";
 import Image from "next/image";
 import { FileUpload } from "./FileUpload";
-import tippy from "tippy.js";
-import Tippy from "@tippyjs/react";
+// import tippy from "tippy.js";
+// import Tippy from "@tippyjs/react";
 import React, { useEffect, useState, useContext } from "react";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
@@ -80,11 +80,11 @@ export function LaunchForm({
     }
   }, [mintAddresses]);
 
-  useEffect(() => {
-    tippy("[data-tippy-content]");
-    tippy("[button-tippy-content]");
-    new CopyToClipboardTip();
-  }, []);
+  // useEffect(() => {
+  //   tippy("[data-tippy-content]");
+  //   tippy("[button-tippy-content]");
+  //   new CopyToClipboardTip();
+  // }, []);
 
   useEffect(() => {
     if (!addressValid) {
@@ -523,7 +523,7 @@ export function LaunchForm({
                     : "border-2 border-red"
                 }`}
                 id="admin-address"
-                data-tippy-content="Copy"
+                // data-tippy-content="Copy"
                 onClick={() => {
                   navigator.clipboard.writeText(adminAddress ?? "");
                 }}
@@ -549,45 +549,45 @@ export function LaunchForm({
               <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
                 Mint Addresses
               </label>
-              <Tippy content={"Click to add"} hideOnClick={true}>
-                <button
-                  className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
-                    addressValid
-                      ? "border-jacarta-100 dark:border-jacarta-600"
-                      : "border-2 border-red"
-                  }`}
-                  id="mint-addresses"
-                  data-bs-toggle="modal"
-                  data-bs-target="#MintAddressesModal"
-                >
-                  <span>{mintAddressesText}</span>
+              {/* <Tippy content={"Click to add"} hideOnClick={true}> */}
+              <button
+                className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
+                  addressValid
+                    ? "border-jacarta-100 dark:border-jacarta-600"
+                    : "border-2 border-red"
+                }`}
+                id="mint-addresses"
+                data-bs-toggle="modal"
+                data-bs-target="#MintAddressesModal"
+              >
+                <span>{mintAddressesText}</span>
 
-                  <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      width="15"
-                      height="16"
-                      className="fill-accent group-hover:fill-white rounded-md border border-accent "
-                    >
-                      <path fill="none" d="M0 0h24v24H0z" />
-                      <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />{" "}
-                    </svg>
-                  </div>
-                </button>
-              </Tippy>
+                <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="16"
+                    className="fill-accent group-hover:fill-white rounded-md border border-accent "
+                  >
+                    <path fill="none" d="M0 0h24v24H0z" />
+                    <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />{" "}
+                  </svg>
+                </div>
+              </button>
+              {/* </Tippy> */}
               <MintAddressesModal onSubmit={setMintAddresses} />
             </div>
 
-            <Tippy content={launchTip}>
-              <button
-                onClick={launchToken}
-                button-tippy-content="Name your token and launch it"
-                className="rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
-              >
-                {addressValid ? "Launch Token" : "Connect Wallet"}
-              </button>
-            </Tippy>
+            {/* <Tippy content={launchTip}> */}
+            <button
+              onClick={launchToken}
+              button-tippy-content="Name your token and launch it"
+              className="rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+            >
+              {addressValid ? "Launch Token" : "Connect Wallet"}
+            </button>
+            {/* </Tippy> */}
           </div>
           <div className="mb-12 md:w-1/2 md:pr-8">
             <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">

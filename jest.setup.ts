@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import console from "console";
+import { afterAll, beforeAll } from "@jest/globals";
 
 global.console = console;
 dotenv.config({ path: ".env.test" });

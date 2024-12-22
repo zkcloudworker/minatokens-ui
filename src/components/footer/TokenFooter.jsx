@@ -1,3 +1,5 @@
+"use client";
+
 import Socials from "./Socials";
 import Image from "next/image";
 import Link from "next/link";
@@ -63,7 +65,7 @@ export default function TokenFooter() {
 
         <div className="flex flex-col items-center justify-between space-y-2 py-8 sm:flex-row sm:space-y-0">
           <span className="text-sm dark:text-jacarta-400">
-            &copy; {new Date().getFullYear()} {getSiteName()} by{" "}
+            &copy; 2025 {getSiteName()} by{" "}
             <a href="https://zkcloudworker.com" className="hover:text-accent">
               zkCloudWorker
             </a>

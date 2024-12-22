@@ -124,6 +124,16 @@ export async function waitForProveJob(params: {
     ) {
       attempt++;
       console.log(`Sending transaction (${attempt})...`, sendResult);
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "txSent" + lineId,
+          content: `Cannot send transaction to Mina blockchain: ${
+            sendResult.status ? "status: " + sendResult.status + ", " : ""
+          } ${String(sendResult.error ?? "error D4381")}, retrying...`,
+          status: "waiting",
+        },
+      });
       await sleep(10000 * attempt);
       sendResult = await sendTransaction(transaction);
     }

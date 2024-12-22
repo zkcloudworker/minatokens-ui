@@ -3,7 +3,7 @@ import CopyToClipboard from "@/utils/AddClipboard";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
-import tippy from "tippy.js";
+// import tippy from "tippy.js";
 
 export default function EditProfile() {
   const [image, setImage] = useState("/img/user/user_avatar.gif");
@@ -18,10 +18,10 @@ export default function EditProfile() {
       reader.readAsDataURL(file);
     }
   };
-  useEffect(() => {
-    tippy("[data-tippy-content]");
-    new CopyToClipboard();
-  }, []);
+  // useEffect(() => {
+  //   tippy("[data-tippy-content]");
+  //   new CopyToClipboard();
+  // }, []);
   return (
     <section className="relative py-16 dark:bg-jacarta-800">
       <picture className="pointer-events-none absolute inset-0 -z-10 dark:hidden">
@@ -153,7 +153,7 @@ export default function EditProfile() {
               </label>
               <button
                 className="js-copy-clipboard flex w-full select-none items-center rounded-lg border border-jacarta-100 bg-white py-3 px-4 hover:bg-jacarta-50 dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-jacarta-300"
-                data-tippy-content="Copy"
+                // data-tippy-content="Copy"
               >
                 <span>0x7a9fe22691c811ea339401bbb2leb</span>
                 <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">

@@ -1,5 +1,5 @@
 import TokenFooter from "@/components/footer/TokenFooter";
-import TokenHeader from "@/components/headers/TokenHeader";
+//import TokenHeader from "@/components/headers/TokenHeader";
 import API from "@/components/pages/api/API";
 import { FC } from "react";
 import { getSiteName } from "@/lib/chain";
@@ -11,7 +11,7 @@ export const metadata = {
 const ApiPage: FC = () => {
   return (
     <>
-      <TokenHeader showSearch={false} />
+      {/* <TokenHeader showSearch={false} /> */}
       <main>
         <API />
       </main>

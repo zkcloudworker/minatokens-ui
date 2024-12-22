@@ -13,7 +13,7 @@ import {
   algoliaGetUsersLikes,
 } from "@/lib/likes";
 
-import tippy from "tippy.js";
+// import tippy from "tippy.js";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
 import Highlight from "./Highlight";
@@ -105,7 +105,7 @@ export default function TokenList({
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
   useEffect(() => {
-    tippy("[data-tippy-content]");
+    // tippy("[data-tippy-content]");
     checkAvailability().then((result) => {
       console.log("checkAvailability", result);
       setIsAvailable(!result);
@@ -189,7 +189,6 @@ export default function TokenList({
       setAddress(userAddress);
       if (DEBUG) console.log("address", userAddress);
     }
-    console.time("fetchTokenList");
     const searchResult = await algoliaGetTokenList({
       query: search,
       page: page - 1,
@@ -207,7 +206,6 @@ export default function TokenList({
     });
     setItems(newItems);
     setTotalPages(searchResult?.nbPages ?? 1);
-    console.timeEnd("fetchTokenList");
     let likedTokens: string[] = [];
     if (onlyFavorites && userAddress) {
       likedTokens = newItems.map((elm) => elm.tokenAddress);
@@ -424,14 +422,24 @@ export default function TokenList({
               {items.map((elm, i) => (
                 <article key={i}>
                   <div className="block rounded-2.5xl border border-jacarta-100 bg-white p-[1.1875rem] transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700">
-                    <figure className="relative">
-                      <Link href={`/token/${elm.tokenAddress}`}>
+                    <figure className="relative aspect-square mb-4">
+                      <Link
+                        href={`/token/${elm.tokenAddress}`}
+                        className="block w-full h-full"
+                      >
                         <Image
-                          width={230}
-                          height={230}
-                          src={elm.image ?? "launchpad.png"}
-                          alt="token 5"
-                          className="w-full rounded-[0.625rem]"
+                          width={0}
+                          height={0}
+                          sizes="100vw"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                            objectPosition: "top",
+                          }}
+                          src={elm.image ?? "/launchpad.png"}
+                          alt="token image"
+                          className="rounded-[0.625rem]"
                           loading="lazy"
                           crossOrigin="anonymous"
                         />
@@ -442,7 +450,7 @@ export default function TokenList({
                           className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
                             isLiked(elm.tokenAddress) ? "js-likes--active" : ""
                           }`}
-                          data-tippy-content="Favorite"
+                          // data-tippy-content="Favorite"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -495,17 +503,17 @@ export default function TokenList({
                           className="dropdown-menu dropdown-menu-end z-10 hidden min-w-[200px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
                           aria-labelledby="itemActions"
                         >
-                          <button className="block w-full rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                          <button className="block w-full rounded-xl px-5 py-2 text-left font-display text-sm font-semibold transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
                             New bid
                           </button>
                           <hr className="my-2 mx-4 h-px border-0 bg-jacarta-100 dark:bg-jacarta-600" />
-                          <button className="block w-full rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                          <button className="block w-full rounded-xl px-5 py-2 text-left font-display text-sm font-semibold transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
                             Refresh Metadata
                           </button>
-                          <button className="block w-full rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                          <button className="block w-full rounded-xl px-5 py-2 text-left font-display text-sm font-semibold transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
                             Share
                           </button>
-                          <button className="block w-full rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
+                          <button className="block w-full rounded-xl px-5 py-2 text-left font-display text-sm font-semibold transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600">
                             Report
                           </button>
                         </div>
@@ -540,8 +548,8 @@ export default function TokenList({
                           height="24"
                           className="mr-1 mb-[3px] h-4 w-4 fill-jacarta-500 group-hover:fill-accent dark:fill-jacarta-200"
                         >
-                          <path fill="none" d="M0 0H24V24H0z" />
-                          <path d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12h2c0 4.418 3.582 8 8 8s8-3.582 8-8-3.582-8-8-8C9.25 4 6.824 5.387 5.385 7.5H8v2H2v-6h2V6c1.824-2.43 4.729-4 8-4zm1 5v4.585l3.243 3.243-1.415 1.415L11 12.413V7h2z" />
+                          <path fill="none" d="M0 0h24v24H0z" />
+                          <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
                         </svg>
                         <span className=" rtl:mr-1 font-display text-sm font-semibold group-hover:text-accent dark:text-jacarta-200">
                           View History

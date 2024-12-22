@@ -30,7 +30,7 @@ export function TokenPreview({
               <Image
                 width={230}
                 height={230}
-                src={image ?? "launchpad.png"}
+                src={image ?? "/launchpad.png"}
                 alt="token 5"
                 className="w-full rounded-[0.625rem]"
                 loading="lazy"
@@ -42,7 +42,7 @@ export function TokenPreview({
                 className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
                   isLiked ? "js-likes--active" : ""
                 }`}
-                data-tippy-content="Favorite"
+                // data-tippy-content="Favorite"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

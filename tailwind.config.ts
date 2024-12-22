@@ -148,7 +148,7 @@ const config: Config = {
   },
   plugins: [
     require("@tailwindcss/forms"),
-    require("tailwindcss-custom-groups"),
+    //require("tailwindcss-custom-groups"),
   ],
 };
 export default config;

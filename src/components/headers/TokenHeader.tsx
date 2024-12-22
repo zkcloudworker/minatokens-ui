@@ -142,7 +142,7 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
             {/* Mobile Logo / Menu Close */}
             <div className="t-0 fixed left-0 z-10 flex w-full items-center justify-between bg-white p-6 dark:bg-jacarta-800 lg:hidden">
               {/* Mobile Logo */}
-              <Link href="/" className="shrink-0">
+              <Link href="/" className="shrink-0" scroll={false}>
                 <Image
                   width={56}
                   height={66}

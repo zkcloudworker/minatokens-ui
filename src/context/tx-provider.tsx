@@ -19,8 +19,8 @@ export interface TransactionStoreProviderProps {
 export const TransactionStoreProvider = ({
   children,
 }: TransactionStoreProviderProps) => {
-  const storeRef = useRef<TransactionStoreApi>();
-  if (!storeRef.current) {
+  const storeRef = useRef<TransactionStoreApi>(null);
+  if (!storeRef?.current) {
     storeRef.current = createTransactionStore();
   }
 

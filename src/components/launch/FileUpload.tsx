@@ -9,7 +9,7 @@ export interface FileUploadProps {
 
 export function FileUpload({ setImage, setImageURL }: FileUploadProps) {
   const [dragging, setDragging] = useState<boolean>(false);
-  const [imagePreview, setImagePreview] = useState<string>("token.png");
+  const [imagePreview, setImagePreview] = useState<string>("/token.png");
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
