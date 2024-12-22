@@ -7,16 +7,16 @@
     "noEmit": true,
     "noEmitOnError": true,
     "esModuleInterop": true,
+    "target": "ESNext",
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true, // needed for decorators
     "emitDecoratorMetadata": true, // needed for decorators
     "useDefineForClassFields": false, // ensure correct behaviour of class fields with decorators
-
-    "jsx": "preserve",
     "incremental": true,
     "plugins": [
       {
@@ -32,7 +32,9 @@
       "@/public/*": ["./public/*"],
       "@/data/*": ["./data/*"],
       "@/*": ["./src/*"]
-    }
+    },
+    "jsx": "preserve",
+    "types": ["react"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

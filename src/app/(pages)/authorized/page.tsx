@@ -1,5 +1,5 @@
 import TokenFooter from "@/components/footer/TokenFooter";
-import TokenHeader from "@/components/headers/TokenHeader";
+//import TokenHeader from "@/components/headers/TokenHeader";
 import List from "@/components/pages/authorized/List";
 
 export const metadata = {
@@ -9,7 +9,7 @@ export const metadata = {
 export default function AuthorizedPage() {
   return (
     <>
-      <TokenHeader showSearch={false} />
+      {/* <TokenHeader showSearch={false} /> */}
       <main className="pt-[5.5rem] lg:pt-24">
         <List />
       </main>

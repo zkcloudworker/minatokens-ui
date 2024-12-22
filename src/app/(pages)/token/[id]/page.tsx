@@ -1,23 +1,23 @@
-import TokenHeader from "@/components/headers/TokenHeader";
+//import TokenHeader from "@/components/headers/TokenHeader";
 import TokenFooter from "@/components/footer/TokenFooter";
 import TokenDetails from "@/components/pages/item/TokenDetails";
 
-export const metadata = {
-  title: "Token Details",
-};
+// export const metadata = {
+//   title: "Token Details",
+// };
 
-interface TokenDetailsPageProps {
-  params: {
-    id: string;
-  };
-}
+export default async function TokenDetailsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
-export default function TokenDetailsPage({ params }: TokenDetailsPageProps) {
   return (
     <>
-      <TokenHeader showSearch={false} />
+      {/* <TokenHeader showSearch={false} /> */}
       <main className="mt-24">
-        <TokenDetails tokenAddress={params.id} />
+        <TokenDetails tokenAddress={id} />
       </main>
       <TokenFooter />
     </>

@@ -58,7 +58,7 @@ const emailMessages = {
   error: "An error occurred while subscribing",
 };
 
-export default function Process(): JSX.Element {
+export default function Process(): React.ReactElement {
   const [emailMessage, setEmailMessage] = useState(emailMessages.initial);
   const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
 

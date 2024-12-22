@@ -126,7 +126,6 @@ export let transactionStore: StoreApi<TransactionStore> | null = null;
 export const createTransactionStore = (
   initState: TransactionStates = defaultInitState
 ) => {
-  console.log("createTransactionStore", initState);
   if (transactionStore) {
     return transactionStore;
   }

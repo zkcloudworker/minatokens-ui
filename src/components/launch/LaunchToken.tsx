@@ -153,7 +153,7 @@ const LaunchToken: React.FC = () => {
               caption={state.isLaunched ? "Token Launched" : "Launching Token"}
               items={state.timelineItems}
               tokenAddress={state.tokenAddress}
-              image={state.tokenData.imageURL ?? "token.png"}
+              image={state.tokenData.imageURL ?? "/token.png"}
               likes={state.likes}
               name={state.tokenData.name ?? state.tokenData.symbol}
               symbol={state.tokenData.symbol}

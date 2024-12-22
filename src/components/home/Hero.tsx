@@ -31,6 +31,7 @@ export default function Hero() {
             <Image
               width={1920}
               height={900}
+              priority
               src="/img/gradient_dark.jpg"
               alt="gradient dark"
               className="w-full"
