@@ -1,7 +1,7 @@
 "use server";
 import { searchClient } from "@algolia/client-search";
 import { DeployedTokenInfo } from "./token";
-import { Like } from "./likes";
+import { Like, getUsersLikes } from "./likes";
 import {
   getAllTokensByAddress,
   BlockberryTokenData,
@@ -30,18 +30,17 @@ export interface TokenList {
   processingTimeMS: number;
 }
 
-export async function algoliaGetTokenList(
-  params: {
-    query?: string;
-    hitsPerPage?: number;
-    page?: number;
-    favoritesOfAddress?: string;
-    issuedByAddress?: string;
-    ownedByAddress?: string;
-  } = {}
-): Promise<TokenList | undefined> {
-  //log.info("algoliaGetTokenList", params);
-  const { favoritesOfAddress, issuedByAddress, ownedByAddress } = params;
+export async function algoliaGetTokenList(params: {
+  query?: string;
+  hitsPerPage?: number;
+  page?: number;
+  onlyFavorites: boolean;
+  favorites: string[];
+  issuedByAddress?: string;
+  ownedByAddress?: string;
+}): Promise<TokenList | undefined> {
+  console.log("algoliaGetTokenList", params);
+  const { onlyFavorites, favorites, issuedByAddress, ownedByAddress } = params;
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
     throw new Error("ALGOLIA_PROJECT is undefined");
@@ -51,7 +50,7 @@ export async function algoliaGetTokenList(
   //if (DEBUG) console.log("algoliaGetTokenList", params);
   const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
   const indexName = `tokens-${chain}`;
-  const likesIndexName = `token-likes-${chain}`;
+  //const likesIndexName = `token-likes-${chain}`;
 
   async function filterFromBlockberryTokens(
     blockberryTokensPromise: Promise<BlockberryTokenData[]> | undefined
@@ -81,23 +80,9 @@ export async function algoliaGetTokenList(
         })
       : undefined;
 
-    if (favoritesOfAddress !== undefined && issuedByAddress !== undefined) {
-      const likesResult = await client.searchSingleIndex({
-        indexName: likesIndexName,
-        searchParams: {
-          query: "",
-          hitsPerPage: 1000,
-          page: 0,
-          facetFilters: [`userAddress:${favoritesOfAddress}`],
-          attributesToRetrieve: ["tokenAddress"],
-        },
-      });
-      const likedTokens =
-        likesResult?.hits?.map(
-          (elm) => (elm as unknown as Like).tokenAddress
-        ) ?? [];
-      if (likedTokens.length > 0) {
-        const filters = likedTokens
+    if (onlyFavorites && issuedByAddress !== undefined) {
+      if (favorites.length > 0) {
+        const filters = favorites
           .map((tokenAddress) => `tokenAddress:${tokenAddress}`)
           .join(" OR ");
 
@@ -121,34 +106,22 @@ export async function algoliaGetTokenList(
           );
         }
       }
-    } else if (favoritesOfAddress !== undefined) {
-      const likesResult = await client.searchSingleIndex({
-        indexName: likesIndexName,
-        searchParams: {
-          query: "",
-          hitsPerPage: 1000,
-          page: 0,
-          facetFilters: [`userAddress:${favoritesOfAddress}`],
-          attributesToRetrieve: ["tokenAddress"],
-        },
-      });
-      const likedTokens =
-        likesResult?.hits?.map(
-          (elm) => (elm as unknown as Like).tokenAddress
-        ) ?? [];
-      if (likedTokens.length > 0) {
-        const filters = likedTokens
+    } else if (onlyFavorites) {
+      if (favorites.length > 0) {
+        const filters = favorites
           .map((tokenAddress) => `tokenAddress:${tokenAddress}`)
           .join(" OR ");
+        console.time("favorites");
         const result = await client.searchSingleIndex({
           indexName,
           searchParams: {
             query,
             hitsPerPage: ownedByAddress ? 1000 : hitsPerPage,
             page: ownedByAddress ? 0 : page,
-            filters: likedTokens.length > 0 ? filters : undefined,
+            filters: favorites.length > 0 ? filters : undefined,
           },
         });
+        console.timeEnd("favorites");
         tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
         if (ownedByAddress && tokenList?.hits !== undefined) {
           const blockberryTokenIdsList = await listFromBlockberryTokens(
@@ -193,6 +166,7 @@ export async function algoliaGetTokenList(
         tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
       }
     } else {
+      console.time("else");
       const result = await client.searchSingleIndex({
         indexName,
         searchParams: {
@@ -201,6 +175,7 @@ export async function algoliaGetTokenList(
           page,
         },
       });
+      console.timeEnd("else");
       tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
     }
 
