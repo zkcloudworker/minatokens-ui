@@ -16,7 +16,12 @@ const HomeToken: FC = () => {
       {/* <TokenHeader showSearch={true} /> */}
       <main>
         <Hero />
-        <TokenList title="Trending" showIcon={true} initialNumberOfItems={8} />
+        <TokenList
+          title="Trending"
+          showIcon={true}
+          initialNumberOfItems={8}
+          key="home-list"
+        />
         <Process />
       </main>
       <TokenFooter />

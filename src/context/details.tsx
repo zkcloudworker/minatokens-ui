@@ -119,9 +119,6 @@ const tokenDetailsReducer = (
         },
       };
     case "SET_TOKEN_STATE":
-      const index = state.list.findIndex(
-        (elm) => elm.tokenAddress === action.payload.tokenAddress
-      );
       return {
         ...state,
         tokens: {
@@ -228,6 +225,19 @@ const tokenDetailsReducer = (
       return {
         ...state,
         list: action.payload.items,
+        tokens: {
+          ...state.tokens,
+          ...action.payload.items.reduce<Record<string, TokenDetailsState>>(
+            (acc, curr) => {
+              acc[curr.tokenAddress] = {
+                ...state.tokens[curr.tokenAddress],
+                info: curr,
+              };
+              return acc;
+            },
+            {}
+          ),
+        },
       };
     case "SET_FAVORITES":
       return {

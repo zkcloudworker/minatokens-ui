@@ -95,7 +95,6 @@ export default function TokenList({
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const { state, dispatch } = useTokenDetails();
   const [itemsToDisplay, setItemsToDisplay] = useState<DeployedTokenInfo[]>([]);
-  const [tokensFetched, setTokensFetched] = useState<string[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [numberOfItems, setNumberOfItems] = useState<number>(
@@ -108,7 +107,6 @@ export default function TokenList({
   useEffect(() => {
     // tippy("[data-tippy-content]");
     checkAvailability().then((result) => {
-      console.log("checkAvailability", result);
       setIsAvailable(!result);
       if (result) window.location.href = "/not-available";
     });
@@ -271,10 +269,8 @@ export default function TokenList({
     const fetchTokenState = async () => {
       const tokensToFetch: DeployedTokenInfo[] = [];
       for (const item of state.list) {
-        const index = tokensFetched.findIndex(
-          (elm) => elm === item.tokenAddress
-        );
-        if (index === -1) tokensToFetch.push(item);
+        if (!state.tokens[item.tokenAddress]?.tokenState === undefined)
+          tokensToFetch.push(item);
       }
       for (const token of tokensToFetch) {
         const state = await getTokenState({
@@ -282,8 +278,7 @@ export default function TokenList({
           info: token,
         });
         if (state.success) {
-          console.log("setTokensFetched", token.tokenAddress);
-          setTokensFetched((prev) => [...prev, token.tokenAddress]);
+          if (DEBUG) console.log("fetchTokenState", token.tokenAddress);
           setTokenState(state.tokenState);
         }
       }
@@ -302,7 +297,6 @@ export default function TokenList({
           address,
         })),
       });
-      console.log("newLikes", newLikes);
       setLikes(
         newLikes.map((like) => ({
           tokenAddress: like.address,
