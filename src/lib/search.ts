@@ -40,6 +40,7 @@ export async function algoliaGetTokenList(params: {
   ownedByAddress?: string;
 }): Promise<TokenList | undefined> {
   console.log("algoliaGetTokenList", params);
+  console.time("algoliaGetTokenList internal");
   const { onlyFavorites, favorites, issuedByAddress, ownedByAddress } = params;
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
@@ -211,7 +212,7 @@ export async function algoliaGetTokenList(params: {
     "serverTimeMS": 2
 }
     */
-
+    console.timeEnd("algoliaGetTokenList internal");
     return tokenList;
   } catch (error: any) {
     log.error("algoliaGetToken error:", {
