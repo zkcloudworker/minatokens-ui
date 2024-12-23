@@ -5,6 +5,7 @@ export type ApiName =
   | "info:nft-v2"
   | "info:token"
   | "info:balance"
+  | "info:contract"
   | "transaction:prove"
   | "transaction:proof"
   | "transaction:status"

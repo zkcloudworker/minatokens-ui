@@ -2,6 +2,7 @@
 
 import React, { createContext, useReducer, useContext, ReactNode } from "react";
 import { DeployedTokenInfo, TokenState, TokenAction } from "@/lib/token";
+import { Order } from "@/components/orderbook/OrderBook";
 import {
   BlockberryTokenTransaction,
   BlockberryTokenHolder,
@@ -14,10 +15,14 @@ interface TokenDetailsState {
   holders: BlockberryTokenHolder[];
   transactions: BlockberryTokenTransaction[];
   action: TokenAction | undefined;
+  bid: Order | undefined;
+  offer: Order | undefined;
+  isPriceLoaded: boolean;
 }
 
 interface TokenDetailsStates {
-  [tokenAddress: string]: TokenDetailsState;
+  tokens: { [tokenAddress: string]: TokenDetailsState };
+  list: DeployedTokenInfo[];
 }
 type Action =
   | {
@@ -29,6 +34,10 @@ type Action =
       payload: { tokenAddress: string; tokenState: TokenState };
     }
   | { type: "SET_LIKE"; payload: { tokenAddress: string; like: boolean } }
+  | {
+      type: "SET_LIKES";
+      payload: { tokenAddress: string; likes: number };
+    }
   | {
       type: "ADD_LIKE";
       payload: { tokenAddress: string };
@@ -47,9 +56,28 @@ type Action =
   | {
       type: "SET_ACTION";
       payload: { tokenAddress: string; action: TokenAction | undefined };
+    }
+  | {
+      type: "SET_BID";
+      payload: { tokenAddress: string; bid: Order | undefined };
+    }
+  | {
+      type: "SET_OFFER";
+      payload: { tokenAddress: string; offer: Order | undefined };
+    }
+  | {
+      type: "SET_IS_PRICE_LOADED";
+      payload: { tokenAddress: string; isPriceLoaded: boolean };
+    }
+  | {
+      type: "SET_ITEMS";
+      payload: { items: DeployedTokenInfo[] };
     };
 
-const initialState: TokenDetailsStates = {};
+const initialState: TokenDetailsStates = {
+  tokens: {},
+  list: [],
+};
 
 const TokenDetailsContext = createContext<{
   state: TokenDetailsStates;
@@ -72,38 +100,77 @@ const tokenDetailsReducer = (
     case "SET_TOKEN_INFO":
       return {
         ...state,
-        [action.payload.tokenAddress]: {
-          ...state[action.payload.tokenAddress],
-          info: action.payload.info,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...state.tokens[action.payload.tokenAddress],
+            info: action.payload.info,
+          },
         },
       };
     case "SET_TOKEN_STATE":
+      const index = state.list.findIndex(
+        (elm) => elm.tokenAddress === action.payload.tokenAddress
+      );
       return {
         ...state,
-        [action.payload.tokenAddress]: {
-          ...state[action.payload.tokenAddress],
-          tokenState: action.payload.tokenState,
+        list:
+          index === -1
+            ? state.list
+            : [
+                ...state.list.slice(0, index),
+                {
+                  ...state.list[index],
+                  ...action.payload.tokenState,
+                },
+                ...state.list.slice(index + 1),
+              ],
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...state.tokens[action.payload.tokenAddress],
+            tokenState: action.payload.tokenState,
+          },
         },
       };
+
     case "SET_LIKE":
       return {
         ...state,
-        [action.payload.tokenAddress]: {
-          ...state[action.payload.tokenAddress],
-          like: action.payload.like,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...state.tokens[action.payload.tokenAddress],
+            like: action.payload.like,
+          },
         },
       };
+    case "SET_LIKES":
+      return {
+        ...state,
+        list: state.list.map((token) => ({
+          ...token,
+          likes:
+            token.tokenAddress === action.payload.tokenAddress
+              ? action.payload.likes
+              : token.likes,
+        })),
+      };
+
     case "ADD_LIKE": {
-      const tokenDetails = state[action.payload.tokenAddress];
+      const tokenDetails = state.tokens[action.payload.tokenAddress];
       if (!tokenDetails?.info) return state;
 
       return {
         ...state,
-        [action.payload.tokenAddress]: {
-          ...tokenDetails,
-          info: {
-            ...tokenDetails.info,
-            likes: (tokenDetails.info.likes || 0) + 1,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...tokenDetails,
+            info: {
+              ...tokenDetails.info,
+              likes: (tokenDetails.info.likes || 0) + 1,
+            },
           },
         },
       };
@@ -111,26 +178,73 @@ const tokenDetailsReducer = (
     case "SET_HOLDERS":
       return {
         ...state,
-        [action.payload.tokenAddress]: {
-          ...state[action.payload.tokenAddress],
-          holders: action.payload.holders,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...state.tokens[action.payload.tokenAddress],
+            holders: action.payload.holders,
+          },
         },
       };
     case "SET_TRANSACTIONS":
       return {
         ...state,
-        [action.payload.tokenAddress]: {
-          ...state[action.payload.tokenAddress],
-          transactions: action.payload.transactions,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...state.tokens[action.payload.tokenAddress],
+            transactions: action.payload.transactions,
+          },
         },
       };
     case "SET_ACTION":
       return {
         ...state,
-        [action.payload.tokenAddress]: {
-          ...state[action.payload.tokenAddress],
-          action: action.payload.action,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...state.tokens[action.payload.tokenAddress],
+            action: action.payload.action,
+          },
         },
+      };
+    case "SET_BID":
+      return {
+        ...state,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...state.tokens[action.payload.tokenAddress],
+            bid: action.payload.bid,
+          },
+        },
+      };
+    case "SET_OFFER":
+      return {
+        ...state,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...state.tokens[action.payload.tokenAddress],
+            offer: action.payload.offer,
+          },
+        },
+      };
+    case "SET_IS_PRICE_LOADED":
+      return {
+        ...state,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...state.tokens[action.payload.tokenAddress],
+            isPriceLoaded: action.payload.isPriceLoaded,
+          },
+        },
+      };
+    case "SET_ITEMS":
+      return {
+        ...state,
+        list: action.payload.items,
       };
     default:
       return state;

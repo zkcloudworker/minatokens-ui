@@ -361,7 +361,7 @@ export async function tokenTransaction(props: {
         json: { error: "Invalid admin contract address" },
       };
     }
-    console.time("prepared tx");
+
     const fee = 100_000_000;
     const tokenAddress = PublicKey.fromBase58(txParams.tokenAddress);
     if (DEBUG) console.log("Contract", tokenAddress.toBase58());
@@ -582,7 +582,6 @@ export async function tokenTransaction(props: {
     if (signers.length > 0)
       tx.sign(signers.map((s) => PrivateKey.fromBase58(s)));
     const payloads = createTransactionPayloads(tx);
-    console.timeEnd("prepared tx");
 
     return {
       status: 200,

@@ -1,5 +1,5 @@
 "use server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Bids, Offers, Prisma } from "@prisma/client";
 import { getPrismaChainName } from "./chain";
 const prismaChainName = getPrismaChainName();
 const prisma = new PrismaClient();
@@ -170,7 +170,68 @@ export async function getOrderbook(params: {
   maxItems?: number;
 }) {
   const { tokenAddress, ownerAddress, maxItems = 5 } = params;
-  const offers = await getOffers({ tokenAddress, ownerAddress, maxItems });
-  const bids = await getBids({ tokenAddress, ownerAddress, maxItems });
-  return { offers, bids };
+  const offers = getOffers({ tokenAddress, ownerAddress, maxItems });
+  const bids = getBids({ tokenAddress, ownerAddress, maxItems });
+  return { offers: await offers, bids: await bids };
+}
+
+export async function getTokenBids(
+  tokenAddresses: string[]
+): Promise<Record<string, Bids | null>> {
+  const bids = await prisma.$queryRaw<Bids[]>(Prisma.sql`
+    SELECT DISTINCT ON ("tokenAddress")
+      *
+    FROM "Bids"
+    WHERE "tokenAddress" IN (${Prisma.join(tokenAddresses)})
+      AND "chain"::text = ${prismaChainName}
+    ORDER BY "tokenAddress", "price" DESC
+  `);
+
+  const result: Record<string, Bids | null> = {};
+  tokenAddresses.forEach((tokenAddress) => {
+    result[tokenAddress] =
+      bids.find((b) => b.tokenAddress === tokenAddress) || null;
+  });
+
+  return result;
+}
+
+export async function getTokenOffers(
+  tokenAddresses: string[]
+): Promise<Record<string, Offers | null>> {
+  const offers = await prisma.$queryRaw<Offers[]>(Prisma.sql`
+    SELECT DISTINCT ON ("tokenAddress")
+      *
+    FROM "Offers"
+    WHERE "tokenAddress" IN (${Prisma.join(tokenAddresses)})
+      AND "chain"::text = ${prismaChainName}
+    ORDER BY "tokenAddress", "price" ASC
+  `);
+
+  const result: Record<string, Offers | null> = {};
+  tokenAddresses.forEach((tokenAddress) => {
+    result[tokenAddress] =
+      offers.find((o) => o.tokenAddress === tokenAddress) || null;
+  });
+
+  return result;
+}
+
+export async function getTokenPrices(
+  tokenAddresses: string[]
+): Promise<Record<string, { bid: Bids | null; offer: Offers | null }>> {
+  const [bids, offers] = await Promise.all([
+    getTokenBids(tokenAddresses),
+    getTokenOffers(tokenAddresses),
+  ]);
+
+  const result: Record<string, { bid: Bids | null; offer: Offers | null }> = {};
+  tokenAddresses.forEach((tokenAddress) => {
+    result[tokenAddress] = {
+      bid: bids[tokenAddress],
+      offer: offers[tokenAddress],
+    };
+  });
+
+  return result;
 }

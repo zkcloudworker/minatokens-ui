@@ -35,7 +35,7 @@ export async function deployToken(params: {
   error?: string;
   jobId?: string;
 }> {
-  console.time("ready to sign");
+
   const {
     tokenPrivateKey,
     adminPublicKey,
@@ -109,7 +109,7 @@ export async function deployToken(params: {
     if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
     const wallet = PublicKey.fromBase58(WALLET);
 
-    console.time("prepared tx");
+
     const memo = `deploy token ${symbol}`.substring(0, 30);
 
     await fetchMinaAccount({
@@ -226,8 +226,6 @@ export async function deployToken(params: {
     // const payloads = createTransactionPayloads(tx);
     const payloads = launchReply.json;
 
-    console.timeEnd("prepared tx");
-    console.timeEnd("ready to sign");
 
     updateTimelineItem({
       groupId,
@@ -241,7 +239,7 @@ export async function deployToken(params: {
       groupId,
       update: messages.txSigned,
     });
-    console.time("sent transaction");
+
 
     if (!AURO_TEST) {
       const txResult = await mina?.sendTransaction(payloads.walletPayload);
@@ -282,19 +280,7 @@ export async function deployToken(params: {
 
     const jobId = await proveTransaction(payloads);
 
-    // const jobId = await sendDeployTransaction({
-    //   txType: "deploy",
-    //   serializedTransaction,
-    //   signedData,
-    //   adminContractAddress: adminContractPublicKey.toBase58(),
-    //   tokenAddress: contractAddress.toBase58(),
-    //   senderAddress: sender.toBase58(),
-    //   chain,
-    //   symbol,
-    //   uri,
-    //   sendTransaction: false,
-    // });
-    console.timeEnd("sent transaction");
+
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {
       log.error("deployToken: Deploy transaction prove job failed", { symbol });

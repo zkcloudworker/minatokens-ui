@@ -204,3 +204,17 @@ model Bids {
   @@index([price])
 }
 
+model Likes {
+  tokenAddress String
+  tokenId String
+  userAddress String
+  chain Chain
+  @@id([tokenAddress, tokenId, userAddress, chain])
+  createdAt DateTime @default(now())
+
+  @@index([chain])
+  @@index([tokenAddress])
+  @@index([userAddress])
+  @@index([tokenId])
+}
+

@@ -8,7 +8,7 @@ import { DeployedTokenInfo, TokenState } from "@/lib/token";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
-import { algoliaWriteLike, algoliaGetLike } from "@/lib/likes";
+import { writeLike, getLike } from "@/lib/likes";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getTokenState } from "@/lib/state";
 import { socials_item } from "@/data/socials";
@@ -55,14 +55,26 @@ interface ItemDetailsProps {
 
 export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   const { state, dispatch } = useTokenDetails();
-  const tokenDetails = state[tokenAddress] || {};
+  const tokenDetails = state.tokens[tokenAddress] || {};
   const item = tokenDetails.info;
-  const [bid, setBid] = useState<Order | null>(null);
-  const [offer, setOffer] = useState<Order | null>(null);
-  const [isPriceLoaded, setIsPriceLoaded] = useState<boolean>(false);
+  const bid = tokenDetails.bid;
+  const offer = tokenDetails.offer;
+  const isPriceLoaded = tokenDetails.isPriceLoaded;
+
+  const setBid = (bid: Order) =>
+    dispatch({ type: "SET_BID", payload: { tokenAddress, bid } });
+  const setOffer = (offer: Order) =>
+    dispatch({ type: "SET_OFFER", payload: { tokenAddress, offer } });
+  const setIsPriceLoaded = (isPriceLoaded: boolean) =>
+    dispatch({
+      type: "SET_IS_PRICE_LOADED",
+      payload: { tokenAddress, isPriceLoaded },
+    });
 
   useEffect(() => {
     const fetchOrderbook = async () => {
+      if (isPriceLoaded) return;
+
       const { offers, bids } = await getOrderbook({
         tokenAddress,
         maxItems: 1,
@@ -78,7 +90,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
               type: "offer",
             } as Order);
 
-      setOffer(offer);
+      if (offer) setOffer(offer);
       const bid: Order | null =
         bids.length === 0
           ? null
@@ -88,8 +100,8 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
               address: bids[0].bidAddress,
               type: "bid",
             } as Order);
-      setBid(bid);
-      setIsPriceLoaded(offer !== null || bid !== null);
+      if (bid) setBid(bid);
+      setIsPriceLoaded(true);
     };
     fetchOrderbook();
   }, [tokenAddress]);
@@ -128,7 +140,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   useEffect(() => {
     if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
     const fetchItem = async () => {
-      if (tokenAddress) {
+      if (tokenAddress && !item) {
         const item = await algoliaGetToken({ tokenAddress });
         if (item) setItem(item);
         if (DEBUG) console.log("item", item);
@@ -149,7 +161,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
         }
         if (DEBUG) console.log("userAddress", userAddress);
         if (userAddress) {
-          const like = await algoliaGetLike({
+          const like = await getLike({
             tokenAddress,
             userAddress,
           });
@@ -164,7 +176,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   useEffect(() => {
     if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
     const fetchItem = async () => {
-      if (tokenAddress && item) {
+      if (tokenAddress && item && !tokenState) {
         const tokenStateResult = await getTokenState({
           tokenAddress,
           info: item,
@@ -218,11 +230,13 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
     let userAddress = address;
     if (!userAddress) {
       userAddress = (await getWalletInfo()).address;
+      if (!userAddress)
+        userAddress = (await connectWallet({ openLink: true })).address;
       if (userAddress) setAddress(userAddress);
     }
     if (DEBUG) console.log("userAddress", userAddress);
     if (tokenAddress && userAddress) {
-      const written = await algoliaWriteLike({ tokenAddress, userAddress });
+      const written = await writeLike({ tokenAddress, userAddress });
       if (DEBUG)
         console.log("written like", { written, tokenAddress, userAddress });
     }
@@ -415,7 +429,12 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                 </span>
                 <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
                   Supply:{" "}
-                  {item?.totalSupply ? item?.totalSupply.toFixed(0) : ""}
+                  {item?.totalSupply
+                    ? item?.totalSupply.toLocaleString(undefined, {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2,
+                      })
+                    : ""}
                 </span>
                 <div className="flex items-center space-x-1 rounded-xl border border-jacarta-100 bg-white py-2 px-4 dark:border-jacarta-600 dark:bg-jacarta-700">
                   <span
@@ -623,7 +642,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
               </div>
 
               {/* Trade */}
-              {isPriceLoaded && (
+              {(bid || offer) && (
                 <div className="min-w-80 max-w-md rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
                   <div className="mb-8 sm:flex sm:flex-wrap">
                     <div className="sm:w-1/2 sm:pr-4 lg:pr-8">

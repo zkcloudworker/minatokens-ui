@@ -1,158 +1,182 @@
 "use server";
-import { algoliasearch } from "algoliasearch";
-import { searchClient } from "@algolia/client-search";
-import { algoliaGetToken, algoliaWriteToken } from "./algolia";
-import { getChain } from "./chain";
+import { PrismaClient, Chain } from "@prisma/client";
+import { getPrismaChainName } from "./chain";
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
 
-const chain = getChain();
+const prisma = new PrismaClient();
+const chain = getPrismaChainName() as Chain;
 const log = logtail.with({
   service: "likes",
   chain,
 });
 const DEBUG = debug();
-
-const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
+const defaultTokenId = "wSHV2S4qX9jFsLjQo8r1BsMLH2ZRKsZx6EJd1sbozGPieEC4Jf";
 
 export interface Like {
   tokenAddress: string;
   userAddress: string;
+  tokenId?: string; // or make this required if you always have a tokenId
 }
 
-export async function algoliaWriteLike(params: Like): Promise<boolean> {
-  const { tokenAddress, userAddress } = params;
-  if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
-  if (ALGOLIA_PROJECT === undefined)
-    throw new Error("ALGOLIA_PROJECT is undefined");
+export async function writeLike(params: Like): Promise<boolean> {
+  const { tokenAddress, userAddress, tokenId = defaultTokenId } = params;
   try {
-    const client = algoliasearch(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const indexName = `token-likes-${chain}`;
-    if (DEBUG) console.log("algoliaWriteLike", params, indexName);
-    const objectID = tokenAddress + "." + userAddress;
-    if (!(await algoliaGetLike({ tokenAddress, userAddress }))) {
-      const likes = await algoliaLikesCount({ tokenAddress });
-      const timestamp = Date.now();
-      const data = {
-        objectID,
-        tokenAddress,
-        userAddress,
-        timestamp,
-      };
+    // Check if we've already liked this token
+    const existingLike = await prisma.likes.findUnique({
+      where: {
+        tokenAddress_tokenId_userAddress_chain: {
+          tokenAddress,
+          tokenId,
+          userAddress,
+          chain,
+        },
+      },
+    });
 
-      const result = await client.saveObject({
-        indexName,
-        body: data,
+    if (!existingLike) {
+      // Create a new like
+      await prisma.likes.create({
+        data: {
+          tokenAddress,
+          tokenId,
+          userAddress,
+          chain,
+        },
       });
-      if (result.taskID === undefined) {
-        log.error("algoliaWriteLike: Algolia write result is", { result });
-        return false;
-      }
-
-      const info = await algoliaGetToken({ tokenAddress });
-
-      if (
-        info !== undefined &&
-        likes !== undefined &&
-        (info.likes === undefined || info.likes <= likes)
-      ) {
-        info.likes = likes + 1;
-        info.updated = timestamp;
-        await algoliaWriteToken({ tokenAddress, info });
-      }
     }
 
     return true;
   } catch (error) {
-    log.error("algoliaWriteLike: error", { error, params });
+    log.error("writeLike: Prisma create error", { error, params });
     return false;
   }
 }
 
-export async function algoliaGetLike(params: Like): Promise<boolean> {
-  if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
-  if (ALGOLIA_PROJECT === undefined)
-    throw new Error("ALGOLIA_PROJECT is undefined");
+export async function getLike(params: Like): Promise<boolean> {
+  const { tokenAddress, userAddress, tokenId = defaultTokenId } = params;
   try {
-    const { tokenAddress, userAddress } = params;
-    const client = algoliasearch(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const indexName = `token-likes-${chain}`;
-    const objectID = tokenAddress + "." + userAddress;
-    //if (DEBUG) console.log("algoliaGetLike", params, indexName);
-    const result = await client.getObject({
-      indexName,
-      objectID,
-    });
-    //if (DEBUG) console.log("algoliaGetLike result:", result);
-    return true;
-  } catch (error: any) {
-    return false;
-  }
-}
-
-export async function algoliaLikesCount(params: {
-  tokenAddress: string;
-}): Promise<number> {
-  const { tokenAddress } = params;
-  if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
-  if (ALGOLIA_PROJECT === undefined)
-    throw new Error("ALGOLIA_PROJECT is undefined");
-
-  try {
-    const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const indexName = `token-likes-${chain}`;
-    //if (DEBUG) console.log("algoliaLikesCount", params, indexName);
-    const result = await client.searchForFacetValues({
-      indexName,
-      facetName: "tokenAddress",
-      searchForFacetValuesRequest: {
-        facetQuery: tokenAddress,
-        maxFacetHits: 1,
+    const existingLike = await prisma.likes.findUnique({
+      where: {
+        tokenAddress_tokenId_userAddress_chain: {
+          tokenAddress,
+          tokenId,
+          userAddress,
+          chain,
+        },
       },
     });
+    return existingLike !== null;
+  } catch (error) {
+    log.error("getLike: Prisma lookup error", { error, params });
+    return false;
+  }
+}
 
-    //if (DEBUG) console.log("algoliaLikesCount result:", result);
-    return result?.facetHits[0]?.count ?? 0;
-  } catch (error: any) {
-    log.error("algoliaLikesCount: error", {
-      error: error?.message ?? String(error),
+export async function likesCount(params: {
+  tokenAddress: string;
+  tokenId?: string;
+}): Promise<number> {
+  const { tokenAddress, tokenId = defaultTokenId } = params;
+  try {
+    const count = await prisma.likes.count({
+      where: {
+        tokenAddress,
+        tokenId,
+        chain,
+      },
+    });
+    return count;
+  } catch (error) {
+    log.error("likesCount: error", {
+      error: error instanceof Error ? error.message : String(error),
       params,
     });
     return 0;
   }
 }
 
-export async function algoliaGetUsersLikes(params: {
-  userAddress: string;
-}): Promise<string[]> {
-  //if (DEBUG) console.log("algoliaGetUsersLikes start", params);
-  const { userAddress } = params;
-  if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
-  if (ALGOLIA_PROJECT === undefined)
-    throw new Error("ALGOLIA_PROJECT is undefined");
+export async function batchLikesCounts(params: {
+  tokens: { address: string; tokenId?: string }[];
+}): Promise<number[]> {
+  const { tokens } = params;
 
   try {
-    const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const indexName = `token-likes-${chain}`;
-    //if (DEBUG) console.log("algoliaGetUsersLikes", params, indexName);
-    const result = await client.searchSingleIndex({
-      indexName,
-      searchParams: {
-        query: "",
-        hitsPerPage: 1000,
-        page: 0,
-        facetFilters: [`userAddress:${userAddress}`],
-        attributesToRetrieve: ["tokenAddress"],
+    // Normalize or fill missing tokenIds with defaultTokenId
+    const items = tokens.map((token) => ({
+      tokenAddress: token.address,
+      tokenId: token.tokenId ?? defaultTokenId,
+    }));
+
+    // Make a single groupBy query for all tokens
+    const groupedCounts = await prisma.likes.groupBy({
+      by: ["tokenAddress", "tokenId"],
+      _count: {
+        _all: true,
+      },
+      where: {
+        chain,
+        OR: items.map((t) => ({
+          tokenAddress: t.tokenAddress,
+          tokenId: t.tokenId,
+        })),
       },
     });
 
-    //if (DEBUG) console.log("algoliaGetUsersLikes result:", result);
-    return (
-      result?.hits?.map((elm) => (elm as unknown as Like).tokenAddress) ?? []
-    );
-  } catch (error: any) {
-    log.error("algoliaGetUsersLikes: error", {
-      error: error?.message ?? String(error),
+    // Re-map the grouped results back to the input tokens order
+    return items.map((item) => {
+      const match = groupedCounts.find(
+        (g) =>
+          g.tokenAddress === item.tokenAddress && g.tokenId === item.tokenId
+      );
+      return match?._count._all ?? 0;
+    });
+  } catch (error) {
+    log.error("batchLikesCounts: error", {
+      error: error instanceof Error ? error.message : String(error),
+      params,
+    });
+    return tokens.map(() => 0);
+  }
+}
+
+// export async function batchLikes(params: {
+//   tokens: { address: string; tokenId?: string }[];
+// }): Promise<number[]> {
+//   const { tokens } = params;
+//   return Promise.all(
+//     tokens.map((token) =>
+//       likesCount({
+//         tokenAddress: token.address,
+//         tokenId: token.tokenId ?? defaultTokenId,
+//       })
+//     )
+//   );
+// }
+
+export async function getUsersLikes(params: {
+  userAddress: string;
+}): Promise<Like[]> {
+  const { userAddress } = params;
+  try {
+    const results = await prisma.likes.findMany({
+      where: {
+        userAddress,
+        chain,
+      },
+      select: {
+        tokenAddress: true,
+        tokenId: true,
+      },
+    });
+    return results.map((like) => ({
+      tokenAddress: like.tokenAddress,
+      tokenId: like.tokenId,
+      userAddress,
+    }));
+  } catch (error) {
+    log.error("getUsersLikes: error", {
+      error: error instanceof Error ? error.message : String(error),
       params,
     });
     return [];
