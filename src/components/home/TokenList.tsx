@@ -92,10 +92,13 @@ export default function TokenList({
   initialNumberOfItems,
 }: TokenListProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const { state, dispatch } = useTokenDetails();
   const items = state.list;
+  const likes = state.likes;
+  const favorites = state.favorites;
+  const [itemsToDisplay, setItemsToDisplay] = useState<DeployedTokenInfo[]>([]);
   const [tokensFetched, setTokensFetched] = useState<string[]>([]);
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [numberOfItems, setNumberOfItems] = useState<number>(
@@ -118,6 +121,19 @@ export default function TokenList({
       ? [initialNumberOfItems, ...numberOfItemsOptions]
       : numberOfItemsOptions;
 
+  useEffect(() => {
+    const filtered = categories[categoriesIndexes.favorites].selected
+      ? items.filter((item) => favorites.includes(item.tokenAddress))
+      : items;
+    setItemsToDisplay(
+      filtered.slice(0, numberOfItems).map((item) => ({
+        ...item,
+        likes: state.likes[item.tokenAddress] ?? 0,
+        like: favorites.includes(item.tokenAddress),
+      }))
+    );
+  }, [categories, items, favorites, numberOfItems]);
+
   const setItem = (info: DeployedTokenInfo) =>
     dispatch({
       type: "SET_TOKEN_INFO",
@@ -128,6 +144,18 @@ export default function TokenList({
     dispatch({
       type: "SET_ITEMS",
       payload: { items },
+    });
+
+  const setFavorites = (favorites: string[]) =>
+    dispatch({
+      type: "SET_FAVORITES",
+      payload: { favorites },
+    });
+
+  const addFavorite = (tokenAddress: string) =>
+    dispatch({
+      type: "ADD_FAVORITE",
+      payload: { tokenAddress },
     });
 
   const setBid = (tokenAddress: string, bid: Order) =>
@@ -148,28 +176,23 @@ export default function TokenList({
       payload: { tokenAddress, isPriceLoaded },
     });
 
-  const setLikes = (tokenAddress: string, likes: number) =>
+  const setLikes = (likes: { tokenAddress: string; likes: number }[]) =>
     dispatch({
       type: "SET_LIKES",
-      payload: { tokenAddress, likes },
+      payload: likes,
     });
 
-  // TODO: save favorites to local or network storage like AWS or algolia
   const addLike = async (tokenAddress: string) => {
-    setFavorites((prev) => {
-      if (prev.includes(tokenAddress)) {
-        return prev;
-      } else {
-        const index = items.findIndex(
-          (elm) => elm.tokenAddress === tokenAddress
-        );
-        if (index !== -1) {
-          items[index].likes = (items[index].likes ?? 0) + 1;
-          setItems(items);
-        }
-        return [...prev, tokenAddress];
-      }
-    });
+    addFavorite(tokenAddress);
+    const index = items.findIndex((elm) => elm.tokenAddress === tokenAddress);
+    if (index !== -1) {
+      setLikes([
+        {
+          tokenAddress: items[index].tokenAddress,
+          likes: (items[index].likes ?? 0) + 1,
+        },
+      ]);
+    }
     if (address) await writeLike({ tokenAddress, userAddress: address });
   };
 
@@ -177,73 +200,66 @@ export default function TokenList({
     return favorites.includes(tokenAddress);
   };
 
-  const fetchTokenList = async () => {
-    let userAddress = address;
-    let onlyFavorites = categories[categoriesIndexes.favorites].selected;
-    let onlyOwned = categories[categoriesIndexes.owned].selected;
-    let onlyIssued = categories[categoriesIndexes.issued].selected;
-    if (userAddress === undefined) {
-      userAddress = (await getWalletInfo()).address;
-      if (
-        userAddress === undefined &&
-        (onlyFavorites || onlyOwned || onlyIssued)
-      ) {
-        userAddress = (await connectWallet())?.address;
-        if (userAddress === undefined) {
-          console.error("Cannot connect wallet");
-          if (!connectWalletError) {
-            log.info("Cannot connect wallet");
-            connectWalletError = true;
+  useEffect(() => {
+    const fetchTokenList = async () => {
+      let userAddress = address;
+      let onlyFavorites = categories[categoriesIndexes.favorites].selected;
+      let onlyOwned = categories[categoriesIndexes.owned].selected;
+      let onlyIssued = categories[categoriesIndexes.issued].selected;
+      if (userAddress === undefined) {
+        userAddress = (await getWalletInfo()).address;
+        if (
+          userAddress === undefined &&
+          (onlyFavorites || onlyOwned || onlyIssued)
+        ) {
+          userAddress = (await connectWallet())?.address;
+          if (userAddress === undefined) {
+            console.error("Cannot connect wallet");
+            if (!connectWalletError) {
+              log.info("Cannot connect wallet");
+              connectWalletError = true;
+            }
+            onlyFavorites = false;
+            onlyOwned = false;
+            onlyIssued = false;
+            setCategories(initialCategories);
           }
-          onlyFavorites = false;
-          onlyOwned = false;
-          onlyIssued = false;
-          setCategories(initialCategories);
         }
       }
-    }
-    if (address !== userAddress) {
-      setAddress(userAddress);
-      if (DEBUG) console.log("address", userAddress);
-    }
-    const searchResult = await algoliaGetTokenList({
-      query: search,
-      page: page - 1,
-      hitsPerPage: numberOfItems < 20 ? 20 : numberOfItems,
-      favoritesOfAddress: onlyFavorites ? userAddress : undefined,
-      ownedByAddress: onlyOwned ? userAddress : undefined,
-      issuedByAddress: onlyIssued ? userAddress : undefined,
-    });
-    let newItems: DeployedTokenInfo[] = searchResult?.hits ?? [];
-    // Sort to put TESTME token first
-    newItems.sort((a, b) => {
-      if (a.symbol === "TESTME") return -1;
-      if (b.symbol === "TESTME") return 1;
-      return 0;
-    });
-    setItems(newItems);
-    setTotalPages(searchResult?.nbPages ?? 1);
-    let likedTokens: string[] = [];
-    if (onlyFavorites && userAddress) {
-      likedTokens = newItems.map((elm) => elm.tokenAddress);
-    } else if (userAddress) {
-      likedTokens = (await getUsersLikes({ userAddress })).map(
-        (like) => like.tokenAddress
-      );
-    }
-    setFavorites(likedTokens);
-    if (DEBUG)
-      console.log("Search results:", {
-        userAddress,
-        categories,
-        newItems,
-        likedTokens,
+      if (address !== userAddress) {
+        setAddress(userAddress);
+        if (DEBUG) console.log("address", userAddress);
+      }
+      console.time("algoliaGetTokenList");
+      const searchResult = await algoliaGetTokenList({
+        query: search,
+        page: page - 1,
+        hitsPerPage: numberOfItems < 20 ? 20 : numberOfItems,
+        onlyFavorites,
+        favorites: onlyFavorites ? favorites : [],
+        ownedByAddress: onlyOwned ? userAddress : undefined,
+        issuedByAddress: onlyIssued ? userAddress : undefined,
       });
-  };
+      console.timeEnd("algoliaGetTokenList");
+      let newItems: DeployedTokenInfo[] = searchResult?.hits ?? [];
+      // Sort to put TESTME token first
+      newItems.sort((a, b) => {
+        if (a.symbol === "TESTME") return -1;
+        if (b.symbol === "TESTME") return 1;
+        return 0;
+      });
+      setItems(newItems);
+      setTotalPages(searchResult?.nbPages ?? 1);
 
-  useEffect(() => {
+      if (DEBUG)
+        console.log("Search results:", {
+          userAddress,
+          categories,
+          newItems,
+        });
+    };
     fetchTokenList();
-  }, [categories, numberOfItems, page, search]);
+  }, [categories, numberOfItems, page, search, refreshCounter]);
 
   const setTokenState = (tokenState: TokenState) =>
     dispatch({
@@ -275,20 +291,32 @@ export default function TokenList({
   useEffect(() => {
     const fetchLikes = async () => {
       const addresses = items
-        .filter((item) => item.likes === undefined)
+        .filter((item) => likes[item.tokenAddress] === undefined)
         .map((item) => item.tokenAddress);
       if (addresses.length === 0) return;
-      const likes = await batchLikesCounts({
+      const newLikes = await batchLikesCounts({
         tokens: addresses.map((address) => ({
           address,
         })),
       });
-      for (let i = 0; i < items.length; i++) {
-        setLikes(items[i].tokenAddress, likes[i]);
-      }
+      setLikes(
+        newLikes.map((like) => ({
+          tokenAddress: like.address,
+          likes: like.likes,
+        }))
+      );
     };
     fetchLikes();
   }, [items]);
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!address) return;
+      const newFavorites = await getUsersLikes({ userAddress: address });
+      setFavorites(newFavorites.map((favorite) => favorite.tokenAddress));
+    };
+    fetchFavorites();
+  }, [address]);
 
   useEffect(() => {
     const fetchOrderbook = async () => {
@@ -434,7 +462,7 @@ export default function TokenList({
               </ul>
               <div className="flex items-center gap-2 my-1">
                 <button
-                  onClick={fetchTokenList}
+                  onClick={() => setRefreshCounter(refreshCounter + 1)}
                   className="flex h-9 w-9 items-center justify-center rounded-lg border border-jacarta-100 bg-white hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
                 >
                   <svg
@@ -508,7 +536,7 @@ export default function TokenList({
             </div>
 
             <div className="grid grid-cols-1 gap-[1.875rem] md:grid-cols-2 lg:grid-cols-4">
-              {items.slice(0, numberOfItems).map((elm, i) => (
+              {itemsToDisplay.map((elm, i) => (
                 <article key={i}>
                   <div className="block rounded-2.5xl border border-jacarta-100 bg-white p-[1.1875rem] transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700">
                     <figure className="relative aspect-square mb-4">

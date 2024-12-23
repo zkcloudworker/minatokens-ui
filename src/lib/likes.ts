@@ -98,7 +98,7 @@ export async function likesCount(params: {
 
 export async function batchLikesCounts(params: {
   tokens: { address: string; tokenId?: string }[];
-}): Promise<number[]> {
+}): Promise<{ address: string; tokenId?: string; likes: number }[]> {
   const { tokens } = params;
 
   try {
@@ -129,14 +129,18 @@ export async function batchLikesCounts(params: {
         (g) =>
           g.tokenAddress === item.tokenAddress && g.tokenId === item.tokenId
       );
-      return match?._count._all ?? 0;
+      return {
+        address: item.tokenAddress,
+        tokenId: item.tokenId,
+        likes: match?._count._all ?? 0,
+      };
     });
   } catch (error) {
     log.error("batchLikesCounts: error", {
       error: error instanceof Error ? error.message : String(error),
       params,
     });
-    return tokens.map(() => 0);
+    return [];
   }
 }
 
