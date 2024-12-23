@@ -18,7 +18,7 @@ const DEBUG = debug();
 
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 
-export interface TokenList {
+export interface AlgoliaTokenList {
   hits: DeployedTokenInfo[];
   nbHits: number;
   page: number;
@@ -38,7 +38,7 @@ export async function algoliaGetTokenList(params: {
   favorites: string[];
   issuedByAddress?: string;
   ownedByAddress?: string;
-}): Promise<TokenList | undefined> {
+}): Promise<AlgoliaTokenList | undefined> {
   console.log("algoliaGetTokenList", params);
   console.time("algoliaGetTokenList internal");
   const { onlyFavorites, favorites, issuedByAddress, ownedByAddress } = params;
@@ -74,7 +74,7 @@ export async function algoliaGetTokenList(params: {
   }
 
   try {
-    let tokenList: TokenList | undefined = undefined;
+    let tokenList: AlgoliaTokenList | undefined = undefined;
     const blockberryTokensPromise = ownedByAddress
       ? getAllTokensByAddress({
           account: ownedByAddress,
@@ -97,7 +97,9 @@ export async function algoliaGetTokenList(params: {
             filters,
           },
         });
-        tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
+        tokenList = result?.hits
+          ? (result as unknown as AlgoliaTokenList)
+          : undefined;
         if (ownedByAddress && tokenList?.hits !== undefined) {
           const blockberryTokenIdsList = await listFromBlockberryTokens(
             blockberryTokensPromise
@@ -123,7 +125,9 @@ export async function algoliaGetTokenList(params: {
           },
         });
         console.timeEnd("favorites");
-        tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
+        tokenList = result?.hits
+          ? (result as unknown as AlgoliaTokenList)
+          : undefined;
         if (ownedByAddress && tokenList?.hits !== undefined) {
           const blockberryTokenIdsList = await listFromBlockberryTokens(
             blockberryTokensPromise
@@ -143,7 +147,9 @@ export async function algoliaGetTokenList(params: {
           facetFilters: [`adminAddress:${issuedByAddress}`],
         },
       });
-      tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
+      tokenList = result?.hits
+        ? (result as unknown as AlgoliaTokenList)
+        : undefined;
       if (ownedByAddress && tokenList?.hits !== undefined) {
         const blockberryTokenIdsList = await listFromBlockberryTokens(
           blockberryTokensPromise
@@ -164,7 +170,9 @@ export async function algoliaGetTokenList(params: {
             filters,
           },
         });
-        tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
+        tokenList = result?.hits
+          ? (result as unknown as AlgoliaTokenList)
+          : undefined;
       }
     } else {
       console.time("else");
@@ -177,7 +185,9 @@ export async function algoliaGetTokenList(params: {
         },
       });
       console.timeEnd("else");
-      tokenList = result?.hits ? (result as unknown as TokenList) : undefined;
+      tokenList = result?.hits
+        ? (result as unknown as AlgoliaTokenList)
+        : undefined;
     }
 
     /*
