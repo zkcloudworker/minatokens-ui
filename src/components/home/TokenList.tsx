@@ -94,9 +94,6 @@ export default function TokenList({
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const { state, dispatch } = useTokenDetails();
-  const items = state.list;
-  const likes = state.likes;
-  const favorites = state.favorites;
   const [itemsToDisplay, setItemsToDisplay] = useState<DeployedTokenInfo[]>([]);
   const [tokensFetched, setTokensFetched] = useState<string[]>([]);
   const [page, setPage] = useState<number>(1);
@@ -107,6 +104,7 @@ export default function TokenList({
   const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
+
   useEffect(() => {
     // tippy("[data-tippy-content]");
     checkAvailability().then((result) => {
@@ -123,16 +121,16 @@ export default function TokenList({
 
   useEffect(() => {
     const filtered = categories[categoriesIndexes.favorites].selected
-      ? items.filter((item) => favorites.includes(item.tokenAddress))
-      : items;
+      ? state.list.filter((item) => state.favorites.includes(item.tokenAddress))
+      : state.list;
     setItemsToDisplay(
       filtered.slice(0, numberOfItems).map((item) => ({
         ...item,
         likes: state.likes[item.tokenAddress] ?? 0,
-        like: favorites.includes(item.tokenAddress),
+        like: state.favorites.includes(item.tokenAddress),
       }))
     );
-  }, [categories, items, favorites, numberOfItems]);
+  }, [categories, state.list, state.favorites, numberOfItems]);
 
   const setItem = (info: DeployedTokenInfo) =>
     dispatch({
@@ -184,12 +182,14 @@ export default function TokenList({
 
   const addLike = async (tokenAddress: string) => {
     addFavorite(tokenAddress);
-    const index = items.findIndex((elm) => elm.tokenAddress === tokenAddress);
+    const index = state.list.findIndex(
+      (elm) => elm.tokenAddress === tokenAddress
+    );
     if (index !== -1) {
       setLikes([
         {
-          tokenAddress: items[index].tokenAddress,
-          likes: (items[index].likes ?? 0) + 1,
+          tokenAddress: state.list[index].tokenAddress,
+          likes: (state.list[index].likes ?? 0) + 1,
         },
       ]);
     }
@@ -197,7 +197,7 @@ export default function TokenList({
   };
 
   const isLiked = (tokenAddress: string) => {
-    return favorites.includes(tokenAddress);
+    return state.favorites.includes(tokenAddress);
   };
 
   useEffect(() => {
@@ -236,7 +236,7 @@ export default function TokenList({
         page: page - 1,
         hitsPerPage: numberOfItems < 20 ? 20 : numberOfItems,
         onlyFavorites,
-        favorites: onlyFavorites ? favorites : [],
+        favorites: onlyFavorites ? state.favorites : [],
         ownedByAddress: onlyOwned ? userAddress : undefined,
         issuedByAddress: onlyIssued ? userAddress : undefined,
       });
@@ -269,29 +269,32 @@ export default function TokenList({
 
   useEffect(() => {
     const fetchTokenState = async () => {
-      for (const item of items) {
+      const tokensToFetch: DeployedTokenInfo[] = [];
+      for (const item of state.list) {
         const index = tokensFetched.findIndex(
           (elm) => elm === item.tokenAddress
         );
-        if (index === -1) {
-          const state = await getTokenState({
-            tokenAddress: item.tokenAddress,
-            info: item,
-          });
-          if (state.success) {
-            setTokensFetched((prev) => [...prev, item.tokenAddress]);
-            setTokenState(state.tokenState);
-          }
+        if (index === -1) tokensToFetch.push(item);
+      }
+      for (const token of tokensToFetch) {
+        const state = await getTokenState({
+          tokenAddress: token.tokenAddress,
+          info: token,
+        });
+        if (state.success) {
+          console.log("setTokensFetched", token.tokenAddress);
+          setTokensFetched((prev) => [...prev, token.tokenAddress]);
+          setTokenState(state.tokenState);
         }
       }
     };
     fetchTokenState();
-  }, [items]);
+  }, [state.list]);
 
   useEffect(() => {
     const fetchLikes = async () => {
-      const addresses = items
-        .filter((item) => likes[item.tokenAddress] === undefined)
+      const addresses = state.list
+        .filter((item) => state.likes[item.tokenAddress] === undefined)
         .map((item) => item.tokenAddress);
       if (addresses.length === 0) return;
       const newLikes = await batchLikesCounts({
@@ -299,6 +302,7 @@ export default function TokenList({
           address,
         })),
       });
+      console.log("newLikes", newLikes);
       setLikes(
         newLikes.map((like) => ({
           tokenAddress: like.address,
@@ -307,7 +311,7 @@ export default function TokenList({
       );
     };
     fetchLikes();
-  }, [items]);
+  }, [state.list]);
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -321,7 +325,7 @@ export default function TokenList({
   useEffect(() => {
     const fetchOrderbook = async () => {
       const addresses: string[] = [];
-      for (const item of items) {
+      for (const item of state.list) {
         const tokenDetails = state.tokens[item.tokenAddress] || {};
         const isPriceLoaded = tokenDetails.isPriceLoaded;
         if (isPriceLoaded !== true) {
@@ -333,7 +337,7 @@ export default function TokenList({
 
         for (const address of Object.keys(offers)) {
           const rawOffer = offers[address];
-          const item = items.find((item) => item.tokenAddress === address);
+          const item = state.list.find((item) => item.tokenAddress === address);
 
           const offer: Order | undefined =
             rawOffer === null
@@ -352,7 +356,7 @@ export default function TokenList({
 
         for (const address of Object.keys(bids)) {
           const rawBid = bids[address];
-          const item = items.find((item) => item.tokenAddress === address);
+          const item = state.list.find((item) => item.tokenAddress === address);
 
           const bid: Order | undefined =
             rawBid === null
@@ -369,13 +373,7 @@ export default function TokenList({
       }
     };
     fetchOrderbook();
-  }, [items]);
-
-  useEffect(() => {
-    for (const item of items) {
-      setItem(item);
-    }
-  }, [items]);
+  }, [state.list]);
 
   return (
     <>
@@ -584,7 +582,7 @@ export default function TokenList({
                       {elm.likes}
                     </span> */}
                         <span className="text-sm dark:text-jacarta-200">
-                          {elm.likes ?? ""}
+                          {state.likes[elm.tokenAddress] ?? ""}
                         </span>
                       </div>
                     </figure>

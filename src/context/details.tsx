@@ -124,17 +124,6 @@ const tokenDetailsReducer = (
       );
       return {
         ...state,
-        list:
-          index === -1
-            ? state.list
-            : [
-                ...state.list.slice(0, index),
-                {
-                  ...state.list[index],
-                  ...action.payload.tokenState,
-                },
-                ...state.list.slice(index + 1),
-              ],
         tokens: {
           ...state.tokens,
           [action.payload.tokenAddress]: {
