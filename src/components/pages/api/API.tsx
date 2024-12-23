@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useContext, FC } from "react";
+import React, { useEffect, useState, useContext, useRef, FC } from "react";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { Mainnet, Devnet, Zeko } from "@/lib/networks";
@@ -260,6 +260,57 @@ const API: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const { address, setAddress } = useContext(AddressContext);
   const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
+  const [userActive, setUserActive] = useState(true);
+  const inactivityTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+
+  // Set up event listeners to track user activity
+  useEffect(() => {
+    const handleUserActivity = () => {
+      setUserActive(true);
+
+      // Reset the inactivity timeout
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+        inactivityTimeoutRef.current = null;
+      }
+
+      inactivityTimeoutRef.current = setTimeout(() => {
+        setUserActive(false);
+      }, 600000); // 600,000 ms = 10 minutes
+    };
+
+    // List of events to consider as user activity
+    const events = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "touchstart",
+      "scroll",
+    ];
+
+    // Add event listeners for each event
+    events.forEach((event) => {
+      window.addEventListener(event, handleUserActivity);
+    });
+
+    // Start the inactivity timeout when component mounts
+    inactivityTimeoutRef.current = setTimeout(() => {
+      setUserActive(false);
+    }, 600000);
+
+    // Cleanup function to remove event listeners and clear timeout
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, handleUserActivity);
+      });
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+      }
+    };
+  }, []);
+
   async function openGoogleForm() {
     if (
       !process.env.NEXT_PUBLIC_GOOGLE_FORM_URL ||
@@ -311,9 +362,9 @@ const API: React.FC = () => {
     if (DEBUG) console.log("address", address);
     fetchApiCalls();
 
-    // Only set up polling interval if we're on page 1
+    // Only set up polling interval if we're on page 1 and user is active
     let interval: NodeJS.Timeout | undefined;
-    if (page === 1) {
+    if (page === 1 && userActive) {
       interval = setInterval(() => {
         fetchApiCalls();
       }, 10000);
@@ -325,7 +376,14 @@ const API: React.FC = () => {
         clearInterval(interval);
       }
     };
-  }, [address, activeBlockchainOption, activeCategory, activeTimeOption, page]);
+  }, [
+    address,
+    activeBlockchainOption,
+    activeCategory,
+    activeTimeOption,
+    page,
+    userActive,
+  ]);
 
   async function getAddress(tryConnect = true): Promise<string | undefined> {
     let userAddress = address;

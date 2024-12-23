@@ -1,17 +1,13 @@
 "use client";
 
 import { algoliaGetTokenList } from "@/lib/search";
-import { DeployedTokenInfo } from "@/lib/token";
+import { DeployedTokenInfo, TokenState } from "@/lib/token";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
-import {
-  algoliaLikesCount,
-  algoliaWriteLike,
-  algoliaGetUsersLikes,
-} from "@/lib/likes";
+import { batchLikesCounts, writeLike, getUsersLikes } from "@/lib/likes";
 
 // import tippy from "tippy.js";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
@@ -21,6 +17,9 @@ import Pagination from "../common/Pagination";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import NotAvailable from "@/components/pages/NotAvailable";
 import { log } from "@/lib/log";
+import { useTokenDetails } from "@/context/details";
+import { getTokenBids, getTokenOffers } from "@/lib/trade";
+import { Order } from "@/components/orderbook/OrderBook";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 /*
@@ -93,7 +92,8 @@ export default function TokenList({
   initialNumberOfItems,
 }: TokenListProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
-  const [items, setItems] = useState<DeployedTokenInfo[]>([]);
+  const { state, dispatch } = useTokenDetails();
+  const items = state.list;
   const [tokensFetched, setTokensFetched] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [page, setPage] = useState<number>(1);
@@ -118,24 +118,41 @@ export default function TokenList({
       ? [initialNumberOfItems, ...numberOfItemsOptions]
       : numberOfItemsOptions;
 
-  /*
-  const addLike = (id: number) => {
-    const items = [...allItems];
-    const item = items.filter((elm) => elm.id === id)[0];
-    const indexToReplace = items.findIndex((item) => item.id === id);
-    if (!item.liked) {
-      item.liked = true;
-      item.likes += 1;
-      items[indexToReplace] = item;
-      setAllItems(items);
-    } else {
-      item.liked = false;
-      item.likes -= 1;
-      items[indexToReplace] = item;
-      setAllItems(items);
-    }
-  };
-  */
+  const setItem = (info: DeployedTokenInfo) =>
+    dispatch({
+      type: "SET_TOKEN_INFO",
+      payload: { tokenAddress: info.tokenAddress, info },
+    });
+
+  const setItems = (items: DeployedTokenInfo[]) =>
+    dispatch({
+      type: "SET_ITEMS",
+      payload: { items },
+    });
+
+  const setBid = (tokenAddress: string, bid: Order) =>
+    dispatch({
+      type: "SET_BID",
+      payload: { tokenAddress, bid },
+    });
+
+  const setOffer = (tokenAddress: string, offer: Order) =>
+    dispatch({
+      type: "SET_OFFER",
+      payload: { tokenAddress, offer },
+    });
+
+  const setIsPriceLoaded = (tokenAddress: string, isPriceLoaded: boolean) =>
+    dispatch({
+      type: "SET_IS_PRICE_LOADED",
+      payload: { tokenAddress, isPriceLoaded },
+    });
+
+  const setLikes = (tokenAddress: string, likes: number) =>
+    dispatch({
+      type: "SET_LIKES",
+      payload: { tokenAddress, likes },
+    });
 
   // TODO: save favorites to local or network storage like AWS or algolia
   const addLike = async (tokenAddress: string) => {
@@ -153,7 +170,7 @@ export default function TokenList({
         return [...prev, tokenAddress];
       }
     });
-    if (address) await algoliaWriteLike({ tokenAddress, userAddress: address });
+    if (address) await writeLike({ tokenAddress, userAddress: address });
   };
 
   const isLiked = (tokenAddress: string) => {
@@ -192,7 +209,7 @@ export default function TokenList({
     const searchResult = await algoliaGetTokenList({
       query: search,
       page: page - 1,
-      hitsPerPage: numberOfItems,
+      hitsPerPage: numberOfItems < 20 ? 20 : numberOfItems,
       favoritesOfAddress: onlyFavorites ? userAddress : undefined,
       ownedByAddress: onlyOwned ? userAddress : undefined,
       issuedByAddress: onlyIssued ? userAddress : undefined,
@@ -210,7 +227,9 @@ export default function TokenList({
     if (onlyFavorites && userAddress) {
       likedTokens = newItems.map((elm) => elm.tokenAddress);
     } else if (userAddress) {
-      likedTokens = await algoliaGetUsersLikes({ userAddress });
+      likedTokens = (await getUsersLikes({ userAddress })).map(
+        (like) => like.tokenAddress
+      );
     }
     setFavorites(likedTokens);
     if (DEBUG)
@@ -220,45 +239,115 @@ export default function TokenList({
         newItems,
         likedTokens,
       });
-
-    for (const item of newItems) {
-      const index = tokensFetched.findIndex((elm) => elm === item.tokenAddress);
-      if (index === -1) {
-        const state = await getTokenState({
-          tokenAddress: item.tokenAddress,
-          info: item,
-        });
-        if (state.success) {
-          setTokensFetched((prev) => [...prev, item.tokenAddress]);
-          if (state.isStateUpdated) {
-            const index = newItems.findIndex(
-              (elm) => elm.tokenAddress === item.tokenAddress
-            );
-            if (index !== -1) {
-              const newItem = newItems[index];
-              Object.keys(state.tokenState).forEach((key) => {
-                (newItem as any)[key] = (state.tokenState as any)[key];
-              });
-              setItems((prev) => {
-                const prevItems = [...prev];
-                const index = prevItems.findIndex(
-                  (elm) => elm.tokenAddress === item.tokenAddress
-                );
-                if (index !== -1) {
-                  prevItems[index] = newItem;
-                }
-                return prevItems;
-              });
-            }
-          }
-        }
-      }
-    }
   };
 
   useEffect(() => {
     fetchTokenList();
   }, [categories, numberOfItems, page, search]);
+
+  const setTokenState = (tokenState: TokenState) =>
+    dispatch({
+      type: "SET_TOKEN_STATE",
+      payload: { tokenAddress: tokenState.tokenAddress, tokenState },
+    });
+
+  useEffect(() => {
+    const fetchTokenState = async () => {
+      for (const item of items) {
+        const index = tokensFetched.findIndex(
+          (elm) => elm === item.tokenAddress
+        );
+        if (index === -1) {
+          const state = await getTokenState({
+            tokenAddress: item.tokenAddress,
+            info: item,
+          });
+          if (state.success) {
+            setTokensFetched((prev) => [...prev, item.tokenAddress]);
+            setTokenState(state.tokenState);
+          }
+        }
+      }
+    };
+    fetchTokenState();
+  }, [items]);
+
+  useEffect(() => {
+    const fetchLikes = async () => {
+      const addresses = items
+        .filter((item) => item.likes === undefined)
+        .map((item) => item.tokenAddress);
+      if (addresses.length === 0) return;
+      const likes = await batchLikesCounts({
+        tokens: addresses.map((address) => ({
+          address,
+        })),
+      });
+      for (let i = 0; i < items.length; i++) {
+        setLikes(items[i].tokenAddress, likes[i]);
+      }
+    };
+    fetchLikes();
+  }, [items]);
+
+  useEffect(() => {
+    const fetchOrderbook = async () => {
+      const addresses: string[] = [];
+      for (const item of items) {
+        const tokenDetails = state.tokens[item.tokenAddress] || {};
+        const isPriceLoaded = tokenDetails.isPriceLoaded;
+        if (isPriceLoaded !== true) {
+          addresses.push(item.tokenAddress);
+        }
+      }
+      if (addresses.length > 0) {
+        const offers = await getTokenOffers(addresses);
+
+        for (const address of Object.keys(offers)) {
+          const rawOffer = offers[address];
+          const item = items.find((item) => item.tokenAddress === address);
+
+          const offer: Order | undefined =
+            rawOffer === null
+              ? undefined
+              : ({
+                  amount: Number(rawOffer.amount) / 10 ** (item?.decimals ?? 9),
+                  price: Number(rawOffer.price) / 10 ** 9,
+                  address: rawOffer.offerAddress,
+                  type: "offer",
+                } as Order);
+
+          if (offer) setOffer(address, offer);
+        }
+
+        const bids = await getTokenBids(addresses);
+
+        for (const address of Object.keys(bids)) {
+          const rawBid = bids[address];
+          const item = items.find((item) => item.tokenAddress === address);
+
+          const bid: Order | undefined =
+            rawBid === null
+              ? undefined
+              : ({
+                  amount: Number(rawBid.amount) / 10 ** (item?.decimals ?? 9),
+                  price: Number(rawBid.price) / 10 ** 9,
+                  address: rawBid.bidAddress,
+                  type: "bid",
+                } as Order);
+          if (bid) setBid(address, bid);
+          setIsPriceLoaded(address, true);
+        }
+      }
+    };
+    fetchOrderbook();
+  }, [items]);
+
+  useEffect(() => {
+    for (const item of items) {
+      setItem(item);
+    }
+  }, [items]);
 
   return (
     <>
@@ -419,7 +508,7 @@ export default function TokenList({
             </div>
 
             <div className="grid grid-cols-1 gap-[1.875rem] md:grid-cols-2 lg:grid-cols-4">
-              {items.map((elm, i) => (
+              {items.slice(0, numberOfItems).map((elm, i) => (
                 <article key={i}>
                   <div className="block rounded-2.5xl border border-jacarta-100 bg-white p-[1.1875rem] transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700">
                     <figure className="relative aspect-square mb-4">
@@ -467,16 +556,27 @@ export default function TokenList({
                       {elm.likes}
                     </span> */}
                         <span className="text-sm dark:text-jacarta-200">
-                          {elm.likes ?? 0}
+                          {elm.likes ?? ""}
                         </span>
                       </div>
                     </figure>
                     <div className="mt-7 flex items-center justify-between">
-                      <Link href={`/token/${elm.tokenAddress}`}>
-                        <span className="font-display text-base text-jacarta-700 hover:text-accent dark:text-white">
+                      <Link
+                        href={`/token/${elm.tokenAddress}`}
+                        className="flex"
+                      >
+                        <span className="font-display text-base text-jacarta-700 hover:text-accent dark:text-white  float-left">
                           <Highlight item={elm} attribute="name" />
                         </span>
                       </Link>
+                      <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
+                        {state.tokens[elm.tokenAddress]?.offer?.price
+                          ? state.tokens[
+                              elm.tokenAddress
+                            ]?.offer?.price.toString() + ` MINA`
+                          : ""}
+                      </span>
+
                       {/* <div className="dropup rounded-full hover:bg-jacarta-100 dark:hover:bg-jacarta-600">
                         <a
                           href="#"
@@ -525,7 +625,10 @@ export default function TokenList({
                         <Highlight item={elm} attribute="symbol" />
                       </span>
                       <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                        {`Supply: ${elm.totalSupply.toFixed(0)}`}
+                        {`Supply: ${elm.totalSupply.toLocaleString(undefined, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 2,
+                        })}`}
                       </span>
                     </div>
 

@@ -150,7 +150,7 @@ export async function deployToken(props: {
       }
     }
   }
-  console.time("prepared tx");
+
   const sender = PublicKey.fromBase58(params.sender);
   if (DEBUG) console.log("Sender", sender.toBase58());
 
@@ -230,7 +230,6 @@ export async function deployToken(props: {
   tx.sign(signers.map((s) => PrivateKey.fromBase58(s)));
   const payloads = createTransactionPayloads(tx);
 
-  console.timeEnd("prepared tx");
 
   return {
     status: 200,

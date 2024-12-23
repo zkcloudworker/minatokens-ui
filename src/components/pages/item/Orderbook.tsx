@@ -47,7 +47,7 @@ export function OrderbookTab({
       const orderbook = await getOrderbook({
         tokenAddress,
         ownerAddress: tab === "withdraw" ? address : undefined,
-        maxItems: tab === "withdraw" ? 100 : undefined,
+        maxItems: tab === "withdraw" ? 100 : 20,
       });
       //setBids(orderbook.bids);
 

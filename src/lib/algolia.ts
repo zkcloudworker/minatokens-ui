@@ -27,6 +27,7 @@ export async function algoliaWriteToken(params: {
     const data = {
       objectID: params.tokenAddress,
       ...params.info,
+      algoliaVersion: 2,
     };
 
     const result = await client.saveObject({
