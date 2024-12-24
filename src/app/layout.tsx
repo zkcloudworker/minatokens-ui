@@ -15,6 +15,7 @@ import { SearchProvider } from "@/context/search";
 import { AddressProvider } from "@/context/address";
 import { TransactionStoreProvider } from "@/context/tx-provider";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 if (typeof window !== "undefined") {
@@ -66,6 +67,7 @@ export default function RootLayout({
             </AddressProvider>
           </SearchProvider>
           <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     </>
