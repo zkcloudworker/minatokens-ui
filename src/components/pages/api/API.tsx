@@ -764,7 +764,7 @@ const API: React.FC = () => {
                       Date
                     </span>
                   </div>
-                  <div className="w-[10%] py-3 px-4" role="columnheader">
+                  <div className="w-[15%] py-3 px-4" role="columnheader">
                     <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
                       Endpoint
                     </span>
@@ -784,7 +784,7 @@ const API: React.FC = () => {
                       Response Time
                     </span>
                   </div>
-                  <div className="w-[50%] py-3 px-4" role="columnheader">
+                  <div className="w-[45%] py-3 px-4" role="columnheader">
                     <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
                       Result
                     </span>
@@ -807,7 +807,7 @@ const API: React.FC = () => {
                         </span>
                       </div>
                       <div
-                        className="flex w-[10%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                        className="flex w-[15%] items-center whitespace-nowrap border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
                         role="cell"
                       >
                         <span className="text-sm font-medium tracking-tight">
@@ -841,7 +841,7 @@ const API: React.FC = () => {
                         {showResponseTime(elm.endpoint, elm.responseTimeMs)}
                       </div>
                       <div
-                        className="flex w-[50%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+                        className="flex w-[45%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
                         role="cell"
                       >
                         {showResult({
