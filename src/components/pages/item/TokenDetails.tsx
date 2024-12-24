@@ -570,14 +570,16 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
               </div>
 
               <div className="flex flex-wrap">
-                {isNotEmpty(item?.instagram) && (
+                {isNotEmpty(item?.website) && (
                   <div className="mr-8 mb-4 flex">
                     <figure className="mr-4 shrink-0">
                       <Link
-                        href={`https://twitter.com/${item?.twitter}`}
+                        href={`${item?.website}`}
                         className="relative block"
+                        rel="noopener noreferrer"
+                        target="_blank"
                       >
-                        <Socials i={3} />
+                        <Socials i={5} />
 
                         <div
                           className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
@@ -598,16 +600,62 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                     </figure>
                     <div className="flex flex-col justify-center">
                       <span className="block text-sm text-jacarta-400 dark:text-white">
-                        <strong>Instagram:</strong>
+                        <strong>Website:</strong>
                       </span>
-                      <Link href={`/user/2`} className="block text-accent">
+                      <Link
+                        href={`${item?.website}`}
+                        className="block text-accent"
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
                         <span className="text-sm font-bold">
-                          @{item?.instagram ?? ""}
+                          {item?.website ?? ""}
                         </span>
                       </Link>
                     </div>
                   </div>
                 )}
+
+                <div className="flex flex-wrap">
+                  {isNotEmpty(item?.instagram) && (
+                    <div className="mr-8 mb-4 flex">
+                      <figure className="mr-4 shrink-0">
+                        <Link
+                          href={`https://twitter.com/${item?.twitter}`}
+                          className="relative block"
+                        >
+                          <Socials i={3} />
+
+                          <div
+                            className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
+                            data-tippy-content="Twitter"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              width="24"
+                              height="24"
+                              className="fill-white"
+                            >
+                              <path fill="none" d="M0 0h24v24H0z"></path>
+                              <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
+                            </svg>
+                          </div>
+                        </Link>
+                      </figure>
+                      <div className="flex flex-col justify-center">
+                        <span className="block text-sm text-jacarta-400 dark:text-white">
+                          <strong>Instagram:</strong>
+                        </span>
+                        <Link href={`/user/2`} className="block text-accent">
+                          <span className="text-sm font-bold">
+                            @{item?.instagram ?? ""}
+                          </span>
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {isNotEmpty(item?.facebook) && (
                   <div className="mb-4 flex">
