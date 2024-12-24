@@ -78,10 +78,6 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
           scrolled ? "js-page-header--is-sticky" : ""
         }`}
       >
-        <div className="flex justify-center w-full">
-          MinaTokens is currently upgrading to the latest FungibleToken
-          standard. Some features may be temporarily unavailable.
-        </div>
         <div className="flex items-center justify-between px-6 py-6 xl:px-24 ">
           {/* Logo */}
 
