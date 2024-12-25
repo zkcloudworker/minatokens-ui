@@ -199,6 +199,13 @@ export async function tokenTransaction(props: {
     await initBlockchain();
     const FEE = txType === "token:mint" ? MINT_FEE : TRANSFER_FEE;
 
+    if (!checkAddress(txParams.sender)) {
+      return {
+        status: 400,
+        json: { error: "Invalid sender address" },
+      };
+    }
+
     if (txParams.nonce && typeof txParams.nonce !== "number") {
       return {
         status: 400,
