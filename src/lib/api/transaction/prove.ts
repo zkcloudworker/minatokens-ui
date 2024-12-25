@@ -4,6 +4,7 @@ import { proveTransactions } from "@/lib/token-api";
 import { debug } from "@/lib/debug";
 import { getChain } from "@/lib/chain";
 import { checkAddress } from "../utils/address";
+import { checkAddress as checkSenderAddress } from "@/lib/address";
 import {
   ProveTokenTransactions,
   ProveTokenTransaction,
@@ -24,12 +25,7 @@ export async function prove(props: {
   const txs: TokenTransaction[] = [];
   for (const params of transactions.txs) {
     const { signedData, tx, sendTransaction = true } = params;
-    if (!checkAddress(tx.sender)) {
-      return {
-        status: 400,
-        json: { error: "Invalid sender address" },
-      };
-    }
+
     if (signedData === undefined)
       return {
         status: 400,
@@ -142,6 +138,14 @@ export async function prove(props: {
 
     tx.signedData = signedData;
     tx.sendTransaction = sendTransaction;
+
+    if (!(await checkSenderAddress(tx.sender))) {
+      console.error("Invalid sender address ERR7562", tx.sender);
+      return {
+        status: 400,
+        json: { error: "Invalid sender address: ERR7562" },
+      };
+    }
 
     txs.push(tx);
   }
