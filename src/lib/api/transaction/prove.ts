@@ -24,6 +24,12 @@ export async function prove(props: {
   const txs: TokenTransaction[] = [];
   for (const params of transactions.txs) {
     const { signedData, tx, sendTransaction = true } = params;
+    if (!checkAddress(tx.sender)) {
+      return {
+        status: 400,
+        json: { error: "Invalid sender address" },
+      };
+    }
     if (signedData === undefined)
       return {
         status: 400,

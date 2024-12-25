@@ -1,6 +1,7 @@
 "use server";
 import { PublicKey } from "o1js";
 import { MintAddress, MintAddressVerified } from "@/lib/token";
+import { PrismaClient } from "@prisma/client";
 
 export async function checkMintData(
   params: MintAddress
@@ -53,6 +54,17 @@ export async function checkAddress(
         address,
         publicKey.toBase58()
       );
+      return false;
+    }
+    const prisma = new PrismaClient({
+      datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+    });
+
+    const addressBlacklist = await prisma.addressBlacklist.findUnique({
+      where: { address },
+    });
+    if (addressBlacklist) {
+      console.error("checkAddress: address is blacklisted", address);
       return false;
     }
     return true;

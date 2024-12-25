@@ -230,7 +230,6 @@ export async function deployToken(props: {
   tx.sign(signers.map((s) => PrivateKey.fromBase58(s)));
   const payloads = createTransactionPayloads(tx);
 
-
   return {
     status: 200,
     json: {
