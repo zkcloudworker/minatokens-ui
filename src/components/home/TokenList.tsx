@@ -228,7 +228,7 @@ export default function TokenList({
         setAddress(userAddress);
         if (DEBUG) console.log("address", userAddress);
       }
-      console.time("algoliaGetTokenList");
+
       const searchResult = await algoliaGetTokenList({
         query: search,
         page: page - 1,
@@ -238,7 +238,7 @@ export default function TokenList({
         ownedByAddress: onlyOwned ? userAddress : undefined,
         issuedByAddress: onlyIssued ? userAddress : undefined,
       });
-      console.timeEnd("algoliaGetTokenList");
+
       let newItems: DeployedTokenInfo[] = searchResult?.hits ?? [];
       // Sort to put TESTME token first
       newItems.sort((a, b) => {

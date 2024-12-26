@@ -17,6 +17,7 @@ import { TransactionStoreProvider } from "@/context/tx-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import Script from "next/script";
 
 if (typeof window !== "undefined") {
   // Import the script only on the client side
@@ -68,6 +69,14 @@ export default function RootLayout({
           </SearchProvider>
           <Analytics />
           <SpeedInsights />
+          <Script
+            id="ze-snippet"
+            src="https://static.zdassets.com/ekr/snippet.js?key=03fe2574-de56-408f-bff3-42cfce73e975"
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+            async
+            defer
+          />
         </body>
       </html>
     </>
