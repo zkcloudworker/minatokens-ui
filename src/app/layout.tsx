@@ -76,6 +76,8 @@ export default function RootLayout({
             strategy="afterInteractive"
             async
             defer
+            data-cfasync="false"
+            referrerPolicy="origin"
           />
         </body>
       </html>
