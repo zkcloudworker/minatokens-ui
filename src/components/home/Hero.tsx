@@ -87,7 +87,7 @@ export default function Hero() {
                     </defs>
                     <g clipPath="url(#clipping)">
                       <image
-                        href="/img/hero/Christmas1.png"
+                        href="/img/hero/hero-Mina_Token4.png"
                         width="200"
                         height="200"
                         clipPath="url(#clipping)"

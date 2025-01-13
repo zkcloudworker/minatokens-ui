@@ -127,6 +127,7 @@ export async function launchToken(params: {
   } = data;
   const { twitter, telegram, website, discord, instagram, facebook } = links;
   let likes = 0;
+  log.error("launchToken: starting", { data });
 
   if (AURO_TEST) {
     if (ADMIN_ADDRESS === undefined) {
@@ -752,6 +753,7 @@ export async function launchToken(params: {
       console.log("Minting tokens", mintItems);
     }
     setLikes((likes += 10));
+    log.info("launchToken: minting tokens", { mintItems });
 
     if (mintItems.length > 0) {
       const tokensToMint = mintItems.length;
@@ -912,6 +914,7 @@ export async function apiTokenTransaction(params: {
 
       await Promise.all(mintPromises);
       const statistics = getMintStatistics();
+      log.info("launchToken: finished", { data, statistics });
       const mintedTokensMsg = (
         <>
           Successfully minted{" "}
