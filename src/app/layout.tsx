@@ -69,7 +69,7 @@ export default function RootLayout({
           </SearchProvider>
           <Analytics />
           <SpeedInsights />
-          {/* <Script
+          <Script
             id="ze-snippet"
             src="https://static.zdassets.com/ekr/snippet.js?key=03fe2574-de56-408f-bff3-42cfce73e975"
             crossOrigin="anonymous"
@@ -78,7 +78,7 @@ export default function RootLayout({
             defer
             data-cfasync="false"
             referrerPolicy="origin"
-          /> */}
+          />
         </body>
       </html>
     </>
