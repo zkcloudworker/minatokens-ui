@@ -117,6 +117,7 @@ export interface DeployedTokenInfo extends TokenInfo, TokenState {
   chain: string;
   likes?: number;
   rating?: number;
+  status?: string;
 }
 
 export interface TokenDeployParams {

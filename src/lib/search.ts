@@ -91,7 +91,7 @@ export async function algoliaGetTokenList(params: {
             query,
             hitsPerPage: 1000,
             page: 0,
-            facetFilters: [`adminAddress:${issuedByAddress}`],
+            facetFilters: [`adminAddress:${issuedByAddress}`, `status:created`],
             filters,
           },
         });
@@ -120,6 +120,7 @@ export async function algoliaGetTokenList(params: {
             hitsPerPage: ownedByAddress ? 1000 : hitsPerPage,
             page: ownedByAddress ? 0 : page,
             filters: favorites.length > 0 ? filters : undefined,
+            facetFilters: [`status:created`],
           },
         });
         console.timeEnd("favorites");
@@ -142,7 +143,7 @@ export async function algoliaGetTokenList(params: {
           query,
           hitsPerPage: ownedByAddress ? 1000 : hitsPerPage,
           page: ownedByAddress ? 0 : page,
-          facetFilters: [`adminAddress:${issuedByAddress}`],
+          facetFilters: [`adminAddress:${issuedByAddress}`, `status:created`],
         },
       });
       tokenList = result?.hits
@@ -166,6 +167,7 @@ export async function algoliaGetTokenList(params: {
             hitsPerPage,
             page,
             filters,
+            facetFilters: [`status:created`],
           },
         });
         tokenList = result?.hits
@@ -180,6 +182,7 @@ export async function algoliaGetTokenList(params: {
           query,
           hitsPerPage,
           page,
+          facetFilters: [`status:created`],
         },
       });
       console.timeEnd("else");

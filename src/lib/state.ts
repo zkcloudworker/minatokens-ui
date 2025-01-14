@@ -243,6 +243,7 @@ export async function updateTokenInfo(params: {
     tokenInfo.created === undefined ||
     tokenInfo.updated === undefined ||
     tokenInfo.rating === undefined ||
+    tokenInfo.status === undefined ||
     tokenInfo.tokenId !== tokenState.tokenId
   ) {
     console.log("getTokenState: Token info mismatch, updating the info", {
@@ -260,6 +261,7 @@ export async function updateTokenInfo(params: {
     if (!tokenInfo.created) tokenInfo.created = tokenInfo.updated;
     if (!tokenInfo.chain) tokenInfo.chain = chainId;
     if (tokenInfo.rating === undefined) tokenInfo.rating = 100;
+    if (tokenInfo.status === undefined) tokenInfo.status = "created";
     console.log("Updating token info", { tokenInfo });
     await algoliaWriteToken({
       tokenAddress,
