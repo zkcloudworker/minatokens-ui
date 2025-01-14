@@ -429,6 +429,7 @@ export async function waitForContractVerification(params: {
     created: timestamp,
     updated: timestamp,
     tokenId,
+    rating: 100,
   });
   if (DEBUG)
     console.log("Waiting for contract state to be verified...", verified);
@@ -444,6 +445,7 @@ export async function waitForContractVerification(params: {
       info,
       created: timestamp,
       updated: timestamp,
+      rating: 100,
     });
   }
   if (DEBUG) console.log("Final status", { verified, count });
