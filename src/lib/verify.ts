@@ -22,6 +22,7 @@ export async function verifyFungibleTokenState(params: {
   created: number;
   updated: number;
   tokenId: string;
+  rating: number;
 }): Promise<boolean> {
   const {
     tokenContractAddress,
@@ -31,6 +32,7 @@ export async function verifyFungibleTokenState(params: {
     created,
     updated,
     tokenId,
+    rating,
   } = params;
   try {
     await initBlockchain();
@@ -130,6 +132,7 @@ export async function verifyFungibleTokenState(params: {
       created,
       updated,
       chain: chainId,
+      rating,
     };
 
     const writeResult = await algoliaWriteToken({
