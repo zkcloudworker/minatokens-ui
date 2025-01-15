@@ -78,7 +78,7 @@ export async function apiTokenTransaction(params: {
     }
     data.sender = sender;
     data.nonce = nonce;
-    console.log("building transaction", data);
+    if (DEBUG) console.log("building transaction", data);
 
     const tx =
       txType === "token:airdrop"

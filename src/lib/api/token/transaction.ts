@@ -568,7 +568,7 @@ export async function tokenTransaction(props: {
         : await getAccountNonce(sender.toBase58());
     txParams.txType = txType;
 
-    console.log("building tx", txParams);
+    if (DEBUG) console.log("building tx", txParams);
     const { tx, request } = await buildTokenTransaction({
       chain,
       args: txParams,

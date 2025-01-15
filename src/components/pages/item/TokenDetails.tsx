@@ -205,7 +205,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
           (holder) => holder.holderAddress !== tokenAddress
         );
         setHolders(filteredHolders ?? []);
-        console.log("holders", filteredHolders);
+        if (DEBUG) console.log("holders", filteredHolders);
       }
     };
     fetchHolders();
