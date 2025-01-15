@@ -16,6 +16,8 @@ import {
 import { log } from "@/lib/log";
 import { explorerAccountUrl } from "@/lib/chain";
 import { TokenAction } from "@/lib/token";
+import { getChain } from "@/lib/chain";
+const chain = getChain();
 
 function formatBalance(num: number | undefined): string {
   if (num === undefined) return "0";
@@ -274,6 +276,8 @@ function ConfirmDialog({
   symbol: string;
 }) {
   if (!order) return null;
+  const total = order.price * parseFloat(amount);
+  const exceeded = chain === "mainnet" && total > 100;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -304,8 +308,14 @@ function ConfirmDialog({
             </p>
             <p>
               <strong className="inline-block w-32">Total:</strong>{" "}
-              {formatBalance(order.price * parseFloat(amount))} MINA
+              {formatBalance(total)} MINA
             </p>
+            {exceeded && (
+              <p className="text-red-500">
+                Note: This order exceeds the maximum amount for the mainnet
+                during the testing phase. The maximum amount is 100 MINA.
+              </p>
+            )}
           </div>
         )}
         <DialogFooter>
@@ -315,18 +325,20 @@ function ConfirmDialog({
           >
             Cancel
           </button>
-          <button
-            onClick={onConfirm}
-            className="rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"
-          >
-            {tab === "orderbook"
-              ? order.type === "offer"
-                ? `Buy ${offerSymbol}`
-                : `Sell ${bidSymbol}`
-              : order.type === "offer"
-              ? `Withdraw ${offerSymbol}`
-              : `Withdraw ${bidSymbol}`}
-          </button>
+          {!exceeded && (
+            <button
+              onClick={onConfirm}
+              className="rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"
+            >
+              {tab === "orderbook"
+                ? order.type === "offer"
+                  ? `Buy ${offerSymbol}`
+                  : `Sell ${bidSymbol}`
+                : order.type === "offer"
+                ? `Withdraw ${offerSymbol}`
+                : `Withdraw ${bidSymbol}`}
+            </button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
