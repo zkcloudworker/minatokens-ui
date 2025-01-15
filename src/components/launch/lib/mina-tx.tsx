@@ -421,34 +421,43 @@ export async function waitForContractVerification(params: {
 
   let count = 0;
   const timestamp = Date.now();
-  let verified = await verifyFungibleTokenState({
-    tokenContractAddress: tokenAddress,
-    adminContractAddress,
-    adminAddress,
-    info,
-    created: timestamp,
-    updated: timestamp,
-    tokenId,
-    rating: 100,
-    status: "created",
-  });
+  let verified = false;
+  try {
+    verified = await verifyFungibleTokenState({
+      tokenContractAddress: tokenAddress,
+      adminContractAddress,
+      adminAddress,
+      info,
+      created: timestamp,
+      updated: timestamp,
+      tokenId,
+      rating: 100,
+      status: "created",
+    });
+  } catch (error) {
+    log.error("Error verifying token contract state", { error });
+  }
   if (DEBUG)
     console.log("Waiting for contract state to be verified...", verified);
   while (!verified && count++ < 100) {
     if (DEBUG)
       console.log("Waiting for contract state to be verified...", verified);
     await sleep(10000);
-    verified = await verifyFungibleTokenState({
-      tokenContractAddress: tokenAddress,
-      adminContractAddress,
-      adminAddress,
-      tokenId,
-      info,
-      created: timestamp,
-      updated: timestamp,
-      rating: 100,
-      status: "created",
-    });
+    try {
+      verified = await verifyFungibleTokenState({
+        tokenContractAddress: tokenAddress,
+        adminContractAddress,
+        adminAddress,
+        tokenId,
+        info,
+        created: timestamp,
+        updated: timestamp,
+        rating: 100,
+        status: "created",
+      });
+    } catch (error) {
+      log.error("Error verifying token contract state", { error });
+    }
   }
   if (DEBUG) console.log("Final status", { verified, count });
   if (!verified) {
