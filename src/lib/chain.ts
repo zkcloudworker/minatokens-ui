@@ -93,6 +93,6 @@ export function getSiteName(): string {
     case "devnet":
       return "MinaTokens";
     case "zeko":
-      return "Zekotokens";
+      return "ZekoTokens";
   }
 }
