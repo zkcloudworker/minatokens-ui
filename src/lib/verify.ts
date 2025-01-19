@@ -34,6 +34,7 @@ export async function verifyFungibleTokenState(params: {
     updated,
     tokenId,
     rating,
+    status,
   } = params;
   try {
     await initBlockchain();
