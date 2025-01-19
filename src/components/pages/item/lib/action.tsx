@@ -78,7 +78,7 @@ export function getActionStatistics(params: {
   if (!transactionStore) return { success: 0, error: 0, waiting: 0 };
   const store = transactionStore;
   const currentState = store.getState()?.transactionStates;
-  console.log("getActionStatistics currentState", currentState);
+  if (DEBUG) console.log("getActionStatistics currentState", currentState);
   const result = currentState?.[params.tokenAddress]?.[params.tab]
     ?.statistics || {
     success: 0,

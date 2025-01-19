@@ -153,7 +153,7 @@ export function TokenActionsTab({
       name: "info:balance",
       apiKeyAddress: "",
     });
-    console.log(tokenBalance);
+    if (DEBUG) console.log("Token balance", tokenBalance);
     if (tokenBalance.status === 200 && tokenBalance.json.balance !== null) {
       setTokenBalance(tokenBalance.json.balance / 10 ** decimals);
     } else {
