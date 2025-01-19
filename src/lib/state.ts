@@ -21,6 +21,7 @@ export async function getTokenState(params: {
   | {
       success: true;
       tokenState: TokenState;
+      info: DeployedTokenInfo;
       isStateUpdated: boolean;
     }
   | {
@@ -190,7 +191,7 @@ export async function getTokenState(params: {
       adminVerificationKeyHash,
       adminVersion,
     };
-    const isStateUpdated = await updateTokenInfo({
+    const { isStateUpdated, info: tokenInfo } = await updateTokenInfo({
       tokenAddress,
       tokenState,
       info,
@@ -200,6 +201,7 @@ export async function getTokenState(params: {
       success: true,
       tokenState,
       isStateUpdated,
+      info: tokenInfo,
     };
   } catch (error: any) {
     log.error("getTokenState: catch", { error });
@@ -214,7 +216,7 @@ export async function updateTokenInfo(params: {
   tokenAddress: string;
   tokenState: TokenState;
   info?: DeployedTokenInfo;
-}): Promise<boolean> {
+}): Promise<{ isStateUpdated: boolean; info: DeployedTokenInfo }> {
   const { tokenAddress, tokenState, info } = params;
   let tokenInfo = info;
   let isStateUpdated = false;
@@ -270,7 +272,7 @@ export async function updateTokenInfo(params: {
     isStateUpdated = true;
   }
 
-  return isStateUpdated;
+  return { isStateUpdated, info: tokenInfo };
 }
 
 /*
