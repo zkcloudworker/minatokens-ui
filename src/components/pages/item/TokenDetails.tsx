@@ -146,8 +146,14 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
     const fetchItem = async () => {
       if (tokenAddress && !item) {
         const item = await algoliaGetToken({ tokenAddress });
-        if (item) setItem(item);
-        if (DEBUG) console.log("item", item);
+        if (item) {
+          setItem(item);
+          if (DEBUG) console.log("item", item);
+        } else {
+          const tokenState = await getTokenState({ tokenAddress });
+          if (tokenState.success && tokenState.info) setItem(tokenState.info);
+          if (DEBUG) console.log("tokenState", tokenState);
+        }
       }
     };
     fetchItem();
