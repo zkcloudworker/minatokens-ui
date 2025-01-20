@@ -6,6 +6,11 @@ import { generateJWT } from "./key";
 import { log as logtail } from "@logtail/next";
 import { getChain } from "@/lib/chain";
 const chain = getChain();
+
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+});
+
 const log = logtail.with({
   service: "api",
   function: "readme",
@@ -44,9 +49,6 @@ export async function readmeApi(
     };
   }
   try {
-    const prisma = new PrismaClient({
-      datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-    });
     const emailBlacklist = await prisma.emailBlacklist.findUnique({
       where: { email },
     });

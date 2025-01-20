@@ -20,6 +20,10 @@ const {
   API_SECRET,
 } = process.env;
 
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+});
+
 export interface KeyParams {
   address: string;
   email: string;
@@ -79,10 +83,6 @@ export async function generateApiKey(props: {
         json: { error: "Missing email" },
       };
     }
-
-    const prisma = new PrismaClient({
-      datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-    });
 
     const addressBlacklist = await prisma.addressBlacklist.findUnique({
       where: { address },
@@ -235,10 +235,6 @@ export async function generateSubscription(
         json: { error: "Invalid email" },
       };
     }
-
-    const prisma = new PrismaClient({
-      datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-    });
 
     const emailBlacklist = await prisma.emailBlacklist.findUnique({
       where: { email },

@@ -3,6 +3,10 @@ import { PublicKey } from "o1js";
 import { MintAddress, MintAddressVerified } from "@/lib/token";
 import { PrismaClient } from "@prisma/client";
 
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+});
+
 export async function checkMintData(
   params: MintAddress
 ): Promise<MintAddressVerified | undefined> {
@@ -56,9 +60,6 @@ export async function checkAddress(
       );
       return false;
     }
-    const prisma = new PrismaClient({
-      datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-    });
 
     const addressBlacklist = await prisma.addressBlacklist.findUnique({
       where: { address },
