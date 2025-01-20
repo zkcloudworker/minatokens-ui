@@ -29,6 +29,10 @@ const DEBUG = debug();
 const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY, README_DOCS_SECRET } =
   process.env;
 
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+});
+
 initializeMemoryRateLimiter({
   name: "ipMemory",
   points: 120,
@@ -160,9 +164,6 @@ function apiHandlerInternal<T, V>(params: {
     let userKey: string = apiKey;
     let userName: string | null = null;
     let userEmail: string | null = null;
-    const prisma = new PrismaClient({
-      datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-    });
 
     function getResult(json: any): string | undefined {
       const result = {

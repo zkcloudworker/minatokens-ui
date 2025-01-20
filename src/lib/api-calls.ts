@@ -2,6 +2,9 @@
 import { APIKeyCalls, Chain, PrismaClient } from "@prisma/client";
 import { debug } from "./debug";
 const DEBUG = debug();
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+});
 
 export async function getApiCalls(params: {
   address: string;
@@ -13,9 +16,6 @@ export async function getApiCalls(params: {
 }): Promise<{ data: APIKeyCalls[]; totalPages: number }> {
   const { address, chain, endpoint, timePeriod, page, itemsPerPage } = params;
   // console.log("getApiCalls", params);
-  const prisma = new PrismaClient({
-    datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-  });
 
   const totalCount = await prisma.aPIKeyCalls.count({
     where: {

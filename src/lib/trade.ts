@@ -2,7 +2,9 @@
 import { PrismaClient, Bids, Offers, Prisma } from "@prisma/client";
 import { getPrismaChainName } from "./chain";
 const prismaChainName = getPrismaChainName();
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+});
 
 export interface OfferInfo {
   tokenAddress: string;
