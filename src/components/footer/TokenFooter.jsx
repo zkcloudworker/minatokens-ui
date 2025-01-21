@@ -3,8 +3,9 @@
 import Socials from "./Socials";
 import Image from "next/image";
 import Link from "next/link";
-import { getSiteName } from "@/lib/chain";
+import { getSiteName, getSiteType } from "@/lib/chain";
 
+const siteType = getSiteType();
 export default function TokenFooter() {
   return (
     <footer className="page-footer bg-white dark:bg-jacarta-900">
@@ -16,20 +17,29 @@ export default function TokenFooter() {
                 <Image
                   width={32}
                   height={32}
-                  src="/img/zkCloudWorker-logo.png"
+                  src={
+                    siteType === "nft"
+                      ? "/img/minanft.png"
+                      : "/img/zkCloudWorker-logo.png"
+                  }
                   className="--max-h-7 dark:hidden"
                   alt="MinaTokens.com"
                 />
                 <Image
                   width={32}
                   height={32}
-                  src="/img/zkCloudWorker-logo.png"
+                  src={
+                    siteType === "nft"
+                      ? "/img/minanft.png"
+                      : "/img/zkCloudWorker-logo.png"
+                  }
                   className="hidden --max-h-7 dark:block"
                   alt="MinaTokens.com"
                 />
               </span>
               <span className="ms-4 text-white text-lg inline-block">
-                {getSiteName()}.com
+                {getSiteName()}
+                {siteType === "nft" ? "" : ".com"}
               </span>
             </Link>
 
@@ -40,7 +50,9 @@ export default function TokenFooter() {
 
           <div className="col-span-full sm:col-span-3 md:col-span-4 md:col-start-9">
             <p className="mb-4 dark:text-jacarta-300">
-              Launch, buy and sell MINA custom tokens.
+              {siteType === "nft"
+                ? "Launch, buy and sell NFTs on Mina."
+                : "Launch, buy and sell MINA custom tokens."}
               <br />
               Powered by &nbsp;
               <a
@@ -54,9 +66,13 @@ export default function TokenFooter() {
               <a
                 className="text-accent font-bold"
                 target="_blank"
-                href="https://zkcloudworker.com"
+                href={
+                  siteType === "nft"
+                    ? "https://minanft.io"
+                    : "https://zkcloudworker.com"
+                }
               >
-                zkCloudWorker
+                {siteType === "nft" ? "MinaNFT" : "zkCloudWorker"}
               </a>
               .
             </p>
@@ -66,8 +82,15 @@ export default function TokenFooter() {
         <div className="flex flex-col items-center justify-between space-y-2 py-8 sm:flex-row sm:space-y-0">
           <span className="text-sm dark:text-jacarta-400">
             &copy; 2025 {getSiteName()} by{" "}
-            <a href="https://zkcloudworker.com" className="hover:text-accent">
-              zkCloudWorker
+            <a
+              href={
+                siteType === "nft"
+                  ? "https://minanft.io"
+                  : "https://zkcloudworker.com"
+              }
+              className="hover:text-accent"
+            >
+              {siteType === "nft" ? "MinaNFT" : "zkCloudWorker"}
             </a>
           </span>
           <ul className="flex flex-wrap space-x-4 text-sm dark:text-jacarta-400">

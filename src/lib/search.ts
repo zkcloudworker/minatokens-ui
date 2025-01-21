@@ -6,17 +6,19 @@ import {
   getAllTokensByAddress,
   BlockberryTokenData,
 } from "./blockberry-tokens";
-import { getChain } from "./chain";
+import { getChain, getSiteType } from "./chain";
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
 const chain = getChain();
+const siteType = getSiteType();
 const log = logtail.with({
   chain,
   service: "search",
 });
 const DEBUG = debug();
 
-const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
+const { ALGOLIA_KEY, ALGOLIA_PROJECT, NFT_ALGOLIA_PROJECT, NFT_ALGOLIA_KEY } =
+  process.env;
 
 export interface AlgoliaTokenList {
   hits: DeployedTokenInfo[];
@@ -39,16 +41,25 @@ export async function algoliaGetTokenList(params: {
   issuedByAddress?: string;
   ownedByAddress?: string;
 }): Promise<AlgoliaTokenList | undefined> {
+  console.log("algoliaGetTokenList", params);
   const { onlyFavorites, favorites, issuedByAddress, ownedByAddress } = params;
   if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
   if (ALGOLIA_PROJECT === undefined)
     throw new Error("ALGOLIA_PROJECT is undefined");
+  if (NFT_ALGOLIA_PROJECT === undefined)
+    throw new Error("NFT_ALGOLIA_PROJECT is undefined");
+  if (NFT_ALGOLIA_KEY === undefined)
+    throw new Error("NFT_ALGOLIA_KEY is undefined");
   const query = params.query ?? "";
   const hitsPerPage = params.hitsPerPage ?? 100;
   const page = params.page ?? 0;
   //if (DEBUG) console.log("algoliaGetTokenList", params);
-  const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
-  const indexName = `tokens-${chain}`;
+  const client = searchClient(
+    siteType === "token" ? ALGOLIA_PROJECT : NFT_ALGOLIA_PROJECT,
+    siteType === "token" ? ALGOLIA_KEY : NFT_ALGOLIA_KEY
+  );
+  const indexName =
+    siteType === "token" ? `tokens-${chain}` : `standard-${chain}`;
   //const likesIndexName = `token-likes-${chain}`;
 
   async function filterFromBlockberryTokens(
@@ -223,8 +234,10 @@ export async function algoliaGetTokenList(params: {
     "serverTimeMS": 2
 }
     */
+    console.log("tokenList", tokenList?.hits?.length);
     return tokenList;
   } catch (error: any) {
+    console.log("error", error);
     log.error("algoliaGetToken error:", {
       error: error?.message ?? String(error),
       params,

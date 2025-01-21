@@ -20,8 +20,10 @@ import { log } from "@/lib/log";
 import { useTokenDetails } from "@/context/details";
 import { getTokenBids, getTokenOffers } from "@/lib/trade";
 import { Order } from "@/components/orderbook/OrderBook";
-const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
+import { getSiteType } from "@/lib/chain";
 
+const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
+const siteType = getSiteType();
 /*
 interface Item {
   id: number;
@@ -78,7 +80,7 @@ const initialCategories: Category[] = [
 ];
 
 export type TokenListProps = {
-  title: string;
+  title?: string;
   showIcon: boolean;
   initialNumberOfItems?: number;
 };
@@ -374,18 +376,20 @@ export default function TokenList({
       {isAvailable && (
         <section className="py-32">
           <div className="container">
-            <h2 className="mb-8 text-center font-display text-5xl text-jacarta-700 dark:text-white">
-              {showIcon && (
-                <span
-                  className="mr-3 inline-block h-8 w-8 bg-contain bg-center text-xl"
-                  style={{
-                    backgroundImage:
-                      "url(https://cdn.jsdelivr.net/npm/emoji-datasource-apple@7.0.2/img/apple/64/26a1.png)",
-                  }}
-                ></span>
-              )}
-              {title}
-            </h2>
+            {title && (
+              <h2 className="mb-8 text-center font-display text-5xl text-jacarta-700 dark:text-white">
+                {showIcon && (
+                  <span
+                    className="mr-3 inline-block h-8 w-8 bg-contain bg-center text-xl"
+                    style={{
+                      backgroundImage:
+                        "url(https://cdn.jsdelivr.net/npm/emoji-datasource-apple@7.0.2/img/apple/64/26a1.png)",
+                    }}
+                  ></span>
+                )}
+                {title}
+              </h2>
+            )}
             <div className="mb-8 flex flex-wrap items-center justify-between">
               <ul className="flex flex-wrap items-center">
                 <li className="my-1 mr-2.5">
@@ -536,7 +540,7 @@ export default function TokenList({
                         href={`/token/${elm.tokenAddress}`}
                         className="block w-full h-full"
                       >
-                        <Image
+                        {/* <Image
                           width={0}
                           height={0}
                           sizes="100vw"
@@ -549,6 +553,15 @@ export default function TokenList({
                           src={elm.image ?? "/launchpad.png"}
                           alt="token image"
                           className="rounded-[0.625rem]"
+                          loading="lazy"
+                          crossOrigin="anonymous"
+                        /> */}
+                        <Image
+                          width={230}
+                          height={230}
+                          src={elm.image ?? "launchpad.png"}
+                          alt="token 5"
+                          className="w-full rounded-[0.625rem]"
                           loading="lazy"
                           crossOrigin="anonymous"
                         />
@@ -589,6 +602,7 @@ export default function TokenList({
                           <Highlight item={elm} attribute="name" />
                         </span>
                       </Link>
+
                       <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
                         {state.tokens[elm.tokenAddress]?.offer?.price
                           ? state.tokens[
@@ -639,20 +653,38 @@ export default function TokenList({
                         </div>
                       </div>*/}
                     </div>
+                    {siteType === "nft" && (
+                      <div className="mt-2 text-sm">
+                        <Link
+                          href={`/token/${elm.tokenAddress}`}
+                          className="flex"
+                        >
+                          <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-left">
+                            Collection:{" "}
+                            <Highlight item={elm} attribute="collectionName" />
+                          </span>
+                        </Link>
+                      </div>
+                    )}
 
                     <div className="mt-2 text-sm">
                       <span className="text-jacarta-500 dark:text-jacarta-300 float-left">
                         <Highlight item={elm} attribute="symbol" />
                       </span>
-                      <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                        {`Supply: ${elm.totalSupply.toLocaleString(undefined, {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 2,
-                        })}`}
-                      </span>
+                      {siteType === "token" && (
+                        <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
+                          {`Supply: ${elm.totalSupply.toLocaleString(
+                            undefined,
+                            {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 2,
+                            }
+                          )}`}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="mt-8 flex items-center justify-between">
+                    <div className="mt-2 flex items-center justify-between">
                       {/* <button
                         className="font-display text-sm font-semibold text-accent"
                         data-bs-toggle="modal"
