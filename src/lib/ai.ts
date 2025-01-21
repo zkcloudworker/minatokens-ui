@@ -14,7 +14,7 @@ let rateLimiter: RateLimiterRedis | null = null;
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;
 initializeRedisRateLimiterInternal({
   name: "ai",
-  points: 10,
+  points: 15,
   duration: 60 * 60 * 24, // 1 day
 });
 
@@ -23,11 +23,11 @@ export async function generateImage(params: {
   name: string;
   description?: string;
   address: string;
-}): Promise<Blob | undefined> {
+}): Promise<{ blob: Blob | undefined; error: string | undefined }> {
   const { symbol, name, description, address } = params;
   if (await rateLimit({ key: address })) {
     log.error("Too many image requests", { ...params, chain });
-    return undefined;
+    return { blob: undefined, error: "Too many AI image requests" };
   }
   const promptCompletion = await openai.chat.completions.create({
     model: "o1-mini",
@@ -42,11 +42,14 @@ export async function generateImage(params: {
     user: address,
   });
   const prompt = promptCompletion?.choices[0]?.message?.content;
-  console.log("prompt", prompt);
+  //console.log("prompt", prompt);
 
   if (!prompt) {
     log.error("No prompt generated", { ...params, chain });
-    return undefined;
+    return {
+      blob: undefined,
+      error: "ChatGPT error: No DALL-E-3 prompt generated",
+    };
   }
 
   const completion = await openai.images.generate({
@@ -59,7 +62,7 @@ export async function generateImage(params: {
   const url = completion.data[0].url;
   if (!url) {
     log.error("No image generated", { ...params, prompt, chain });
-    return undefined;
+    return { blob: undefined, error: "ChatGPT error: No image generated" };
   }
   log.info("Image generated", { ...params, prompt, chain, url });
   const res = await fetch(url, {
@@ -68,11 +71,14 @@ export async function generateImage(params: {
 
   if (!res.ok) {
     log.error("Cannot download ai image", { ...params, prompt, chain, url });
-    return undefined;
+    return {
+      blob: undefined,
+      error: "ChatGPT error: Cannot download AI image",
+    };
   }
 
   const blob = await res.blob();
-  return blob;
+  return { blob, error: undefined };
 }
 
 function initializeRedisRateLimiterInternal(params: {
