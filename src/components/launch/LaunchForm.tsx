@@ -61,7 +61,7 @@ export function LaunchForm({
       return;
     }
     setImageGenerating(true);
-    const blob = await generateImage({
+    const { blob, error } = await generateImage({
       symbol,
       name,
       description,
@@ -74,10 +74,10 @@ export function LaunchForm({
         const url = URL.createObjectURL(file);
         setImage(file);
         setImageURL(url);
-      }
+      } else setImageError(error ?? "AI error ERR_AI_1");
     } else {
       log.error("No image generated", { symbol, name, description, address });
-      setImageError("AI error");
+      setImageError(error ?? "AI error ERR_AI_2");
     }
     setImageGenerating(false);
   }
@@ -626,15 +626,19 @@ export function LaunchForm({
                 url={imageURL}
               />
             </div>
-            {symbol && name && address && (
+            {imageError && (
+              <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+                <p className="text-red">{imageError}</p>
+              </div>
+            )}
+            {symbol && name && address && !imageError && (
               <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
                 <button
                   onClick={generateImageWithAI}
                   disabled={imageGenerating || imageError !== undefined}
                   className="rounded-full bg-accent py-1 px-6 text-center text-white shadow-accent-volume transition-all hover:bg-accent-dark text-sm"
                 >
-                  {imageError ??
-                    (imageGenerating ? "Generating..." : "Generate with AI")}
+                  {imageGenerating ? "Generating..." : "Generate with AI"}
                 </button>
               </div>
             )}
