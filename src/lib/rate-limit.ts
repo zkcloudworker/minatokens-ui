@@ -39,6 +39,14 @@ export function initializeRedisRateLimiter(params: {
   points: number;
   duration: number;
 }) {
+  initializeRedisRateLimiterInternal(params);
+}
+
+function initializeRedisRateLimiterInternal(params: {
+  name: string;
+  points: number;
+  duration: number;
+}) {
   const { name, points, duration } = params;
   if (limiters[name]) return;
   if (!RATE_LIMIT_KV_URL) {
@@ -78,6 +86,14 @@ export function initializeRedisRateLimiter(params: {
 
   limiters[name] = rateLimiter;
   printInitMessage(name, "redis");
+}
+
+export async function initializeRedisRateLimiterAsync(params: {
+  name: string;
+  points: number;
+  duration: number;
+}) {
+  initializeRedisRateLimiterInternal(params);
 }
 
 const limited: { [key: string]: number } = {};

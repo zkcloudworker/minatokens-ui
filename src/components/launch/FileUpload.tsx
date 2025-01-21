@@ -5,11 +5,12 @@ import Image from "next/image";
 export interface FileUploadProps {
   setImage: (image: File) => void;
   setImageURL: (url: string | undefined) => void;
+  url?: string;
 }
 
-export function FileUpload({ setImage, setImageURL }: FileUploadProps) {
+export function FileUpload({ setImage, setImageURL, url }: FileUploadProps) {
   const [dragging, setDragging] = useState<boolean>(false);
-  const [imagePreview, setImagePreview] = useState<string>("/token.png");
+  //const [imagePreview, setImagePreview] = useState<string>(url || "/token.png");
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -31,7 +32,7 @@ export function FileUpload({ setImage, setImageURL }: FileUploadProps) {
     const file = e.dataTransfer.files[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      setImagePreview(url);
+      //setImagePreview(url);
       setImage(file);
       setImageURL(url);
     }
@@ -41,7 +42,7 @@ export function FileUpload({ setImage, setImageURL }: FileUploadProps) {
     const file = e.target.files?.[0];
     if (file) {
       setImage(file);
-      setImagePreview(URL.createObjectURL(file)); // Set the image preview
+      setImageURL(URL.createObjectURL(file)); // Set the image preview
     }
   };
 
@@ -56,8 +57,8 @@ export function FileUpload({ setImage, setImageURL }: FileUploadProps) {
       >
         <figure className="relative inline-block w-300 h-300 ">
           <Image
-            src={imagePreview}
-            alt="collection avatar"
+            src={url ?? "/token.png"}
+            alt="image"
             height={300}
             width={300}
             className="rounded-xl border-[5px] border-white dark:border-jacarta-600 object-cover !w-[150px] !h-[150px] overflow-hidden "
