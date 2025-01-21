@@ -9,6 +9,7 @@ const log = logtail.with({
   service: "ai",
   chain,
 });
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 let rateLimiter: RateLimiterRedis | null = null;
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;
