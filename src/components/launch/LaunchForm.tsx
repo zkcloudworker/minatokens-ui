@@ -13,6 +13,7 @@ import { LaunchTokenData, MintAddress, TokenLinks } from "@/lib/token";
 import { MintAddressesModal } from "../modals/MintAddressesModal";
 import { checkAvailability, unavailableCountry } from "@/lib/availability";
 import { log } from "@/lib/log";
+import { generateImage } from "@/lib/ai";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 export function LaunchForm({
@@ -42,7 +43,8 @@ export function LaunchForm({
   );
   const [mintAddresses, setMintAddresses] = useState<MintAddress[]>([]);
   const [mintAddressesText, setMintAddressesText] = useState<string>("");
-
+  const [imageGenerating, setImageGenerating] = useState<boolean>(false);
+  const [imageError, setImageError] = useState<string | undefined>(undefined);
   const { address, setAddress } = useContext(AddressContext);
 
   async function addressChanged(address: string | undefined) {
@@ -53,6 +55,33 @@ export function LaunchForm({
     }
     setAddressValid(address ? await checkAddress(address) : false);
   }
+
+  async function generateImageWithAI() {
+    if (!symbol || !name || !address) {
+      return;
+    }
+    setImageGenerating(true);
+    const blob = await generateImage({
+      symbol,
+      name,
+      description,
+      address,
+    });
+    if (DEBUG) console.log("image", image);
+    if (blob) {
+      const file = new File([blob], symbol + ".png", { type: blob.type });
+      if (file) {
+        const url = URL.createObjectURL(file);
+        setImage(file);
+        setImageURL(url);
+      }
+    } else {
+      log.error("No image generated", { symbol, name, description, address });
+      setImageError("AI error");
+    }
+    setImageGenerating(false);
+  }
+
   useEffect(() => {
     addressChanged(address);
   }, [address]);
@@ -591,8 +620,24 @@ export function LaunchForm({
           </div>
           <div className="mb-12 md:w-1/2 md:pr-8">
             <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
-              <FileUpload setImage={setImage} setImageURL={setImageURL} />
+              <FileUpload
+                setImage={setImage}
+                setImageURL={setImageURL}
+                url={imageURL}
+              />
             </div>
+            {symbol && name && address && (
+              <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+                <button
+                  onClick={generateImageWithAI}
+                  disabled={imageGenerating || imageError !== undefined}
+                  className="rounded-full bg-accent py-1 px-6 text-center text-white shadow-accent-volume transition-all hover:bg-accent-dark text-sm"
+                >
+                  {imageError ??
+                    (imageGenerating ? "Generating..." : "Generate with AI")}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
