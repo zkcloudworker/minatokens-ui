@@ -9,7 +9,7 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { checkAddress } from "@/lib/address";
 import { shortenString } from "@/lib/short";
-import { LaunchTokenData, MintAddress, TokenLinks } from "@/lib/token";
+import { LaunchTokenData, MintAddress, TokenLinks } from "@/tokens/lib/token";
 import { MintAddressesModal } from "../modals/MintAddressesModal";
 import { checkAvailability, unavailableCountry } from "@/lib/availability";
 import { log } from "@/lib/log";

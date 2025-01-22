@@ -1,13 +1,13 @@
 "use server";
 import { searchClient } from "@algolia/client-search";
 import { DeployedTokenInfo } from "./token";
-import { Like, getUsersLikes } from "./likes";
+import { Like, getUsersLikes } from "@/lib/likes";
 import {
   getAllTokensByAddress,
   BlockberryTokenData,
-} from "./blockberry-tokens";
-import { getChain, getSiteType } from "./chain";
-import { debug } from "./debug";
+} from "@/lib/blockberry-tokens";
+import { getChain, getSiteType } from "@/lib/chain";
+import { debug } from "@/lib/debug";
 import { log as logtail } from "@logtail/next";
 const chain = getChain();
 const siteType = getSiteType();
@@ -17,8 +17,17 @@ const log = logtail.with({
 });
 const DEBUG = debug();
 
-const { ALGOLIA_KEY, ALGOLIA_PROJECT, NFT_ALGOLIA_PROJECT, NFT_ALGOLIA_KEY } =
-  process.env;
+const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
+if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
+if (ALGOLIA_PROJECT === undefined)
+  throw new Error("ALGOLIA_PROJECT is undefined");
+
+const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
+const indexName = `tokens-${chain}`;
+
+export async function algoliaGetCollectionList(): Promise<DeployedTokenInfo[]> {
+  return [];
+}
 
 export interface AlgoliaTokenList {
   hits: DeployedTokenInfo[];
@@ -43,24 +52,19 @@ export async function algoliaGetTokenList(params: {
 }): Promise<AlgoliaTokenList | undefined> {
   console.log("algoliaGetTokenList", params);
   const { onlyFavorites, favorites, issuedByAddress, ownedByAddress } = params;
-  if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
-  if (ALGOLIA_PROJECT === undefined)
-    throw new Error("ALGOLIA_PROJECT is undefined");
-  if (NFT_ALGOLIA_PROJECT === undefined)
-    throw new Error("NFT_ALGOLIA_PROJECT is undefined");
-  if (NFT_ALGOLIA_KEY === undefined)
-    throw new Error("NFT_ALGOLIA_KEY is undefined");
+
   const query = params.query ?? "";
   const hitsPerPage = params.hitsPerPage ?? 100;
   const page = params.page ?? 0;
   //if (DEBUG) console.log("algoliaGetTokenList", params);
-  const client = searchClient(
-    siteType === "token" ? ALGOLIA_PROJECT : NFT_ALGOLIA_PROJECT,
-    siteType === "token" ? ALGOLIA_KEY : NFT_ALGOLIA_KEY
-  );
-  const indexName =
-    siteType === "token" ? `tokens-${chain}` : `standard-${chain}`;
+
   //const likesIndexName = `token-likes-${chain}`;
+
+  // const result = await client.searchForFacetValues({
+  //   indexName,
+  //   facetName: "collectionName",
+  // });
+  // console.log("result", result);
 
   async function filterFromBlockberryTokens(
     blockberryTokensPromise: Promise<BlockberryTokenData[]> | undefined

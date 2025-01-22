@@ -12,7 +12,7 @@ import {
   TimelineItemStatus,
   TimelineGroupStatus,
 } from "@/components/launch/TimeLine";
-import { LaunchTokenData } from "@/lib/token";
+import { LaunchTokenData } from "@/tokens/lib/token";
 import { log } from "@/lib/log";
 interface LaunchTokenState {
   timelineItems: TimelineGroupDated[];

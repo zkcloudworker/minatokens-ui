@@ -1,7 +1,7 @@
 // "use client";
 
 // import confetti from "canvas-confetti";
-// import { TokenActionData, MintAddressVerified } from "@/lib/token";
+// import { TokenActionData, MintAddressVerified } from "@/tokens/lib/token";
 // import { checkMintData } from "@/lib/address";
 // import {
 //   explorerAccountUrl,

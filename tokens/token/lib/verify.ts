@@ -1,12 +1,12 @@
 "use server";
 import { fetchMinaAccount } from "zkcloudworker";
-import { initBlockchain } from "./blockchain";
+import { initBlockchain } from "@/lib/blockchain";
 import { FungibleToken } from "@minatokens/token";
 import { Mina, PublicKey, TokenId, fetchAccount } from "o1js";
 import { TokenInfo, DeployedTokenInfo } from "./token";
 import { getTokenState } from "./state";
-import { algoliaWriteToken } from "./algolia";
-import { getChainId } from "./chain";
+import { algoliaWriteToken } from "@/lib/algolia";
+import { getChainId } from "@/lib/chain";
 import { log as logtail } from "@logtail/next";
 const chainId = getChainId();
 const log = logtail.with({

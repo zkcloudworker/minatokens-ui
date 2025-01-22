@@ -1,16 +1,16 @@
 "use client";
 import { useTokenDetails } from "@/context/details";
-import { TokenStats } from "./TokenStats";
+import { TokenStats } from "@/components/pages/item/TokenStats";
 import Image from "next/image";
 import Link from "next/link";
 import { algoliaGetToken } from "@/lib/algolia";
-import { DeployedTokenInfo, TokenState } from "@/lib/token";
+import { DeployedTokenInfo, TokenState } from "@/tokens/lib/token";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { writeLike, getLike, likesCount } from "@/lib/likes";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { getTokenState } from "@/lib/state";
+import { getTokenState } from "@/tokens/lib/state";
 import { socials_item } from "@/data/socials";
 import {
   BlockberryTokenHolder,

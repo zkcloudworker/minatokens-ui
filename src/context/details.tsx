@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useReducer, useContext, ReactNode } from "react";
-import { DeployedTokenInfo, TokenState, TokenAction } from "@/lib/token";
+import { DeployedTokenInfo, TokenState, TokenAction } from "@/tokens/lib/token";
 import { Order } from "@/components/orderbook/OrderBook";
 import {
   BlockberryTokenTransaction,

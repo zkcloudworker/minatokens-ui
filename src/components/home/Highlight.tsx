@@ -1,6 +1,6 @@
 import React from "react";
 
-import { DeployedTokenInfo } from "@/lib/token";
+import { DeployedTokenInfo } from "@/tokens/lib/token";
 
 interface HighlightProps {
   item: DeployedTokenInfo;

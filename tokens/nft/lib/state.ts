@@ -1,11 +1,11 @@
 "use server";
-import { fetchMinaAccount, initBlockchain } from "./blockchain";
+import { fetchMinaAccount, initBlockchain } from "@/lib/blockchain";
 import { FungibleToken } from "@minatokens/token";
 import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo, TokenInfo } from "./token";
-import { algoliaGetToken, algoliaWriteToken } from "./algolia";
-import { getChainId } from "./chain";
-import { debug } from "./debug";
+import { algoliaGetToken, algoliaWriteToken } from "@/lib/algolia";
+import { getChainId } from "@/lib/chain";
+import { debug } from "@/lib/debug";
 import { log as logtail } from "@logtail/next";
 const chainId = getChainId();
 const log = logtail.with({
@@ -236,11 +236,11 @@ export async function updateTokenInfo(params: {
 
   if (
     needUpdateState ||
-    tokenInfo.adminContractAddress !== tokenState.adminContractAddress ||
-    tokenInfo.adminAddress !== tokenState.adminAddress ||
-    tokenInfo.totalSupply !== tokenState.totalSupply ||
-    tokenInfo.isPaused !== tokenState.isPaused ||
-    tokenInfo.decimals !== tokenState.decimals ||
+    // tokenInfo.adminContractAddress !== tokenState.adminContractAddress ||
+    // tokenInfo.adminAddress !== tokenState.adminAddress ||
+    // tokenInfo.totalSupply !== tokenState.totalSupply ||
+    // tokenInfo.isPaused !== tokenState.isPaused ||
+    // tokenInfo.decimals !== tokenState.decimals ||
     tokenInfo.chain === undefined ||
     tokenInfo.created === undefined ||
     tokenInfo.updated === undefined ||
@@ -254,11 +254,11 @@ export async function updateTokenInfo(params: {
       tokenState,
     });
     tokenInfo.tokenId = tokenState.tokenId;
-    tokenInfo.adminContractAddress = tokenState.adminContractAddress;
-    tokenInfo.adminAddress = tokenState.adminAddress;
-    tokenInfo.totalSupply = tokenState.totalSupply;
-    tokenInfo.isPaused = tokenState.isPaused;
-    tokenInfo.decimals = tokenState.decimals;
+    // tokenInfo.adminContractAddress = tokenState.adminContractAddress;
+    // tokenInfo.adminAddress = tokenState.adminAddress;
+    // tokenInfo.totalSupply = tokenState.totalSupply;
+    // tokenInfo.isPaused = tokenState.isPaused;
+    // tokenInfo.decimals = tokenState.decimals;
     tokenInfo.updated = Date.now();
     if (!tokenInfo.created) tokenInfo.created = tokenInfo.updated;
     if (!tokenInfo.chain) tokenInfo.chain = chainId;
@@ -371,15 +371,16 @@ export async function restoreDeployedTokenInfo(params: {
   } catch (e) {
     log.error("restoreDeployedTokenInfo: catch", { error: e });
   }
-  const deployedTokenInfo: DeployedTokenInfo = {
-    ...info,
-    ...tokenState,
-    symbol: tokenState.tokenSymbol,
-    name: info.name ?? tokenState.tokenSymbol,
-    created: time,
-    updated: time,
-    chain: chainId,
-    rating: 100,
-  };
-  return deployedTokenInfo;
+  // const deployedTokenInfo: DeployedTokenInfo = {
+  //   ...info,
+  //   // ...tokenState,
+  //   symbol: tokenState.tokenSymbol,
+  //   name: info.name ?? tokenState.tokenSymbol,
+  //   created: time,
+  //   updated: time,
+  //   chain: chainId,
+  //   rating: 100,
+  // };
+  // return deployedTokenInfo;
+  throw new Error("Not implemented");
 }

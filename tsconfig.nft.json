@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@/tokens/*": ["./tokens/nft/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/context/*": ["./src/context/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/home/*": ["./src/app/home/*"],
+      "@/public/*": ["./public/*"],
+      "@/data/*": ["./data/*"],
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "tokens/nft/**/*.ts",
+    "tokens/nft/**/*.tsx",
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts"
+  ]
+}

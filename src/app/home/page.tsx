@@ -22,7 +22,7 @@ const HomeToken: FC = () => {
         <TokenList
           title={siteType === "token" ? "Trending" : undefined}
           showIcon={true}
-          initialNumberOfItems={8}
+          initialNumberOfItems={siteType === "token" ? 8 : 50}
           key="home-list"
         />
         <Process />

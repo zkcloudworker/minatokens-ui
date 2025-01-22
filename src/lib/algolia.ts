@@ -1,7 +1,7 @@
 "use server";
 import { algoliasearch } from "algoliasearch";
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
-import { DeployedTokenInfo } from "./token";
+import { DeployedTokenInfo } from "@/tokens/lib/token";
 import { getChain } from "./chain";
 const chain = getChain();
 import { debug } from "./debug";

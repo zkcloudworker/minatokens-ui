@@ -1,7 +1,7 @@
 "use client";
 
 import confetti from "canvas-confetti";
-import { LaunchTokenData, MintAddressVerified } from "@/lib/token";
+import { LaunchTokenData, MintAddressVerified } from "@/tokens/lib/token";
 import { checkMintData } from "@/lib/address";
 import {
   explorerAccountUrl,
@@ -25,7 +25,7 @@ import {
 } from "../TimeLine";
 import { pinBase64ImageToArweave, pinStringToArweave } from "@/lib/arweave";
 import { arweaveHashToUrl } from "@/lib/arweave";
-import { TokenInfo } from "@/lib/token";
+import { TokenInfo } from "@/tokens/lib/token";
 import { sendTransaction } from "@/lib/send";
 import {
   messages,

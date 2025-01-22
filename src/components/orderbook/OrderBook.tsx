@@ -15,7 +15,7 @@ import {
 } from "./dialog";
 import { log } from "@/lib/log";
 import { explorerAccountUrl } from "@/lib/chain";
-import { TokenAction } from "@/lib/token";
+import { TokenAction } from "@/tokens/lib/token";
 import { getChain } from "@/lib/chain";
 const chain = getChain();
 

@@ -4,9 +4,13 @@ import { withLogtail } from "@logtail/next";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const siteType = process.env.NEXT_PUBLIC_SITE_TYPE;
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    tsconfigPath: `tsconfig.${siteType}.json`,
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "5mb",
@@ -78,7 +82,6 @@ const nextConfig = {
     } else {
       config.externals.push("o1js"); // https://nextjs.org/docs/app/api-reference/next-config-js/serverExternalPackages
     }
-
     return config;
   },
 };

@@ -1,6 +1,6 @@
 "use server";
 import { PublicKey } from "o1js";
-import { MintAddress, MintAddressVerified } from "@/lib/token";
+import { MintAddress, MintAddressVerified } from "@/tokens/lib/token";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient({

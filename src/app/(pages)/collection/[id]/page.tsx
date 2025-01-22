@@ -1,12 +1,12 @@
 //import TokenHeader from "@/components/headers/TokenHeader";
 import TokenFooter from "@/components/footer/TokenFooter";
-import TokenDetails from "@/tokens/components/TokenDetails";
+import CollectionDetails from "@/tokens/components/CollectionDetails";
 
 // export const metadata = {
 //   title: "Token Details",
 // };
 
-export default async function TokenDetailsPage({
+export default async function CollectionDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -17,7 +17,7 @@ export default async function TokenDetailsPage({
     <>
       {/* <TokenHeader showSearch={false} /> */}
       <main className="mt-24">
-        <TokenDetails tokenAddress={id} />
+        <CollectionDetails tokenAddress={id} />
       </main>
       <TokenFooter />
     </>

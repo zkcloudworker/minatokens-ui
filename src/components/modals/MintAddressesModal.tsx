@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState } from "react";
 import { checkAddress } from "@/lib/address";
-import { MintAddress } from "@/lib/token";
+import { MintAddress } from "@/tokens/lib/token";
 import { AddressesModal } from "@/components/token/AddressesModal";
 
 const MINT_TEST = process.env.NEXT_PUBLIC_MINT_TEST === "true";

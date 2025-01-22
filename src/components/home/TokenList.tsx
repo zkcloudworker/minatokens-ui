@@ -1,7 +1,12 @@
 "use client";
 
-import { algoliaGetTokenList } from "@/lib/search";
-import { DeployedTokenInfo, TokenState } from "@/lib/token";
+import Sidebar from "./Sidebar";
+
+import {
+  algoliaGetCollectionList,
+  algoliaGetTokenList,
+} from "@/tokens/lib/search";
+import { DeployedTokenInfo, TokenState } from "@/tokens/lib/token";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState, useContext } from "react";
@@ -11,7 +16,7 @@ import { batchLikesCounts, writeLike, getUsersLikes } from "@/lib/likes";
 
 // import tippy from "tippy.js";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { getTokenState } from "@/lib/state";
+import { getTokenState } from "@/tokens/lib/state";
 import Highlight from "./Highlight";
 import Pagination from "../common/Pagination";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
@@ -62,13 +67,13 @@ const initialCategories: Category[] = [
   {
     id: "owned",
     selected: false,
-    name: "Tokens I own",
+    name: siteType === "token" ? "Tokens I own" : "My NFTs",
     icon: "M2 4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v5.5a2.5 2.5 0 1 0 0 5V20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4zm6.085 15a1.5 1.5 0 0 1 2.83 0H20v-2.968a4.5 4.5 0 0 1 0-8.064V5h-9.085a1.5 1.5 0 0 1-2.83 0H4v14h4.085zM9.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
   },
   {
     id: "issued",
     selected: false,
-    name: "Tokens I issued",
+    name: siteType === "token" ? "Tokens I issued" : "Collections I created",
     icon: "M2 4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v5.5a2.5 2.5 0 1 0 0 5V20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4zm6.085 15a1.5 1.5 0 0 1 2.83 0H20v-2.968a4.5 4.5 0 0 1 0-8.064V5h-9.085a1.5 1.5 0 0 1-2.83 0H4v14h4.085zM9.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
   },
   {
@@ -83,6 +88,8 @@ export type TokenListProps = {
   title?: string;
   showIcon: boolean;
   initialNumberOfItems?: number;
+  hideSidebar?: boolean;
+  collectionAddress?: string;
 };
 
 const numberOfItemsOptions = [20, 50, 100];
@@ -92,11 +99,14 @@ export default function TokenList({
   title,
   showIcon,
   initialNumberOfItems,
+  hideSidebar,
+  collectionAddress,
 }: TokenListProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const { state, dispatch } = useTokenDetails();
   const [itemsToDisplay, setItemsToDisplay] = useState<DeployedTokenInfo[]>([]);
+  const [collections, setCollections] = useState<DeployedTokenInfo[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [numberOfItems, setNumberOfItems] = useState<number>(
@@ -123,8 +133,14 @@ export default function TokenList({
     const filtered = categories[categoriesIndexes.favorites].selected
       ? state.list.filter((item) => state.favorites.includes(item.tokenAddress))
       : state.list;
+    const filteredByCollection = collectionAddress
+      ? filtered.filter((item) => item.collectionAddress === collectionAddress)
+      : filtered;
+    const filteredByMasterNFT = filteredByCollection.filter(
+      (item) => item.collectionAddress !== item.tokenAddress
+    );
     setItemsToDisplay(
-      filtered.slice(0, numberOfItems).map((item) => ({
+      filteredByMasterNFT.slice(0, numberOfItems).map((item) => ({
         ...item,
         likes: state.likes[item.tokenAddress] ?? 0,
         like: state.favorites.includes(item.tokenAddress),
@@ -239,6 +255,7 @@ export default function TokenList({
         favorites: onlyFavorites ? state.favorites : [],
         ownedByAddress: onlyOwned ? userAddress : undefined,
         issuedByAddress: onlyIssued ? userAddress : undefined,
+        collectionAddress,
       });
 
       let newItems: DeployedTokenInfo[] = searchResult?.hits ?? [];
@@ -319,6 +336,15 @@ export default function TokenList({
   }, [address]);
 
   useEffect(() => {
+    const fetchCollections = async () => {
+      const collections = await algoliaGetCollectionList();
+      console.log("collections", collections);
+      setCollections(collections);
+    };
+    fetchCollections();
+  }, []);
+
+  useEffect(() => {
     const fetchOrderbook = async () => {
       const addresses: string[] = [];
       for (const item of state.list) {
@@ -334,12 +360,15 @@ export default function TokenList({
         for (const address of Object.keys(offers)) {
           const rawOffer = offers[address];
           const item = state.list.find((item) => item.tokenAddress === address);
-
+          const decimals: number =
+            item && "decimals" in item && item?.decimals
+              ? (item.decimals as number)
+              : 9;
           const offer: Order | undefined =
             rawOffer === null
               ? undefined
               : ({
-                  amount: Number(rawOffer.amount) / 10 ** (item?.decimals ?? 9),
+                  amount: Number(rawOffer.amount) / 10 ** decimals,
                   price: Number(rawOffer.price) / 10 ** 9,
                   address: rawOffer.offerAddress,
                   type: "offer",
@@ -353,12 +382,16 @@ export default function TokenList({
         for (const address of Object.keys(bids)) {
           const rawBid = bids[address];
           const item = state.list.find((item) => item.tokenAddress === address);
+          const decimals: number =
+            item && "decimals" in item && item?.decimals
+              ? (item.decimals as number)
+              : 9;
 
           const bid: Order | undefined =
             rawBid === null
               ? undefined
               : ({
-                  amount: Number(rawBid.amount) / 10 ** (item?.decimals ?? 9),
+                  amount: Number(rawBid.amount) / 10 ** decimals,
                   price: Number(rawBid.price) / 10 ** 9,
                   address: rawBid.bidAddress,
                   type: "bid",
@@ -374,8 +407,8 @@ export default function TokenList({
   return (
     <>
       {isAvailable && (
-        <section className="py-32">
-          <div className="container">
+        <section className={`${collectionAddress ? "" : "py-32"}`}>
+          <div className="ml-20 mr-20">
             {title && (
               <h2 className="mb-8 text-center font-display text-5xl text-jacarta-700 dark:text-white">
                 {showIcon && (
@@ -390,157 +423,167 @@ export default function TokenList({
                 {title}
               </h2>
             )}
-            <div className="mb-8 flex flex-wrap items-center justify-between">
-              <ul className="flex flex-wrap items-center">
-                <li className="my-1 mr-2.5">
-                  <div
-                    onClick={() => setCategories(initialCategories)}
-                    className={`  ${
-                      categories.every(
-                        (category) => category.selected === false
-                      )
-                        ? "bg-jacarta-100"
-                        : "bg-white"
-                    }  ${
-                      categories.every(
-                        (category) => category.selected === false
-                      )
-                        ? "dark:bg-jacarta-600"
-                        : "dark:bg-jacarta-900"
-                    } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
-                  >
-                    All
-                  </div>
-                </li>
-                {categories.map((elm, i) => (
-                  <li
-                    onClick={() =>
-                      setCategories((prev) => {
-                        const newCategories = prev.map((category, index) => {
-                          if (index === i) {
-                            return {
-                              ...category,
-                              selected: !category.selected,
-                            };
-                          }
-                          return category;
-                        });
-                        if (DEBUG) console.log("New categories", newCategories);
-                        return newCategories;
-                      })
-                    }
-                    key={i}
-                    className="my-1 mr-2.5"
-                  >
+            {hideSidebar !== true && (
+              <div className="mb-8 flex flex-wrap items-center justify-between">
+                <ul className="flex flex-wrap items-center">
+                  <li className="my-1 mr-2.5">
                     <div
+                      onClick={() => setCategories(initialCategories)}
                       className={`  ${
-                        categories[i].selected ? "bg-jacarta-100" : "bg-white"
+                        categories.every(
+                          (category) => category.selected === false
+                        )
+                          ? "bg-jacarta-100"
+                          : "bg-white"
                       }  ${
-                        categories[i].selected
+                        categories.every(
+                          (category) => category.selected === false
+                        )
                           ? "dark:bg-jacarta-600"
                           : "dark:bg-jacarta-900"
                       } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 25 28"
-                        width="24"
-                        height="24"
-                        className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
-                      >
-                        <path fill="none" d="M0 0h24v24H0z" />
-                        <path d={elm.icon} />
-                      </svg>
-                      <span>{elm.name}</span>
+                      All
                     </div>
                   </li>
-                ))}
-              </ul>
-              <div className="flex items-center gap-2 my-1">
-                <button
-                  onClick={() => setRefreshCounter(refreshCounter + 1)}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-jacarta-100 bg-white hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="24"
-                    height="24"
-                    className="h-4 w-4 fill-jacarta-700 group-hover:fill-white dark:fill-jacarta-100"
+                  {categories.map((elm, i) => (
+                    <li
+                      onClick={() =>
+                        setCategories((prev) => {
+                          const newCategories = prev.map((category, index) => {
+                            if (index === i) {
+                              return {
+                                ...category,
+                                selected: !category.selected,
+                              };
+                            }
+                            return category;
+                          });
+                          if (DEBUG)
+                            console.log("New categories", newCategories);
+                          return newCategories;
+                        })
+                      }
+                      key={i}
+                      className="my-1 mr-2.5"
+                    >
+                      <div
+                        className={`  ${
+                          categories[i].selected ? "bg-jacarta-100" : "bg-white"
+                        }  ${
+                          categories[i].selected
+                            ? "dark:bg-jacarta-600"
+                            : "dark:bg-jacarta-900"
+                        } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 25 28"
+                          width="24"
+                          height="24"
+                          className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
+                        >
+                          <path fill="none" d="M0 0h24v24H0z" />
+                          <path d={elm.icon} />
+                        </svg>
+                        <span>{elm.name}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex items-center gap-2 my-1">
+                  <button
+                    onClick={() => setRefreshCounter(refreshCounter + 1)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-jacarta-100 bg-white hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
                   >
-                    <path fill="none" d="M0 0h24v24H0z" />
-                    <path d="M5.463 4.433A9.961 9.961 0 0 1 12 2c5.523 0 10 4.477 10 10 0 2.136-.67 4.116-1.81 5.74L17 12h3A8 8 0 0 0 6.46 6.228l-.997-1.795zm13.074 15.134A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12c0-2.136.67-4.116 1.81-5.74L7 12H4a8 8 0 0 0 13.54 5.772l.997 1.795z" />
-                  </svg>
-                </button>
-
-                <div className="dropdown my-1 cursor-pointer">
-                  <div
-                    className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
-                    role="button"
-                    id="numberOfItems"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    <span className="font-display">{numberOfItems}</span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       width="24"
                       height="24"
-                      className="h-4 w-4 fill-jacarta-500 dark:fill-white"
+                      className="h-4 w-4 fill-jacarta-700 group-hover:fill-white dark:fill-jacarta-100"
                     >
                       <path fill="none" d="M0 0h24v24H0z" />
-                      <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
+                      <path d="M5.463 4.433A9.961 9.961 0 0 1 12 2c5.523 0 10 4.477 10 10 0 2.136-.67 4.116-1.81 5.74L17 12h3A8 8 0 0 0 6.46 6.228l-.997-1.795zm13.074 15.134A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12c0-2.136.67-4.116 1.81-5.74L7 12H4a8 8 0 0 0 13.54 5.772l.997 1.795z" />
                     </svg>
-                  </div>
+                  </button>
 
-                  <div
-                    className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
-                    aria-labelledby="numberOfItems"
-                  >
-                    <span className="block px-5 py-2 font-display text-sm font-semibold text-jacarta-300">
-                      Number of items
-                    </span>
-                    {listOfNumberOfItems.map((elm, i) => (
-                      <button
-                        onClick={() => setNumberOfItems(elm)}
-                        key={i}
-                        className={
-                          numberOfItems == elm
-                            ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                            : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                        }
+                  <div className="dropdown my-1 cursor-pointer">
+                    <div
+                      className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
+                      role="button"
+                      id="numberOfItems"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <span className="font-display">{numberOfItems}</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="24"
+                        height="24"
+                        className="h-4 w-4 fill-jacarta-500 dark:fill-white"
                       >
-                        {elm}
-                        {numberOfItems == elm && (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="mb-[3px] h-4 w-4 fill-accent"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z" />
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
-                          </svg>
-                        )}
-                      </button>
-                    ))}
+                        <path fill="none" d="M0 0h24v24H0z" />
+                        <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
+                      </svg>
+                    </div>
+
+                    <div
+                      className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
+                      aria-labelledby="numberOfItems"
+                    >
+                      <span className="block px-5 py-2 font-display text-sm font-semibold text-jacarta-300">
+                        Number of items
+                      </span>
+                      {listOfNumberOfItems.map((elm, i) => (
+                        <button
+                          onClick={() => setNumberOfItems(elm)}
+                          key={i}
+                          className={
+                            numberOfItems == elm
+                              ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                              : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                          }
+                        >
+                          {elm}
+                          {numberOfItems == elm && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              width="24"
+                              height="24"
+                              className="mb-[3px] h-4 w-4 fill-accent"
+                            >
+                              <path fill="none" d="M0 0h24v24H0z" />
+                              <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="grid grid-cols-1 gap-[1.875rem] md:grid-cols-2 lg:grid-cols-4">
-              {itemsToDisplay.map((elm, i) => (
-                <article key={i}>
-                  <div className="block rounded-2.5xl border border-jacarta-100 bg-white p-[1.1875rem] transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700">
-                    <figure className="relative aspect-square mb-4">
-                      <Link
-                        href={`/token/${elm.tokenAddress}`}
-                        className="block w-full h-full"
-                      >
-                        {/* <Image
+            <div className="lg:flex mt-6">
+              {/* Sidebar */}
+              {siteType === "nft" && hideSidebar !== true && (
+                <Sidebar collections={collections} />
+              )}
+              {/* end sidebar */}
+              {/* Content */}
+              <div className="grid grid-cols-1 gap-[1.875rem] md:grid-cols-2 lg:grid-cols-4">
+                {itemsToDisplay.map((elm, i) => (
+                  <article key={i}>
+                    <div className="block rounded-2.5xl border border-jacarta-100 bg-white p-[1.1875rem] transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700">
+                      <figure className="relative">
+                        <Link
+                          href={`/token/${elm.tokenAddress}`}
+                          className="block w-full h-full"
+                        >
+                          {/* <Image
                           width={0}
                           height={0}
                           sizes="100vw"
@@ -556,62 +599,64 @@ export default function TokenList({
                           loading="lazy"
                           crossOrigin="anonymous"
                         /> */}
-                        <Image
-                          width={230}
-                          height={230}
-                          src={elm.image ?? "launchpad.png"}
-                          alt="token 5"
-                          className="w-full rounded-[0.625rem]"
-                          loading="lazy"
-                          crossOrigin="anonymous"
-                        />
-                      </Link>
-                      <div className="absolute top-3 right-3 flex items-center space-x-1 rounded-md bg-white p-2 dark:bg-jacarta-700">
-                        <span
-                          onClick={() => addLike(elm.tokenAddress)}
-                          className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
-                            isLiked(elm.tokenAddress) ? "js-likes--active" : ""
-                          }`}
-                          // data-tippy-content="Favorite"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="h-4 w-4 fill-jacarta-500 hover:fill-red dark:fill-jacarta-200 dark:hover:fill-red"
+                          <Image
+                            width={230}
+                            height={230}
+                            src={elm.image ?? "launchpad.png"}
+                            alt="token 5"
+                            className="w-full rounded-[0.625rem]"
+                            loading="lazy"
+                            crossOrigin="anonymous"
+                          />
+                        </Link>
+                        <div className="absolute top-3 right-3 flex items-center space-x-1 rounded-md bg-white p-2 dark:bg-jacarta-700">
+                          <span
+                            onClick={() => addLike(elm.tokenAddress)}
+                            className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
+                              isLiked(elm.tokenAddress)
+                                ? "js-likes--active"
+                                : ""
+                            }`}
+                            // data-tippy-content="Favorite"
                           >
-                            <path fill="none" d="M0 0H24V24H0z" />
-                            <path d="M12.001 4.529c2.349-2.109 5.979-2.039 8.242.228 2.262 2.268 2.34 5.88.236 8.236l-8.48 8.492-8.478-8.492c-2.104-2.356-2.025-5.974.236-8.236 2.265-2.264 5.888-2.34 8.244-.228zm6.826 1.641c-1.5-1.502-3.92-1.563-5.49-.153l-1.335 1.198-1.336-1.197c-1.575-1.412-3.99-1.35-5.494.154-1.49 1.49-1.565 3.875-.192 5.451L12 18.654l7.02-7.03c1.374-1.577 1.299-3.959-.193-5.454z" />
-                          </svg>
-                        </span>
-                        {/* <span className="text-sm dark:text-jacarta-200">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              width="24"
+                              height="24"
+                              className="h-4 w-4 fill-jacarta-500 hover:fill-red dark:fill-jacarta-200 dark:hover:fill-red"
+                            >
+                              <path fill="none" d="M0 0H24V24H0z" />
+                              <path d="M12.001 4.529c2.349-2.109 5.979-2.039 8.242.228 2.262 2.268 2.34 5.88.236 8.236l-8.48 8.492-8.478-8.492c-2.104-2.356-2.025-5.974.236-8.236 2.265-2.264 5.888-2.34 8.244-.228zm6.826 1.641c-1.5-1.502-3.92-1.563-5.49-.153l-1.335 1.198-1.336-1.197c-1.575-1.412-3.99-1.35-5.494.154-1.49 1.49-1.565 3.875-.192 5.451L12 18.654l7.02-7.03c1.374-1.577 1.299-3.959-.193-5.454z" />
+                            </svg>
+                          </span>
+                          {/* <span className="text-sm dark:text-jacarta-200">
                       {elm.likes}
                     </span> */}
-                        <span className="text-sm dark:text-jacarta-200">
-                          {state.likes[elm.tokenAddress] ?? ""}
-                        </span>
-                      </div>
-                    </figure>
-                    <div className="mt-7 flex items-center justify-between">
-                      <Link
-                        href={`/token/${elm.tokenAddress}`}
-                        className="flex"
-                      >
-                        <span className="font-display text-base text-jacarta-700 hover:text-accent dark:text-white  float-left">
-                          <Highlight item={elm} attribute="name" />
-                        </span>
-                      </Link>
+                          <span className="text-sm dark:text-jacarta-200">
+                            {state.likes[elm.tokenAddress] ?? ""}
+                          </span>
+                        </div>
+                      </figure>
+                      <div className="mt-7 flex items-center justify-between">
+                        <Link
+                          href={`/token/${elm.tokenAddress}`}
+                          className="flex"
+                        >
+                          <span className="font-display text-base text-jacarta-700 hover:text-accent dark:text-white  float-left">
+                            <Highlight item={elm} attribute="name" />
+                          </span>
+                        </Link>
 
-                      <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                        {state.tokens[elm.tokenAddress]?.offer?.price
-                          ? state.tokens[
-                              elm.tokenAddress
-                            ]?.offer?.price.toString() + ` MINA`
-                          : ""}
-                      </span>
+                        <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
+                          {state.tokens[elm.tokenAddress]?.offer?.price
+                            ? state.tokens[
+                                elm.tokenAddress
+                              ]?.offer?.price.toString() + ` MINA`
+                            : ""}
+                        </span>
 
-                      {/* <div className="dropup rounded-full hover:bg-jacarta-100 dark:hover:bg-jacarta-600">
+                        {/* <div className="dropup rounded-full hover:bg-jacarta-100 dark:hover:bg-jacarta-600">
                         <a
                           href="#"
                           className="dropdown-toggle inline-flex h-8 w-8 items-center justify-center text-sm"
@@ -652,47 +697,50 @@ export default function TokenList({
                           </button>
                         </div>
                       </div>*/}
-                    </div>
-                    {siteType === "nft" && (
-                      <div className="mt-2 text-sm">
-                        <Link
-                          href={`/token/${elm.tokenAddress}`}
-                          className="flex"
-                        >
-                          <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-left">
-                            Collection:{" "}
-                            <Highlight item={elm} attribute="collectionName" />
-                          </span>
-                        </Link>
                       </div>
-                    )}
-
-                    <div className="mt-2 text-sm">
-                      <span className="text-jacarta-500 dark:text-jacarta-300 float-left">
-                        <Highlight item={elm} attribute="symbol" />
-                      </span>
-                      {siteType === "token" && (
-                        <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                          {`Supply: ${elm.totalSupply.toLocaleString(
-                            undefined,
-                            {
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 2,
-                            }
-                          )}`}
-                        </span>
+                      {siteType === "nft" && (
+                        <div className="mt-2 text-sm">
+                          <Link
+                            href={`/collection/${elm.collectionAddress}`}
+                            className="flex hover:text-accent"
+                          >
+                            <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-left">
+                              Collection:{" "}
+                              <Highlight
+                                item={elm}
+                                attribute="collectionName"
+                              />
+                            </span>
+                          </Link>
+                        </div>
                       )}
-                    </div>
+                      {siteType === "token" && (
+                        <div className="mt-2 text-sm">
+                          <span className="text-jacarta-500 dark:text-jacarta-300 float-left">
+                            <Highlight item={elm} attribute="symbol" />
+                          </span>
 
-                    <div className="mt-2 flex items-center justify-between">
-                      {/* <button
+                          <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
+                            {`Supply: ${(elm as any).totalSupply.toLocaleString(
+                              undefined,
+                              {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 2,
+                              }
+                            )}`}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="mt-2 flex items-center justify-between">
+                        {/* <button
                         className="font-display text-sm font-semibold text-accent"
                         data-bs-toggle="modal"
                         data-bs-target="#buyNowModal"
                       >
                         Buy now
                       </button> */}
-                      {/* <Link
+                        {/* <Link
                         href={`/token/${elm.tokenAddress}`}
                         className="group flex items-center"
                       >
@@ -710,10 +758,11 @@ export default function TokenList({
                           View History
                         </span>
                       </Link> */}
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                ))}
+              </div>
             </div>
             <Pagination page={page} setPage={setPage} totalPages={totalPages} />
           </div>
