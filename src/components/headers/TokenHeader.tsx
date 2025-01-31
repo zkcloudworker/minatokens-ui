@@ -107,7 +107,7 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
                 {getSiteName()}
               </div>
               <div className="text-jacarta-900 dark:text-white -ms-2 text-xs">
-                {`${chain} alpha`}
+                {chain === "mainnet" ? "mainnet alpha" : "devnet"}
               </div>
             </Link>
           )}
