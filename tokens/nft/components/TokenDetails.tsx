@@ -1,16 +1,16 @@
 "use client";
 import { useTokenDetails } from "@/context/details";
-import { TokenStats } from "./TokenStats";
+import { TokenStats } from "@/components/pages/item/TokenStats";
 import Image from "next/image";
 import Link from "next/link";
 import { algoliaGetToken } from "@/lib/algolia";
-import { DeployedTokenInfo, TokenState } from "@/lib/token";
+import { DeployedTokenInfo, TokenState } from "@/tokens/lib/token";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { writeLike, getLike, likesCount } from "@/lib/likes";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { getTokenState } from "@/lib/state";
+import { getTokenState } from "@/tokens/lib/state";
 import { socials_item } from "@/data/socials";
 import {
   BlockberryTokenHolder,
@@ -77,32 +77,32 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
     const fetchOrderbook = async () => {
       if (isPriceLoaded) return;
 
-      const { offers, bids } = await getOrderbook({
-        tokenAddress,
-        maxItems: 1,
-      });
+      // const { offers, bids } = await getOrderbook({
+      //   tokenAddress,
+      //   maxItems: 1,
+      // });
 
-      const offer: Order | null =
-        offers.length === 0
-          ? null
-          : ({
-              amount: Number(offers[0].amount) / 10 ** (item?.decimals ?? 9),
-              price: Number(offers[0].price) / 10 ** 9,
-              address: offers[0].offerAddress,
-              type: "offer",
-            } as Order);
+      // const offer: Order | null =
+      //   offers.length === 0
+      //     ? null
+      //     : ({
+      //         amount: Number(offers[0].amount) / 10 ** (item?.decimals ?? 9),
+      //         price: Number(offers[0].price) / 10 ** 9,
+      //         address: offers[0].offerAddress,
+      //         type: "offer",
+      //       } as Order);
 
-      if (offer) setOffer(offer);
-      const bid: Order | null =
-        bids.length === 0
-          ? null
-          : ({
-              amount: Number(bids[0].amount) / 10 ** (item?.decimals ?? 9),
-              price: Number(bids[0].price) / 10 ** 9,
-              address: bids[0].bidAddress,
-              type: "bid",
-            } as Order);
-      if (bid) setBid(bid);
+      // if (offer) setOffer(offer);
+      // const bid: Order | null =
+      //   bids.length === 0
+      //     ? null
+      //     : ({
+      //         amount: Number(bids[0].amount) / 10 ** (item?.decimals ?? 9),
+      //         price: Number(bids[0].price) / 10 ** 9,
+      //         address: bids[0].bidAddress,
+      //         type: "bid",
+      //       } as Order);
+      // if (bid) setBid(bid);
       setIsPriceLoaded(true);
     };
     fetchOrderbook();
@@ -275,7 +275,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                 <Image
                   width={540}
                   height={670}
-                  src={item?.image ?? "launchpad.png"}
+                  src={item?.image ?? "/launchpad.png"}
                   alt="token image"
                   className="cursor-pointer rounded-2.5xl w-[100%]"
                   data-bs-toggle="modal"
@@ -295,7 +295,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                     <Image
                       width={787}
                       height={984}
-                      src={item?.image ?? "launchpad.png"}
+                      src={item?.image ?? "/launchpad.png"}
                       alt="token image"
                       className="w-full rounded-[0.625rem]"
                       loading="lazy"
@@ -439,7 +439,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                 <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
                   {item?.symbol ?? ""}
                 </span>
-                <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
+                {/* <span className="text-sm text-jacarta-400 dark:text-jacarta-300">
                   Supply:{" "}
                   {item?.totalSupply
                     ? item?.totalSupply.toLocaleString(undefined, {
@@ -447,7 +447,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                         maximumFractionDigits: 2,
                       })
                     : ""}
-                </span>
+                </span> */}
                 <div className="flex items-center space-x-1 rounded-xl border border-jacarta-100 bg-white py-2 px-4 dark:border-jacarta-600 dark:bg-jacarta-700">
                   <span
                     className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
@@ -492,7 +492,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
               </Link>
 
               {/* Creator / Owner */}
-              <div className="flex flex-wrap">
+              {/* <div className="flex flex-wrap">
                 {isNotEmpty(item?.twitter) && (
                   <div className="mr-8 mb-4 flex">
                     <figure className="mr-4 shrink-0">
@@ -697,7 +697,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                     </div>
                   </div>
                 )}
-              </div>
+              </div> */}
 
               {/* Trade */}
               {(bid || offer) && (
@@ -782,7 +782,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
             tokenState={tokenState}
             tokenAddress={tokenAddress}
             tokenSymbol={tokenState?.tokenSymbol ?? item?.symbol ?? "tokens"}
-            decimals={tokenState?.decimals ?? item?.decimals ?? 9}
+            decimals={9}
           />
           {/* end tabs */}
         </div>

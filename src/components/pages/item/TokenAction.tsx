@@ -6,7 +6,7 @@ import {
   TokenState,
   TokenActionData,
   TokenActionTransactionParams,
-} from "@/lib/token";
+} from "@/tokens/lib/token";
 import { TransactionTokenState, TokenActionFormData } from "@/context/action";
 import { TimeLine } from "@/components/launch/TimeLine";
 import { tokenAction } from "./lib/action";

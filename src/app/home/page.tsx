@@ -5,6 +5,9 @@ import Hero from "@/components/home/Hero";
 import Process from "@/components/home/Process";
 // import { getSiteName } from "@/lib/chain";
 import { FC } from "react";
+import { getSiteType } from "@/lib/chain";
+
+const siteType = getSiteType();
 
 // export const metadata = {
 //   title: `${getSiteName()} | Launchpad`,
@@ -15,11 +18,11 @@ const HomeToken: FC = () => {
     <>
       {/* <TokenHeader showSearch={true} /> */}
       <main>
-        <Hero />
+        {siteType === "token" && <Hero />}
         <TokenList
-          title="Trending"
+          title={siteType === "token" ? "Trending" : undefined}
           showIcon={true}
-          initialNumberOfItems={8}
+          initialNumberOfItems={siteType === "token" ? 8 : 50}
           key="home-list"
         />
         <Process />

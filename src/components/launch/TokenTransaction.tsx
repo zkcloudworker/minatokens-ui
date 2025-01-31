@@ -3,7 +3,7 @@
 
 // import React, { useEffect } from "react";
 // import { TimeLine } from "./TimeLine";
-// import { TokenActionData } from "@/lib/token";
+// import { TokenActionData } from "@/tokens/lib/token";
 // import { tokenAction } from "./lib/action";
 // import {
 //   useTransactionContext,

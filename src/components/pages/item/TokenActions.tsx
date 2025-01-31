@@ -1,5 +1,5 @@
 "use client";
-import type { TokenState } from "@/lib/token";
+import type { TokenState } from "@/tokens/lib/token";
 import Link from "next/link";
 import { useContext, useEffect, useState, useCallback } from "react";
 import { getChainId } from "@/lib/chain";

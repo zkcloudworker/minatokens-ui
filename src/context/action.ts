@@ -9,7 +9,7 @@ import {
   deleteTimelineGroup,
   TimelineItemStatus,
 } from "@/components/launch/TimeLine";
-import { TokenActionData, MintAddress, TokenAction } from "@/lib/token";
+import { TokenActionData, MintAddress, TokenAction } from "@/tokens/lib/token";
 import { debug } from "@/lib/debug";
 const DEBUG = debug();
 import { log } from "@/lib/log";

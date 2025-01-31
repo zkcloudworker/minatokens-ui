@@ -5,7 +5,7 @@ import {
   TokenState,
   TokenActionData,
   TokenActionTransactionParams,
-} from "@/lib/token";
+} from "@/tokens/lib/token";
 import { useState, useEffect } from "react";
 import { getOrderbook } from "@/lib/trade";
 import { bidInfo, offerInfo } from "@/lib/api/info/token-info";

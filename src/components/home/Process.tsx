@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { getSiteName } from "@/lib/chain";
+import { getSiteName, getSiteType } from "@/lib/chain";
 import { generateSubscription } from "@/lib/api/key";
 import { FormEvent, useState, useEffect } from "react";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import { log } from "@/lib/log";
 import Link from "next/link";
+
+const siteType = getSiteType();
 
 export const process: ProcessItem[] = [
   {
@@ -51,8 +53,11 @@ interface ProcessItem {
 }
 
 const emailMessages = {
-  initial: `Join our mailing list to stay in the loop with our newest feature
-          releases, Airdrops, and tips and tricks for navigating ${getSiteName()}.`,
+  initial:
+    siteType === "token"
+      ? `Join our mailing list to stay in the loop with our newest feature
+          releases, Airdrops, and tips and tricks for navigating ${getSiteName()}.`
+      : `Join our mailing list to stay in the loop with newest collections on ${getSiteName()}.`,
   processing: "Processing subscription request...",
   success: "Thank you for subscribing!",
   error: "An error occurred while subscribing",
@@ -102,42 +107,47 @@ export default function Process(): React.ReactElement {
               className="h-full w-full"
             />
           </picture>
+
           <div className="container">
-            <h2 className="mb-16 text-center font-display text-3xl text-jacarta-700 dark:text-white">
-              Launch and sell your custom tokens
-            </h2>
-            <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
-              {process.map((elm: ProcessItem, i: number) => (
-                <div key={i} className="text-center">
-                  <div
-                    className={`mb-6 inline-flex rounded-full bg-[${elm.backgroundColor}] p-3`}
-                  >
-                    <div
-                      className={`inline-flex h-12 w-12 items-center justify-center rounded-full ${elm.bgClass}`}
-                    >
-                      <Image
-                        width={24}
-                        height={24}
-                        src={elm.iconSrc}
-                        alt="process"
-                      />
+            {siteType === "token" && (
+              <div>
+                <h2 className="mb-16 text-center font-display text-3xl text-jacarta-700 dark:text-white">
+                  Launch and sell your custom tokens
+                </h2>
+                <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+                  {process.map((elm: ProcessItem, i: number) => (
+                    <div key={i} className="text-center">
+                      <div
+                        className={`mb-6 inline-flex rounded-full bg-[${elm.backgroundColor}] p-3`}
+                      >
+                        <div
+                          className={`inline-flex h-12 w-12 items-center justify-center rounded-full ${elm.bgClass}`}
+                        >
+                          <Image
+                            width={24}
+                            height={24}
+                            src={elm.iconSrc}
+                            alt="process"
+                          />
+                        </div>
+                      </div>
+                      <h3
+                        dir="ltr"
+                        className="mb-4  font-display text-lg text-jacarta-700 dark:text-white"
+                      >
+                        {elm.title}
+                      </h3>
+                      <p className="dark:text-jacarta-300">{elm.description}</p>
+                      {elm.id === 3 && (
+                        <button className="mt-4 rounded-full bg-accent px-6 py-2 font-display text-sm text-white hover:bg-accent-dark">
+                          <Link href="/authorized">Contact</Link>
+                        </button>
+                      )}
                     </div>
-                  </div>
-                  <h3
-                    dir="ltr"
-                    className="mb-4  font-display text-lg text-jacarta-700 dark:text-white"
-                  >
-                    {elm.title}
-                  </h3>
-                  <p className="dark:text-jacarta-300">{elm.description}</p>
-                  {elm.id === 3 && (
-                    <button className="mt-4 rounded-full bg-accent px-6 py-2 font-display text-sm text-white hover:bg-accent-dark">
-                      <Link href="/authorized">Contact</Link>
-                    </button>
-                  )}
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
 
             <p className="mx-auto mt-20 max-w-2xl text-center text-lg text-jacarta-700 dark:text-white">
               {emailMessage}

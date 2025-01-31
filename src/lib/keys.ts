@@ -1,9 +1,9 @@
 "use client";
 
 import type { PrivateKey, PublicKey } from "o1js";
-import { TokenDeployParams } from "./token";
-import type { Libraries } from "./libraries";
-import { debug } from "./debug";
+import { TokenDeployParams } from "@/tokens/lib/token";
+import type { Libraries } from "@/lib/libraries";
+import { debug } from "@/lib/debug";
 const DEBUG = debug();
 
 export async function deployTokenParams(

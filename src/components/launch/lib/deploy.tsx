@@ -35,7 +35,6 @@ export async function deployToken(params: {
   error?: string;
   jobId?: string;
 }> {
-
   const {
     tokenPrivateKey,
     adminPublicKey,
@@ -108,7 +107,6 @@ export async function deployToken(params: {
     const adminContractPublicKey = adminContractPrivateKey.toPublicKey();
     if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
     const wallet = PublicKey.fromBase58(WALLET);
-
 
     const memo = `deploy token ${symbol}`.substring(0, 30);
 
@@ -226,7 +224,6 @@ export async function deployToken(params: {
     // const payloads = createTransactionPayloads(tx);
     const payloads = launchReply.json;
 
-
     updateTimelineItem({
       groupId,
       update: {
@@ -239,7 +236,6 @@ export async function deployToken(params: {
       groupId,
       update: messages.txSigned,
     });
-
 
     if (!AURO_TEST) {
       const txResult = await mina?.sendTransaction(payloads.walletPayload);
@@ -279,7 +275,6 @@ export async function deployToken(params: {
     payloads.sendTransaction = false;
 
     const jobId = await proveTransaction(payloads);
-
 
     if (DEBUG) console.log("Sent transaction, jobId", jobId);
     if (jobId === undefined) {

@@ -6,7 +6,7 @@ import {
   MintAddressVerified,
   TokenAction,
   TokenActionData,
-} from "@/lib/token";
+} from "@/tokens/lib/token";
 import { TokenActionStatistics, transactionStore } from "@/context/action";
 import { TokenActionFormData } from "@/context/action";
 import { checkMintData } from "@/lib/address";

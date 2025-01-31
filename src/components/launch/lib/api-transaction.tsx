@@ -8,7 +8,7 @@ import {
 import { proveTransactions } from "@/lib/token-api";
 import { UpdateTimelineItemFunction, messages } from "./messages";
 import { debug } from "@/lib/debug";
-import { TokenAction } from "@/lib/token";
+import { TokenAction } from "@/tokens/lib/token";
 import { log } from "@/lib/log";
 import {
   LaunchTokenAdvancedAdminParams,

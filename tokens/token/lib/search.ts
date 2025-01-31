@@ -1,15 +1,16 @@
 "use server";
 import { searchClient } from "@algolia/client-search";
 import { DeployedTokenInfo } from "./token";
-import { Like, getUsersLikes } from "./likes";
+import { Like, getUsersLikes } from "@/lib/likes";
 import {
   getAllTokensByAddress,
   BlockberryTokenData,
-} from "./blockberry-tokens";
-import { getChain } from "./chain";
-import { debug } from "./debug";
+} from "@/lib/blockberry-tokens";
+import { getChain, getSiteType } from "@/lib/chain";
+import { debug } from "@/lib/debug";
 import { log as logtail } from "@logtail/next";
 const chain = getChain();
+const siteType = getSiteType();
 const log = logtail.with({
   chain,
   service: "search",
@@ -17,6 +18,16 @@ const log = logtail.with({
 const DEBUG = debug();
 
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
+if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
+if (ALGOLIA_PROJECT === undefined)
+  throw new Error("ALGOLIA_PROJECT is undefined");
+
+const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
+const indexName = `tokens-${chain}`;
+
+export async function algoliaGetCollectionList(): Promise<DeployedTokenInfo[]> {
+  return [];
+}
 
 export interface AlgoliaTokenList {
   hits: DeployedTokenInfo[];
@@ -38,18 +49,29 @@ export async function algoliaGetTokenList(params: {
   favorites: string[];
   issuedByAddress?: string;
   ownedByAddress?: string;
+  collectionAddress?: string;
 }): Promise<AlgoliaTokenList | undefined> {
-  const { onlyFavorites, favorites, issuedByAddress, ownedByAddress } = params;
-  if (ALGOLIA_KEY === undefined) throw new Error("ALGOLIA_KEY is undefined");
-  if (ALGOLIA_PROJECT === undefined)
-    throw new Error("ALGOLIA_PROJECT is undefined");
+  console.log("algoliaGetTokenList", params);
+  const {
+    onlyFavorites,
+    favorites,
+    issuedByAddress,
+    ownedByAddress,
+    collectionAddress,
+  } = params;
+
   const query = params.query ?? "";
   const hitsPerPage = params.hitsPerPage ?? 100;
   const page = params.page ?? 0;
   //if (DEBUG) console.log("algoliaGetTokenList", params);
-  const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
-  const indexName = `tokens-${chain}`;
+
   //const likesIndexName = `token-likes-${chain}`;
+
+  // const result = await client.searchForFacetValues({
+  //   indexName,
+  //   facetName: "collectionName",
+  // });
+  // console.log("result", result);
 
   async function filterFromBlockberryTokens(
     blockberryTokensPromise: Promise<BlockberryTokenData[]> | undefined
@@ -223,8 +245,10 @@ export async function algoliaGetTokenList(params: {
     "serverTimeMS": 2
 }
     */
+    console.log("tokenList", tokenList?.hits?.length);
     return tokenList;
   } catch (error: any) {
+    console.log("error", error);
     log.error("algoliaGetToken error:", {
       error: error?.message ?? String(error),
       params,

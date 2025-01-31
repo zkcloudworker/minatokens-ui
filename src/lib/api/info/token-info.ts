@@ -13,7 +13,7 @@ import {
   FungibleTokenBidContract,
 } from "@minatokens/token";
 import { checkAddress } from "../utils/address";
-import { updateTokenInfo } from "../../state";
+import { updateTokenInfo } from "@/tokens/lib/state";
 import {
   OfferInfo,
   writeOffer,

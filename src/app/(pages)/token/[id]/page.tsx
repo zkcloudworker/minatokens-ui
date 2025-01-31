@@ -1,6 +1,6 @@
 //import TokenHeader from "@/components/headers/TokenHeader";
 import TokenFooter from "@/components/footer/TokenFooter";
-import TokenDetails from "@/components/pages/item/TokenDetails";
+import TokenDetails from "@/tokens/components/TokenDetails";
 
 // export const metadata = {
 //   title: "Token Details",

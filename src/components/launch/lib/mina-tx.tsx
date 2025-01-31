@@ -6,9 +6,9 @@ import {
   messages,
 } from "./messages";
 import { getResult } from "@/lib/token-api";
-import { TokenInfo, TokenAction } from "@/lib/token";
+import { TokenInfo, TokenAction } from "@/tokens/lib/token";
 import { getTxStatusFast } from "@/lib/txstatus-fast";
-import { verifyFungibleTokenState } from "@/lib/verify";
+import { verifyFungibleTokenState } from "@/tokens/lib/verify";
 import { sleep } from "@/lib/sleep";
 import { debug } from "@/lib/debug";
 import {

@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 
 import { TokenProgress } from "./TokenProgress";
 import { LaunchForm } from "./LaunchForm";
-import { LaunchTokenData } from "@/lib/token";
+import { LaunchTokenData } from "@/tokens/lib/token";
 import { launchToken } from "./lib/launch";
 import { useLaunchToken } from "@/context/launch";
 import {
