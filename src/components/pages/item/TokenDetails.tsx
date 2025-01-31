@@ -1,16 +1,16 @@
 "use client";
 import { useTokenDetails } from "@/context/details";
-import { TokenStats } from "@/components/pages/item/TokenStats";
+import { TokenStats } from "./TokenStats";
 import Image from "next/image";
 import Link from "next/link";
 import { algoliaGetToken } from "@/lib/algolia";
-import { DeployedTokenInfo, TokenState } from "../lib/token";
+import { DeployedTokenInfo, TokenState } from "@/tokens/lib/token";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { writeLike, getLike, likesCount } from "@/lib/likes";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { getTokenState } from "../lib/state";
+import { getTokenState } from "@/tokens/lib/state";
 import { socials_item } from "@/data/socials";
 import {
   BlockberryTokenHolder,
@@ -324,7 +324,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
               {/* Collection / Likes / Actions */}
               <div className="mb-3 flex">
                 <div className="mb-4 font-display text-4xl font-semibold text-jacarta-700 dark:text-white">
-                  {item?.name ? item.name + "AAA" : ""}
+                  {item?.name ? item.name : ""}
                 </div>
                 {/* Collection */}
                 <div className="flex items-center">
