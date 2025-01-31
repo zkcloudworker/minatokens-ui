@@ -277,7 +277,7 @@ function ConfirmDialog({
 }) {
   if (!order) return null;
   const total = order.price * parseFloat(amount);
-  const exceeded = chain === "mainnet" && total > 100;
+  const exceeded = chain === "mainnet" && total > 500;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -313,7 +313,7 @@ function ConfirmDialog({
             {exceeded && (
               <p className="text-red-500">
                 Note: This order exceeds the maximum amount for the mainnet
-                during the testing phase. The maximum amount is 100 MINA.
+                during the alpha phase. The maximum amount is 500 MINA.
               </p>
             )}
           </div>
