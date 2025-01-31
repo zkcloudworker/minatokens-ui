@@ -13,10 +13,15 @@ import Link from "next/link";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { explorerAccountUrl } from "@/lib/chain";
-import { getSiteName, getSiteType } from "@/lib/chain";
+import {
+  getChain,
+  getSiteType,
+  getSiteName,
+  explorerAccountUrl,
+} from "@/lib/chain";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
 
+const chain = getChain();
 const siteType = getSiteType();
 
 type TokenHeaderProps = {
@@ -100,6 +105,9 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
               />
               <div className="text-jacarta-900 dark:text-white -ms-3">
                 {getSiteName()}
+              </div>
+              <div className="text-jacarta-900 dark:text-white -ms-2 text-xs">
+                {`${chain} alpha`}
               </div>
             </Link>
           )}

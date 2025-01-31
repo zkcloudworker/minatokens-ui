@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { DeployedTokenInfo } from "@/tokens/lib/token";
+import React, { useEffect, useState } from "react";
+import { DeployedTokenInfo } from "../lib/token";
 import Link from "next/link";
 
 const status = [

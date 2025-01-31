@@ -3,7 +3,12 @@
 import Socials from "./Socials";
 import Image from "next/image";
 import Link from "next/link";
-import { getSiteName, getSiteType } from "@/lib/chain";
+import { getSiteName, getSiteType, getChain } from "@/lib/chain";
+const otherChain = getChain() == "mainnet" ? "Devnet" : "Mainnet";
+const otherChainUrl =
+  otherChain == "Devnet"
+    ? "https://devnet.minatokens.com"
+    : "https://minatokens.com";
 
 const siteType = getSiteType();
 export default function TokenFooter() {
@@ -94,6 +99,11 @@ export default function TokenFooter() {
             </a>
           </span>
           <ul className="flex flex-wrap space-x-4 text-sm dark:text-jacarta-400">
+            <li>
+              <a href={otherChainUrl} className="hover:text-accent">
+                {otherChain}
+              </a>
+            </li>
             <li>
               <a href="/terms" className="hover:text-accent">
                 Terms of Service

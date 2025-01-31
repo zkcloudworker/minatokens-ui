@@ -275,7 +275,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                 <Image
                   width={540}
                   height={670}
-                  src={item?.image ?? "launchpad.png"}
+                  src={item?.image ?? "/launchpad.png"}
                   alt="token image"
                   className="cursor-pointer rounded-2.5xl w-[100%]"
                   data-bs-toggle="modal"
@@ -295,7 +295,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                     <Image
                       width={787}
                       height={984}
-                      src={item?.image ?? "launchpad.png"}
+                      src={item?.image ?? "/launchpad.png"}
                       alt="token image"
                       className="w-full rounded-[0.625rem]"
                       loading="lazy"

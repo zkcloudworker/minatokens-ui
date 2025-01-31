@@ -49,9 +49,16 @@ export async function algoliaGetTokenList(params: {
   favorites: string[];
   issuedByAddress?: string;
   ownedByAddress?: string;
+  collectionAddress?: string;
 }): Promise<AlgoliaTokenList | undefined> {
   console.log("algoliaGetTokenList", params);
-  const { onlyFavorites, favorites, issuedByAddress, ownedByAddress } = params;
+  const {
+    onlyFavorites,
+    favorites,
+    issuedByAddress,
+    ownedByAddress,
+    collectionAddress,
+  } = params;
 
   const query = params.query ?? "";
   const hitsPerPage = params.hitsPerPage ?? 100;

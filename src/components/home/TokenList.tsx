@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "./Sidebar";
+import Sidebar from "@/tokens/components/Sidebar";
 
 import {
   algoliaGetCollectionList,
@@ -134,10 +134,12 @@ export default function TokenList({
       ? state.list.filter((item) => state.favorites.includes(item.tokenAddress))
       : state.list;
     const filteredByCollection = collectionAddress
-      ? filtered.filter((item) => item.collectionAddress === collectionAddress)
+      ? filtered.filter(
+          (item) => (item as any).collectionAddress === collectionAddress
+        )
       : filtered;
     const filteredByMasterNFT = filteredByCollection.filter(
-      (item) => item.collectionAddress !== item.tokenAddress
+      (item) => (item as any).collectionAddress !== item.tokenAddress
     );
     setItemsToDisplay(
       filteredByMasterNFT.slice(0, numberOfItems).map((item) => ({
@@ -602,7 +604,7 @@ export default function TokenList({
                           <Image
                             width={230}
                             height={230}
-                            src={elm.image ?? "launchpad.png"}
+                            src={elm.image ?? "/launchpad.png"}
                             alt="token 5"
                             className="w-full rounded-[0.625rem]"
                             loading="lazy"
@@ -701,7 +703,9 @@ export default function TokenList({
                       {siteType === "nft" && (
                         <div className="mt-2 text-sm">
                           <Link
-                            href={`/collection/${elm.collectionAddress}`}
+                            href={`/collection/${
+                              (elm as any).collectionAddress
+                            }`}
                             className="flex hover:text-accent"
                           >
                             <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-left">
@@ -721,13 +725,15 @@ export default function TokenList({
                           </span>
 
                           <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                            {`Supply: ${(elm as any).totalSupply.toLocaleString(
-                              undefined,
-                              {
-                                minimumFractionDigits: 0,
-                                maximumFractionDigits: 2,
-                              }
-                            )}`}
+                            {`Supply: ${
+                              (elm as any).totalSupply?.toLocaleString(
+                                undefined,
+                                {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 2,
+                                }
+                              ) ?? "0"
+                            }`}
                           </span>
                         </div>
                       )}
