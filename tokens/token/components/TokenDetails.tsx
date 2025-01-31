@@ -471,25 +471,35 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                 </div>
               </div>
 
-              <p className="mb-5 dark:text-jacarta-300">
+              <p className="mb-6 dark:text-jacarta-300">
                 {item?.description ?? ""}
               </p>
-
-              <p className="dark:text-jacarta-300">
-                {item?.tokenId ? "TokenId:" : "Address:"}
-              </p>
-              <Link
-                href={
-                  item?.tokenId
-                    ? `${explorerTokenUrl()}${item.tokenId}`
-                    : `${explorerAccountUrl()}${tokenAddress}`
-                }
-                className="block mb-10 text-sm font-bold text-accent hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {item?.tokenId ?? tokenAddress}
-              </Link>
+              {item?.tokenId && (
+                <>
+                  <p className="dark:text-jacarta-300">TokenId:</p>
+                  <Link
+                    href={`${explorerTokenUrl()}${item.tokenId}`}
+                    className="block text-sm font-bold text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item?.tokenId}
+                  </Link>
+                </>
+              )}
+              {item?.tokenAddress && (
+                <>
+                  <p className="dark:text-jacarta-300">Address:</p>
+                  <Link
+                    href={`${explorerAccountUrl()}${item.tokenAddress}`}
+                    className="block mb-10 text-sm font-bold text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item?.tokenAddress}
+                  </Link>
+                </>
+              )}
 
               {/* Creator / Owner */}
               <div className="flex flex-wrap">
