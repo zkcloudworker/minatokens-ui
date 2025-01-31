@@ -1,7 +1,6 @@
 "use client";
 
 import Sidebar from "@/tokens/components/Sidebar";
-
 import {
   algoliaGetCollectionList,
   algoliaGetTokenList,
