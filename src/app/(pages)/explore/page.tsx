@@ -14,7 +14,7 @@ const ExploreTokens: FC = () => {
   return (
     <>
       {/* <TokenHeader /> */}
-      <main>
+      <main className="mt-4">
         <TokenList title="Explore" showIcon={false} key="explore-list" />
       </main>
       <TokenFooter />
