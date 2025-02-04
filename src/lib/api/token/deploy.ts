@@ -10,6 +10,7 @@ import {
   TokenTransaction,
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
+  LaunchTokenBondingCurveAdminParams,
 } from "@minatokens/api";
 import { ApiName, ApiResponse } from "../api-types";
 import { createTransactionPayloads } from "zkcloudworker";
@@ -24,7 +25,10 @@ const DEBUG = debug();
 const ISSUE_FEE = 1e9;
 
 export async function deployToken(props: {
-  params: LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams;
+  params:
+    | LaunchTokenStandardAdminParams
+    | LaunchTokenAdvancedAdminParams
+    | LaunchTokenBondingCurveAdminParams;
   name: ApiName;
   apiKeyAddress: string;
 }): Promise<ApiResponse<TokenTransaction>> {
@@ -212,7 +216,7 @@ export async function deployToken(props: {
     PrivateKey.fromBase58(params.adminContractPrivateKey)
       .toPublicKey()
       .toBase58();
-  const { tx, request } = await buildTokenLaunchTransaction({
+  const { tx, request, adminType } = await buildTokenLaunchTransaction({
     chain,
     args: params,
     developerAddress: apiKeyAddress,
@@ -235,7 +239,7 @@ export async function deployToken(props: {
     json: {
       ...payloads,
       request: {
-        ...request,
+        ...(request as any),
         txType: "token:launch",
       },
       symbol,

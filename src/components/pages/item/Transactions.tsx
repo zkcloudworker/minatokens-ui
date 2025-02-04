@@ -81,7 +81,7 @@ export function Transactions({ transactions }: TransactionsProps) {
   useEffect(() => {
     if (filterAction) {
       setFilteredItems(
-        transactions.filter((elm) => elm.memo.startsWith(filterAction))
+        transactions.filter((elm) => elm.memo.includes(filterAction))
       );
     } else {
       setFilteredItems(transactions);

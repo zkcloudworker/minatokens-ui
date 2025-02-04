@@ -397,6 +397,8 @@ export async function tokenTransaction(props: {
     const action =
       {
         "token:mint": "mint",
+        "token:burn": "burn",
+        "token:redeem": "redeem",
         "token:transfer": "transfer",
         "token:airdrop": "airdrop",
         "token:offer:create": "offer",
