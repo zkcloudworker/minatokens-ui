@@ -222,19 +222,27 @@ export function TokenActionsTab({
             {actions !== "administrative_actions" && (
               <>
                 {(tokenBalance !== undefined || minaBalance !== undefined) && (
-                  <div className="ml-6 text-2x mt-2 dark:text-jacarta-200 md:text-left">
+                  <div className="ml-6 text-sm mt-2 dark:text-jacarta-200 md:text-left">
                     Your balance: {formatBalance(tokenBalance)} {symbol} and{" "}
                     {formatBalance(minaBalance)} MINA
                   </div>
                 )}
                 {tokenState?.mintPrice && (
-                  <div className="ml-6 text-2x mt-2 dark:text-jacarta-200 md:text-left">
-                    Bonding Curve Mint Price: {tokenState.mintPrice} MINA
+                  <div className="ml-6 text-sm mt-2 dark:text-jacarta-200 md:text-left">
+                    Bonding Curve Mint Price:{" "}
+                    {Number(tokenState.mintPrice).toLocaleString(undefined, {
+                      maximumSignificantDigits: 3,
+                    })}{" "}
+                    MINA
                   </div>
                 )}
                 {tokenState?.redeemPrice && (
-                  <div className="ml-6 text-2x mt-2 dark:text-jacarta-200 md:text-left">
-                    Bonding Curve Redeem Price: {tokenState.redeemPrice} MINA
+                  <div className="ml-6 text-sm mt-2 dark:text-jacarta-200 md:text-left">
+                    Bonding Curve Redeem Price:{" "}
+                    {Number(tokenState.redeemPrice).toLocaleString(undefined, {
+                      maximumSignificantDigits: 3,
+                    })}{" "}
+                    MINA
                   </div>
                 )}
               </>
