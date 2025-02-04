@@ -22,7 +22,6 @@ import { accountExists } from "../../account";
 const WALLET = getWallet();
 const chain = getChain();
 const DEBUG = debug();
-const ISSUE_FEE = 1e9;
 
 export async function deployToken(props: {
   params:
@@ -191,7 +190,7 @@ export async function deployToken(props: {
   const balance = await accountBalanceMina(sender);
   if (DEBUG) console.log("Sender balance:", balance);
 
-  const requiredBalance = 3 + (ISSUE_FEE + fee) / 1_000_000_000;
+  const requiredBalance = 4 + (LAUNCH_FEE + fee) / 1_000_000_000;
   if (requiredBalance > balance) {
     return {
       status: 400,

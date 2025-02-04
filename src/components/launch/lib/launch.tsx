@@ -26,7 +26,6 @@ import {
 import { pinBase64ImageToArweave, pinStringToArweave } from "@/lib/arweave";
 import { arweaveHashToUrl } from "@/lib/arweave";
 import { TokenInfo } from "@/tokens/lib/token";
-import { sendTransaction } from "@/lib/send";
 import {
   messages,
   LineId,
@@ -124,6 +123,7 @@ export async function launchToken(params: {
     imageURL,
     adminAddress,
     mintAddresses,
+    tokenType,
   } = data;
   const { twitter, telegram, website, discord, instagram, facebook } = links;
   let likes = 0;
@@ -641,6 +641,7 @@ export async function launchToken(params: {
       libraries: lib,
       updateTimelineItem,
       groupId: "deploy",
+      tokenType,
     });
     if (DEBUG) console.log("Deploy result:", deployResult);
     if (deployResult.success === false || deployResult.jobId === undefined) {
@@ -754,6 +755,7 @@ export async function launchToken(params: {
     }
     setLikes((likes += 10));
     log.info("launchToken: minting tokens", { mintItems });
+    let price = 10000;
 
     if (mintItems.length > 0) {
       const tokensToMint = mintItems.length;
@@ -863,7 +865,9 @@ export async function apiTokenTransaction(params: {
           amount: item.amount * 1_000_000_000,
           tokenAddress: tokenPublicKey,
           sender: adminPublicKey,
+          price,
         };
+        price += Math.ceil((10000 * item.amount) / 100000);
 
         const mintResult = await apiTokenTransaction({
           symbol,

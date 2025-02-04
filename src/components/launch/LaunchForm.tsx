@@ -26,6 +26,7 @@ export function LaunchForm({
   const [name, setName] = useState<string | undefined>(undefined);
   const [symbol, setSymbol] = useState<string | undefined>(undefined);
   const [description, setDescription] = useState<string | undefined>(undefined);
+  const [tokenType, setTokenType] = useState<"standard" | "meme">("standard");
   const [links, setLinks] = useState<TokenLinks>({
     twitter: "",
     discord: "",
@@ -167,6 +168,7 @@ export function LaunchForm({
       symbol,
       name: name,
       description: description ?? "",
+      tokenType,
       links,
       image,
       imageURL,
@@ -261,6 +263,45 @@ export function LaunchForm({
                 }}
               ></textarea>
             </div>
+
+            {/* Token type */}
+            <div className="mb-6">
+              <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
+                Token type
+              </label>
+              <div className="flex rounded-lg border border-jacarta-100 bg-white dark:border-jacarta-600 dark:bg-jacarta-700">
+                <button
+                  className={`flex-1 rounded-l-lg py-3 px-4 text-center ${
+                    tokenType === "standard"
+                      ? "bg-accent text-white"
+                      : "hover:bg-jacarta-50 dark:text-jacarta-300 dark:hover:bg-jacarta-600"
+                  }`}
+                  onClick={() => setTokenType("standard")}
+                >
+                  Standard
+                </button>
+                <button
+                  className={`flex-1 rounded-r-lg py-3 px-4 text-center ${
+                    tokenType === "meme"
+                      ? "bg-accent text-white"
+                      : "hover:bg-jacarta-50 dark:text-jacarta-300 dark:hover:bg-jacarta-600"
+                  }`}
+                  onClick={() => setTokenType("meme")}
+                >
+                  Meme
+                </button>
+              </div>
+            </div>
+
+            {tokenType === "meme" && (
+              <div className="mb-6">
+                <p className="text-sm text-jacarta-500 dark:text-jacarta-300">
+                  For every 1 MINA you spend, you will receive 100,000 meme
+                  tokens. Note: The initial mint can only be done by your
+                  connected wallet address.
+                </p>
+              </div>
+            )}
 
             {/* Links: website, telegram, twitter, discord, instagram */}
 
