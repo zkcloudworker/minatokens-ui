@@ -397,6 +397,8 @@ export async function tokenTransaction(props: {
     const action =
       {
         "token:mint": "mint",
+        "token:burn": "burn",
+        "token:redeem": "redeem",
         "token:transfer": "transfer",
         "token:airdrop": "airdrop",
         "token:offer:create": "offer",
@@ -567,6 +569,9 @@ export async function tokenTransaction(props: {
         ? txParams.nonce
         : await getAccountNonce(sender.toBase58());
     txParams.txType = txType;
+    if ("slippage" in txParams && txParams.slippage === undefined) {
+      txParams.slippage = 50;
+    }
 
     if (DEBUG) console.log("building tx", txParams);
     const { tx, request } = await buildTokenTransaction({

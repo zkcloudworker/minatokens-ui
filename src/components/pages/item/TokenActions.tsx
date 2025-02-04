@@ -33,18 +33,24 @@ export const actions_types = {
     },
     {
       id: 2,
+      action: "Redeem",
+      tab: "redeem",
+      svgPath: `M16.05 12.05L21 17l-4.95 4.95-1.414-1.414 2.536-2.537L4 18v-2h13.172l-2.536-2.536 1.414-1.414zm-8.1-10l1.414 1.414L6.828 6 20 6v2H6.828l2.536 2.536L7.95 11.95 3 7l4.95-4.95z`,
+    },
+    {
+      id: 3,
       action: "Transfer",
       tab: "transfer",
       svgPath: `M14 20v2H2v-2h12zM14.586.686l7.778 7.778L20.95 9.88l-1.06-.354L17.413 12l5.657 5.657-1.414 1.414L16 13.414l-2.404 2.404.283 1.132-1.415 1.414-7.778-7.778 1.415-1.414 1.13.282 6.294-6.293-.353-1.06L14.586.686zm.707 3.536l-7.071 7.07 3.535 3.536 7.071-7.07-3.535-3.536z`,
     },
     {
-      id: 3,
+      id: 4,
       action: "Airdrop",
       tab: "airdrop",
       svgPath: `M16.05 12.05L21 17l-4.95 4.95-1.414-1.414 2.536-2.537L4 18v-2h13.172l-2.536-2.536 1.414-1.414zm-8.1-10l1.414 1.414L6.828 6 20 6v2H6.828l2.536 2.536L7.95 11.95 3 7l4.95-4.95z`,
     },
     {
-      id: 4,
+      id: 5,
       action: "Burn",
       tab: "burn",
       svgPath: `M16.05 12.05L21 17l-4.95 4.95-1.414-1.414 2.536-2.537L4 18v-2h13.172l-2.536-2.536 1.414-1.414zm-8.1-10l1.414 1.414L6.828 6 20 6v2H6.828l2.536 2.536L7.95 11.95 3 7l4.95-4.95z`,
@@ -215,27 +221,28 @@ export function TokenActionsTab({
             </div>
             {actions !== "administrative_actions" && (
               <>
-                <div className="mt-2 ml-6">
-                  <span className="min-w-[14rem] dark:text-jacarta-300">
-                    <p className="text-2x dark:text-jacarta-200 md:text-left">
-                      Contact{" "}
-                      <Link
-                        href="/authorized"
-                        className="text-accent hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Authorized Developers
-                      </Link>{" "}
-                      to enable the trading and transfers for your token on
-                      mainnet
-                    </p>
-                  </span>
-                </div>
                 {(tokenBalance !== undefined || minaBalance !== undefined) && (
-                  <div className="ml-6 text-2x mt-2 dark:text-jacarta-200 md:text-left">
+                  <div className="ml-6 text-sm mt-2 dark:text-jacarta-200 md:text-left">
                     Your balance: {formatBalance(tokenBalance)} {symbol} and{" "}
                     {formatBalance(minaBalance)} MINA
+                  </div>
+                )}
+                {tokenState?.mintPrice && (
+                  <div className="ml-6 text-sm mt-2 dark:text-jacarta-200 md:text-left">
+                    Bonding Curve Mint Price:{" "}
+                    {Number(tokenState.mintPrice).toLocaleString(undefined, {
+                      maximumSignificantDigits: 3,
+                    })}{" "}
+                    MINA
+                  </div>
+                )}
+                {tokenState?.redeemPrice && (
+                  <div className="ml-6 text-sm mt-2 dark:text-jacarta-200 md:text-left">
+                    Bonding Curve Redeem Price:{" "}
+                    {Number(tokenState.redeemPrice).toLocaleString(undefined, {
+                      maximumSignificantDigits: 3,
+                    })}{" "}
+                    MINA
                   </div>
                 )}
               </>
@@ -246,6 +253,8 @@ export function TokenActionsTab({
 
       <div className="p-6 md:p-10">
         {(tab === "mint" ||
+          tab === "redeem" ||
+          tab === "burn" ||
           tab === "transfer" ||
           tab === "airdrop" ||
           tab === "offer" ||
@@ -266,6 +275,8 @@ export function TokenActionsTab({
         )}
 
         {tab !== "mint" &&
+          tab !== "redeem" &&
+          tab !== "burn" &&
           tab !== "transfer" &&
           tab !== "airdrop" &&
           tab !== "offer" &&

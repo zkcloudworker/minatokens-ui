@@ -1,3 +1,4 @@
+"use client";
 /* eslint-disable react/no-unescaped-entities */
 import React, { useState } from "react";
 import { checkAddress } from "@/lib/address";
@@ -111,13 +112,16 @@ export function TokenActionForm({
                     type="number"
                     className="h-12 w-full border border-r-0 border-jacarta-100 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                     placeholder="amount"
-                    value={address.amount}
+                    value={address.amount ?? ""}
                     onChange={(e) => {
                       onChange({
                         ...data,
                         addresses: data.addresses.map((item, i) =>
                           i === index
-                            ? { ...item, amount: parseFloat(e.target.value) }
+                            ? {
+                                ...item,
+                                amount: parseFloat(e.target.value) || 0,
+                              }
                             : item
                         ),
                       });
@@ -130,7 +134,7 @@ export function TokenActionForm({
                     type="text"
                     className="h-12 w-full rounded-r-lg border border-jacarta-100 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                     placeholder="address (B62...)"
-                    value={address.address}
+                    value={address.address ?? ""}
                     onChange={(e) => onChangeAddress(index, e)}
                   />
                 </div>
@@ -164,9 +168,12 @@ export function TokenActionForm({
                   type="number"
                   className="w-full rounded-lg border border-jacarta-100 py-3 px-3 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                   placeholder="Enter amount"
-                  value={data.amount}
+                  value={data.amount ?? ""}
                   onChange={(e) =>
-                    onChange({ ...data, amount: parseFloat(e.target.value) })
+                    onChange({
+                      ...data,
+                      amount: parseFloat(e.target.value) || 0,
+                    })
                   }
                 />
               </div>
@@ -180,9 +187,12 @@ export function TokenActionForm({
                   type="number"
                   className="w-full rounded-lg border border-jacarta-100 py-3 px-3 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                   placeholder="Enter price"
-                  value={data.price}
+                  value={data.price ?? ""}
                   onChange={(e) =>
-                    onChange({ ...data, price: parseFloat(e.target.value) })
+                    onChange({
+                      ...data,
+                      price: parseFloat(e.target.value) || 0,
+                    })
                   }
                 />
               </div>

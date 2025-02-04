@@ -25,6 +25,7 @@ import {
 //export type TokenAction = Exclude<FungibleTokenTransactionType, "launch">;
 export type TokenAction =
   | "mint"
+  | "redeem"
   | "transfer"
   | "airdrop"
   | "burn"
@@ -57,6 +58,7 @@ export interface LaunchTokenData {
   symbol: string;
   name?: string;
   description?: string;
+  tokenType: "standard" | "meme";
   links: TokenLinks;
   image?: File;
   imageURL?: string;
@@ -109,6 +111,9 @@ export interface TokenState {
   adminUri: string;
   adminVerificationKeyHash: string;
   adminVersion: number;
+  adminType: "standard" | "advanced" | "bondingCurve" | "unknown";
+  mintPrice?: number;
+  redeemPrice?: number;
 }
 
 export interface DeployedTokenInfo extends TokenInfo, TokenState {

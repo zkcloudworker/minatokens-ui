@@ -12,14 +12,17 @@ import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
 import { proveTransaction } from "@/lib/token-api";
 import { log } from "@/lib/log";
-import { LaunchTokenStandardAdminParams } from "@minatokens/api";
+import {
+  LaunchTokenStandardAdminParams,
+  LaunchTokenBondingCurveAdminParams,
+} from "@minatokens/api";
 import { deployToken as deployTokenApi } from "@/lib/api/token/deploy";
 const DEBUG = debug();
 const chain = getChain();
 
 const WALLET = getWallet();
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
-const ISSUE_FEE = 1e9;
+const LAUNCH_FEE = 10e9;
 
 export async function deployToken(params: {
   tokenPrivateKey: string;
@@ -30,6 +33,7 @@ export async function deployToken(params: {
   libraries: Libraries;
   updateTimelineItem: UpdateTimelineItemFunction;
   groupId: GroupId;
+  tokenType: "standard" | "meme";
 }): Promise<{
   success: boolean;
   error?: string;
@@ -43,6 +47,7 @@ export async function deployToken(params: {
     libraries,
     updateTimelineItem,
     groupId,
+    tokenType,
   } = params;
 
   try {
@@ -131,7 +136,7 @@ export async function deployToken(params: {
         error: "Account of the sender is not activated",
       };
     }
-    const requiredBalance = 3 + (ISSUE_FEE + fee) / 1_000_000_000;
+    const requiredBalance = 4 + (LAUNCH_FEE + fee) / 1_000_000_000;
     if (requiredBalance > balance) {
       updateTimelineItem({
         groupId,
@@ -151,9 +156,11 @@ export async function deployToken(params: {
     const nonce = await getAccountNonce(sender.toBase58());
     const decimals = 9;
 
-    const launchParams: LaunchTokenStandardAdminParams = {
+    const launchParams:
+      | LaunchTokenStandardAdminParams
+      | LaunchTokenBondingCurveAdminParams = {
       txType: "token:launch",
-      adminContract: "standard",
+      adminContract: tokenType === "standard" ? "standard" : "bondingCurve",
       nonce,
       memo,
       adminContractAddress: adminContractPublicKey.toBase58(),

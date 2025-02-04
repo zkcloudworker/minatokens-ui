@@ -80,6 +80,36 @@ export function TokenStateTab({ tokenState }: { tokenState: TokenState }) {
                 : tokenState.adminContractAddress}
             </Link>
           </div>
+          {tab === "admin" && (
+            <>
+              <div className="mb-2 flex items-center">
+                <span className="mr-2 min-w-[14rem] dark:text-jacarta-300">
+                  Admin Contract Type:
+                </span>
+                <span className="text-jacarta-700 dark:text-white">
+                  {tokenState.adminType === "bondingCurve"
+                    ? "Bonding Curve"
+                    : tokenState.adminType}
+                </span>
+              </div>
+              <div className="mb-2 flex items-center">
+                <span className="mr-2 min-w-[14rem] dark:text-jacarta-300">
+                  Bonding Curve Mint Price:
+                </span>
+                <span className="text-jacarta-700 dark:text-white">
+                  {tokenState.mintPrice ?? "N/A"}
+                </span>
+              </div>
+              <div className="mb-2 flex items-center">
+                <span className="mr-2 min-w-[14rem] dark:text-jacarta-300">
+                  Bonding Curve Redeem Price:
+                </span>
+                <span className="text-jacarta-700 dark:text-white">
+                  {tokenState.redeemPrice ?? "N/A"}
+                </span>
+              </div>
+            </>
+          )}
           {tab === "token" && (
             <>
               <div className="mb-2 flex items-center">

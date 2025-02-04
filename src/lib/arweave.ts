@@ -64,6 +64,10 @@ async function checkArweaveBalance(
     log.error("checkArweaveBalance: Insufficient arweave balance", {
       balance: arBalance,
     });
+  } else {
+    log.info("checkArweaveBalance: Sufficient arweave balance", {
+      balance: arBalance,
+    });
   }
   return arBalance;
 }

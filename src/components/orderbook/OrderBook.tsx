@@ -20,9 +20,11 @@ import { getChain } from "@/lib/chain";
 const chain = getChain();
 
 function formatBalance(num: number | undefined): string {
-  if (num === undefined) return "0";
-  const fixed = num.toFixed(2);
-  return fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed;
+  if (num === undefined) return "-";
+  const fixed = num.toLocaleString(undefined, {
+    maximumSignificantDigits: 3,
+  });
+  return fixed;
 }
 
 export type Order = {
@@ -249,7 +251,7 @@ function OrderRow({ order, type, onClick, isSelected }: OrderRowProps) {
           </Link>
         </span>
       </span>
-      <span className="font-medium">{order.price.toFixed(2)}</span>
+      <span className="font-medium">{formatBalance(order.price)}</span>
     </div>
   );
 }

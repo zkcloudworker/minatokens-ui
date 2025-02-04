@@ -1,6 +1,11 @@
 "use server";
 import { fetchMinaAccount, initBlockchain } from "@/lib/blockchain";
-import { FungibleToken } from "@minatokens/token";
+import {
+  FungibleToken,
+  FungibleTokenBondingCurveAdmin,
+  BondingCurveParams,
+} from "@minatokens/token";
+import { tokenVerificationKeys } from "@minatokens/abi";
 import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo, TokenInfo } from "./token";
 import { algoliaGetToken, algoliaWriteToken } from "@/lib/algolia";
@@ -136,6 +141,29 @@ export async function getTokenState(params: {
         error: "Admin contract verification key hash not found",
       };
     }
+    const vk =
+      tokenVerificationKeys[chainId === "mina:mainnet" ? "mainnet" : "devnet"]
+        .vk;
+    let adminType = "unknown" as
+      | "standard"
+      | "advanced"
+      | "bondingCurve"
+      | "unknown";
+    if (adminVerificationKeyHash === vk.FungibleTokenAdmin.hash) {
+      adminType = "standard";
+    } else if (
+      adminVerificationKeyHash === vk.FungibleTokenAdvancedAdmin.hash
+    ) {
+      adminType = "advanced";
+    } else if (
+      adminVerificationKeyHash === vk.FungibleTokenBondingCurveAdmin.hash
+    ) {
+      adminType = "bondingCurve";
+    }
+    const prices =
+      adminType === "bondingCurve"
+        ? await getPrice(adminContractPublicKey)
+        : undefined;
     const adminVersionData = adminContract.zkapp?.zkappVersion;
     if (adminVersionData === undefined) {
       console.error("getTokenState: Admin contract version not found", {
@@ -190,6 +218,9 @@ export async function getTokenState(params: {
       adminUri: adminUri ?? "",
       adminVerificationKeyHash,
       adminVersion,
+      adminType,
+      mintPrice: prices?.mintPrice,
+      redeemPrice: prices?.redeemPrice,
     };
     const { isStateUpdated, info: tokenInfo } = await updateTokenInfo({
       tokenAddress,
@@ -246,7 +277,10 @@ export async function updateTokenInfo(params: {
     tokenInfo.updated === undefined ||
     tokenInfo.rating === undefined ||
     tokenInfo.status === undefined ||
-    tokenInfo.tokenId !== tokenState.tokenId
+    tokenInfo.tokenId !== tokenState.tokenId ||
+    tokenInfo.adminType !== tokenState.adminType ||
+    tokenInfo.mintPrice !== tokenState.mintPrice ||
+    tokenInfo.redeemPrice !== tokenState.redeemPrice
   ) {
     console.log("getTokenState: Token info mismatch, updating the info", {
       tokenAddress,
@@ -259,6 +293,9 @@ export async function updateTokenInfo(params: {
     tokenInfo.totalSupply = tokenState.totalSupply;
     tokenInfo.isPaused = tokenState.isPaused;
     tokenInfo.decimals = tokenState.decimals;
+    tokenInfo.adminType = tokenState.adminType;
+    tokenInfo.mintPrice = tokenState.mintPrice;
+    tokenInfo.redeemPrice = tokenState.redeemPrice;
     tokenInfo.updated = Date.now();
     if (!tokenInfo.created) tokenInfo.created = tokenInfo.updated;
     if (!tokenInfo.chain) tokenInfo.chain = chainId;
@@ -382,4 +419,25 @@ export async function restoreDeployedTokenInfo(params: {
     rating: 100,
   };
   return deployedTokenInfo;
+}
+
+async function getPrice(adminAddress: PublicKey): Promise<{
+  redeemPrice: number;
+  mintPrice: number;
+}> {
+  const adminContract = new FungibleTokenBondingCurveAdmin(adminAddress);
+  const tokenId = adminContract.deriveTokenId();
+  await fetchMinaAccount({
+    publicKey: adminAddress,
+    tokenId,
+  });
+  const supply = Mina.getAccount(adminAddress, tokenId).balance.toBigInt();
+  const balance = Mina.getAccount(adminAddress).balance.toBigInt();
+  const redeemPrice =
+    supply === 0n ? 10_000 : (balance * 1_000_000_000n) / supply;
+  const mintPrice = 10_000 + Math.ceil(Number(supply) / 10_000_000_000);
+  return {
+    redeemPrice: (Number(redeemPrice) * 0.9) / 1_000_000_000,
+    mintPrice: (Number(mintPrice) * 1.1) / 1_000_000_000,
+  };
 }

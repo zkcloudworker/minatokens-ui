@@ -393,7 +393,7 @@ export async function tokenAction(params: {
           status: "success",
         });
       }
-      if ("price" in item) {
+      if ("price" in item && item.price) {
         timeLineItems.push({
           lineId: "price",
           content: `Price: ${item.price / 1_000_000_000}`,
@@ -421,6 +421,8 @@ export async function tokenAction(params: {
       const action =
         {
           "token:mint": "mint",
+          "token:burn": "burn",
+          "token:redeem": "redeem",
           "token:transfer": "transfer",
           "token:airdrop": "airdrop",
           "token:offer:create": "offer",

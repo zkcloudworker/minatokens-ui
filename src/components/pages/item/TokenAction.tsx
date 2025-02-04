@@ -12,7 +12,15 @@ import { TimeLine } from "@/components/launch/TimeLine";
 import { tokenAction } from "./lib/action";
 import { debug } from "@/lib/debug";
 import { useTransactionStore } from "@/context/tx-provider";
-import { TokenAirdropTransactionParams } from "@minatokens/api";
+import {
+  TokenAirdropTransactionParams,
+  TokenMintTransactionParams,
+  TokenRedeemTransactionParams,
+  TokenTransferTransactionParams,
+  TokenOfferTransactionParams,
+  TokenBidTransactionParams,
+  TokenBurnTransactionParams,
+} from "@minatokens/api";
 import { OrderbookTab } from "./Orderbook";
 
 const DEBUG = debug();
@@ -57,9 +65,37 @@ function initialTokenActionData(params: {
               amount: Math.round(
                 (address.amount ? Number(address.amount) : 0) * 1_000_000_000
               ),
-            } as TokenActionTransactionParams)
+              price: tokenState.mintPrice
+                ? Math.round(Number(tokenState.mintPrice) * 1_000_000_000)
+                : undefined,
+            } as TokenMintTransactionParams)
         )
       );
+      break;
+
+    case "redeem":
+      txs.push({
+        tokenAddress: tokenState.tokenAddress,
+        sender: tokenState.adminAddress,
+        txType: "token:redeem",
+        amount: Math.round(
+          (formData.amount ? Number(formData.amount) : 0) * 1_000_000_000
+        ),
+        price: tokenState.redeemPrice
+          ? Math.round(Number(tokenState.redeemPrice) * 1_000_000_000)
+          : undefined,
+      } as TokenRedeemTransactionParams);
+      break;
+
+    case "burn":
+      txs.push({
+        tokenAddress: tokenState.tokenAddress,
+        sender: tokenState.adminAddress,
+        txType: "token:burn",
+        amount: Math.round(
+          (formData.amount ? Number(formData.amount) : 0) * 1_000_000_000
+        ),
+      } as TokenBurnTransactionParams);
       break;
     case "transfer":
       txs.push(
@@ -73,7 +109,7 @@ function initialTokenActionData(params: {
               amount: Math.round(
                 (address.amount ? Number(address.amount) : 0) * 1_000_000_000
               ),
-            } as TokenActionTransactionParams)
+            } as TokenTransferTransactionParams)
         )
       );
       break;
@@ -103,7 +139,7 @@ function initialTokenActionData(params: {
             ? Number(formData.price) * 1_000_000_000
             : 1_000_000_000
         ),
-      });
+      } as TokenOfferTransactionParams);
       break;
     case "bid":
       txs.push({
@@ -118,7 +154,7 @@ function initialTokenActionData(params: {
             ? Number(formData.price) * 1_000_000_000
             : 1_000_000_000
         ),
-      });
+      } as TokenBidTransactionParams);
       break;
   }
   return {
@@ -171,6 +207,7 @@ export function TokenActionComponent({
   const timelineItems = state?.timelineItems || [];
 
   function onChange(formData: TokenActionFormData) {
+    console.log("onChange", formData);
     setFormData({
       tokenAddress,
       tab,
@@ -251,7 +288,12 @@ export function TokenActionComponent({
             data={state.formData}
             buttonText={tab.slice(0, 1).toUpperCase() + tab.slice(1)}
             showPrice={tab === "offer" || tab === "bid"}
-            showAmount={tab === "offer" || tab === "bid"}
+            showAmount={
+              tab === "offer" ||
+              tab === "bid" ||
+              tab === "redeem" ||
+              tab === "burn"
+            }
             showAddMore={tab === "mint" || tab === "airdrop"}
             showAddress={
               tab === "transfer" || tab === "airdrop" || tab === "mint"

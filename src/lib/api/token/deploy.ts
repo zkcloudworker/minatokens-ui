@@ -10,6 +10,7 @@ import {
   TokenTransaction,
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
+  LaunchTokenBondingCurveAdminParams,
 } from "@minatokens/api";
 import { ApiName, ApiResponse } from "../api-types";
 import { createTransactionPayloads } from "zkcloudworker";
@@ -21,10 +22,12 @@ import { accountExists } from "../../account";
 const WALLET = getWallet();
 const chain = getChain();
 const DEBUG = debug();
-const ISSUE_FEE = 1e9;
 
 export async function deployToken(props: {
-  params: LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams;
+  params:
+    | LaunchTokenStandardAdminParams
+    | LaunchTokenAdvancedAdminParams
+    | LaunchTokenBondingCurveAdminParams;
   name: ApiName;
   apiKeyAddress: string;
 }): Promise<ApiResponse<TokenTransaction>> {
@@ -187,7 +190,7 @@ export async function deployToken(props: {
   const balance = await accountBalanceMina(sender);
   if (DEBUG) console.log("Sender balance:", balance);
 
-  const requiredBalance = 3 + (ISSUE_FEE + fee) / 1_000_000_000;
+  const requiredBalance = 4 + (LAUNCH_FEE + fee) / 1_000_000_000;
   if (requiredBalance > balance) {
     return {
       status: 400,
@@ -212,7 +215,7 @@ export async function deployToken(props: {
     PrivateKey.fromBase58(params.adminContractPrivateKey)
       .toPublicKey()
       .toBase58();
-  const { tx, request } = await buildTokenLaunchTransaction({
+  const { tx, request, adminType } = await buildTokenLaunchTransaction({
     chain,
     args: params,
     developerAddress: apiKeyAddress,
@@ -235,7 +238,7 @@ export async function deployToken(props: {
     json: {
       ...payloads,
       request: {
-        ...request,
+        ...(request as any),
         txType: "token:launch",
       },
       symbol,

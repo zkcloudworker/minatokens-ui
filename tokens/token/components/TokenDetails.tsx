@@ -25,8 +25,10 @@ const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 function formatBalance(num: number | undefined): string {
   if (num === undefined) return "-";
-  const fixed = num.toFixed(2);
-  return fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed;
+  const fixed = num.toLocaleString(undefined, {
+    maximumSignificantDigits: 3,
+  });
+  return fixed;
 }
 
 export function Socials({ i }: { i: number }) {
