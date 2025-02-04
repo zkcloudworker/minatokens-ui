@@ -569,6 +569,9 @@ export async function tokenTransaction(props: {
         ? txParams.nonce
         : await getAccountNonce(sender.toBase58());
     txParams.txType = txType;
+    if ("slippage" in txParams && txParams.slippage === undefined) {
+      txParams.slippage = 50;
+    }
 
     if (DEBUG) console.log("building tx", txParams);
     const { tx, request } = await buildTokenTransaction({
