@@ -438,6 +438,6 @@ async function getPrice(adminAddress: PublicKey): Promise<{
   const mintPrice = 10_000 + Math.ceil(Number(supply) / 10_000_000_000_000);
   return {
     redeemPrice: (Number(redeemPrice) * 0.9) / 1_000_000_000,
-    mintPrice: (Number(mintPrice) * 1.05) / 1_000_000_000,
+    mintPrice: (Number(mintPrice) * 1.1) / 1_000_000_000,
   };
 }
