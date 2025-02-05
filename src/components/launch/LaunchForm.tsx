@@ -293,16 +293,6 @@ export function LaunchForm({
               </div>
             </div>
 
-            {tokenType === "meme" && (
-              <div className="mb-6">
-                <p className="text-sm text-jacarta-500 dark:text-jacarta-300">
-                  For every 1 MINA you spend, you will receive 100,000 meme
-                  tokens. Note: The initial mint can only be done by your
-                  connected wallet address.
-                </p>
-              </div>
-            )}
-
             {/* Links: website, telegram, twitter, discord, instagram */}
 
             <div className="mb-6">
@@ -681,6 +671,86 @@ export function LaunchForm({
                 >
                   {imageGenerating ? "Generating..." : "Generate with AI"}
                 </button>
+              </div>
+            )}
+            {tokenType === "meme" && (
+              <div className="mb-6">
+                <div className="text-sm text-jacarta-500 dark:text-jacarta-300">
+                  <h3 className="font-bold mb-3">How Meme Tokens Work</h3>
+                  <p className="mb-4">
+                    Meme tokens use a "bonding curve" system where the price
+                    automatically changes based on the total supply of tokens.
+                    Think of it like a dynamic pricing system:
+                  </p>
+
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2">🎯 Starting Price</h4>
+                    <ul className="list-disc ml-6">
+                      <li>Initial price is set at 0.00001 MINA per token</li>
+                      <li>This means 100,000 tokens cost 1 MINA at launch</li>
+                      <li>
+                        Token creator should mint first, others will be able to
+                        mint after the creator
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2">📈 Price Increases</h4>
+                    <ul className="list-disc ml-6">
+                      <li>
+                        The price goes up as more tokens are minted. Each new
+                        purchase increases the price following a linear curve
+                      </li>
+                      <li>
+                        Example: If 200,000 tokens are in circulation, the price
+                        becomes 0.00003 MINA per token (3x the starting price)
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2">
+                      💰 Redeeming (Selling)
+                    </h4>
+                    <ul className="list-disc ml-6">
+                      <li>
+                        You can sell your tokens back to the contract at any
+                        time
+                      </li>
+                      <li>
+                        The selling price is based on the current supply and
+                        contract balance
+                      </li>
+                      <li>You'll receive MINA in exchange for your tokens</li>
+                    </ul>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="font-semibold mb-2">⚠️ Important Notes</h4>
+                    <ul className="list-disc ml-6">
+                      <li>
+                        You can sell your tokens back at any time, but the price
+                        might change based on other transactions
+                      </li>
+                      <li>
+                        A small fee (1%, but no less than 0.1 MINA) is taken
+                        from each mint and redeem transaction
+                      </li>
+                      <li>
+                        You can buy and sell the meme tokens using Orderbook at
+                        the prices you set. The prices for minting and redeeming
+                        the token using the meme token contract are set
+                        automatically using bonding curve.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <p className="font-semibold">
+                    Remember: Like all crypto tokens, prices can go up and down.
+                    Only invest what you can afford to lose!
+                  </p>
+                </div>
               </div>
             )}
           </div>
