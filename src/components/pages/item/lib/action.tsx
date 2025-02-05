@@ -472,7 +472,7 @@ export async function tokenAction(params: {
       });
       if (DEBUG) console.log("mintResult", mintResult);
       if (mintResult.success === false || mintResult.jobId === undefined) {
-        log.error("tokenAction: mintResult error", {
+        log.error("tokenAction: apiTokenTransaction error", {
           tokenAddress,
           tab,
           mintResult,
@@ -481,7 +481,8 @@ export async function tokenAction(params: {
           groupId,
           update: {
             lineId: "error",
-            content: "Error minting tokens",
+            content:
+              "Failed to create transaction. Please check your inputs and try again.",
             status: "error",
           },
         });
