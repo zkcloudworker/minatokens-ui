@@ -244,6 +244,13 @@ export async function offerInfo(
       force: false,
     });
     if (!Mina.hasAccount(offerPublicKey, tokenId)) {
+      writeOffer({
+        tokenAddress,
+        offerAddress,
+        amount: 0,
+        price: 0,
+        ownerAddress: "",
+      });
       return {
         status: 400,
         json: { error: "Offer account not found" },
@@ -322,6 +329,13 @@ export async function bidInfo(
       force: false,
     });
     if (!Mina.hasAccount(bidPublicKey)) {
+      writeBid({
+        tokenAddress,
+        bidAddress,
+        amount: 0,
+        price: 0,
+        ownerAddress: "",
+      });
       return {
         status: 400,
         json: { error: "Bid account not found" },
