@@ -56,7 +56,6 @@
     "rate-limiter-flexible": "^5.0.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "readmeio": "^6.2.1",
     "swiper": "^11.2.1",
     "tailwind-merge": "^2.6.0",
     "zkcloudworker": "^0.24.3",

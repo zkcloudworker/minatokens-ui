@@ -6,7 +6,6 @@ import {
   initializeMemoryRateLimiter,
   initializeRedisRateLimiter,
 } from "../rate-limit";
-import * as readme from "readmeio";
 import { jwtVerify } from "jose";
 import { Chain, PrismaClient } from "@prisma/client";
 import {
@@ -23,7 +22,6 @@ import {
 import { ApiResponse, ApiName } from "./api-types";
 import { debug } from "../debug";
 import { getChain } from "@/lib/chain";
-import { readmeApi } from "./readme";
 const chain = getChain();
 const DEBUG = debug();
 const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY, README_DOCS_SECRET } =
@@ -127,35 +125,35 @@ function apiHandlerInternal<T, V>(params: {
       return await reply(429, { error: "Too many requests" });
     }
 
-    if (isReadme) {
-      const signature = req.headers["readme-signature"];
-      if (!signature || typeof signature !== "string") {
-        return reply(401, { error: "Unauthorized" });
-      }
+    // if (isReadme) {
+    //   const signature = req.headers["readme-signature"];
+    //   if (!signature || typeof signature !== "string") {
+    //     return reply(401, { error: "Unauthorized" });
+    //   }
 
-      const email = req.body.email;
-      if (!email || typeof email !== "string") {
-        return reply(400, { error: "Email is required" });
-      }
-      if (await rateLimit({ name: "apiMemory", key: "readme" })) {
-        return await reply(429, { error: "Too many requests" });
-      }
-      if (!README_DOCS_SECRET) {
-        console.error("Readme Docs API secret not set");
-        return res
-          .status(500)
-          .json({ error: "Readme Docs API secret not set" });
-      }
-      try {
-        readme.verifyWebhook(req.body, signature, README_DOCS_SECRET);
-      } catch (e: any) {
-        // Handle invalid requests
-        req.log.error("webhook verification failed", e);
-        return res.status(401).json({ error: e?.message || "Unauthorized" });
-      }
-      const { status, json } = await readmeApi({ email });
-      return res.status(status).json(json);
-    }
+    //   const email = req.body.email;
+    //   if (!email || typeof email !== "string") {
+    //     return reply(400, { error: "Email is required" });
+    //   }
+    //   if (await rateLimit({ name: "apiMemory", key: "readme" })) {
+    //     return await reply(429, { error: "Too many requests" });
+    //   }
+    //   if (!README_DOCS_SECRET) {
+    //     console.error("Readme Docs API secret not set");
+    //     return res
+    //       .status(500)
+    //       .json({ error: "Readme Docs API secret not set" });
+    //   }
+    //   try {
+    //     readme.verifyWebhook(req.body, signature, README_DOCS_SECRET);
+    //   } catch (e: any) {
+    //     // Handle invalid requests
+    //     req.log.error("webhook verification failed", e);
+    //     return res.status(401).json({ error: e?.message || "Unauthorized" });
+    //   }
+    //   const { status, json } = await readmeApi({ email });
+    //   return res.status(status).json(json);
+    // }
 
     const apiKey = req.headers["x-api-key"];
     if (!apiKey || typeof apiKey !== "string" || apiKey === "") {
@@ -216,28 +214,28 @@ function apiHandlerInternal<T, V>(params: {
     async function reply(status: number, json: { error: string } | V) {
       if (status !== 200) req.log.error("api reply", { status, json });
       if (!isInternal) {
-        if (!README_API_KEY) {
-          req.log.error("README API key not set");
-        } else if (userKey && userName && userEmail) {
-          const log = await readme.log(
-            README_API_KEY,
-            req,
-            res,
-            {
-              apiKey: userKey,
-              label: userName,
-              email: userEmail,
-            },
-            {
-              baseLogUrl: "https://docs.minatokens.com",
-            }
-          );
+        // if (!README_API_KEY) {
+        //   req.log.error("README API key not set");
+        // } else if (userKey && userName && userEmail) {
+        //   const log = await readme.log(
+        //     README_API_KEY,
+        //     req,
+        //     res,
+        //     {
+        //       apiKey: userKey,
+        //       label: userName,
+        //       email: userEmail,
+        //     },
+        //     {
+        //       baseLogUrl: "https://docs.minatokens.com",
+        //     }
+        //   );
 
-          if (DEBUG) console.log("README log", log);
-        } else {
-          req.log.error("No user info found for API key", { userKey });
-          console.error("No user info found for API key", userKey);
-        }
+        //   if (DEBUG) console.log("README log", log);
+        // } else {
+        //   req.log.error("No user info found for API key", { userKey });
+        //   console.error("No user info found for API key", userKey);
+        // }
         if ((json as any)?.error) {
           if (status === 200)
             req.log.error("api reply", { status, error: (json as any)?.error });
