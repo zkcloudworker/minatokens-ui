@@ -14,8 +14,7 @@ export type ApiName =
   | "arweave:json"
   | "arweave:image"
   | "faucet"
-  | "key"
-  | "readme";
+  | "key";
 
 export type ApiResponse<T> =
   | {
