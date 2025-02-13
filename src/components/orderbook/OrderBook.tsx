@@ -22,7 +22,7 @@ const chain = getChain();
 function formatBalance(num: number | undefined): string {
   if (num === undefined) return "-";
   const fixed = num.toLocaleString(undefined, {
-    maximumSignificantDigits: 3,
+    maximumSignificantDigits: 4,
   });
   return fixed;
 }
