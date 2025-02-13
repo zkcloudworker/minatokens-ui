@@ -231,7 +231,7 @@ export function TokenActionsTab({
                   <div className="ml-6 text-sm mt-2 dark:text-jacarta-200 md:text-left">
                     Bonding Curve Mint Price:{" "}
                     {Number(tokenState.mintPrice).toLocaleString(undefined, {
-                      maximumSignificantDigits: 3,
+                      maximumSignificantDigits: 4,
                     })}{" "}
                     MINA
                   </div>
@@ -240,7 +240,7 @@ export function TokenActionsTab({
                   <div className="ml-6 text-sm mt-2 dark:text-jacarta-200 md:text-left">
                     Bonding Curve Redeem Price:{" "}
                     {Number(tokenState.redeemPrice).toLocaleString(undefined, {
-                      maximumSignificantDigits: 3,
+                      maximumSignificantDigits: 4,
                     })}{" "}
                     MINA
                   </div>
