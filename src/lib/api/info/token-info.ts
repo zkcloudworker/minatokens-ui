@@ -237,6 +237,7 @@ export async function offerInfo(
     const tokenContractPublicKey = PublicKey.fromBase58(tokenAddress);
     const offerPublicKey = PublicKey.fromBase58(offerAddress);
     const tokenId = TokenId.derive(tokenContractPublicKey);
+    const offerInfo = await getOffer({ tokenAddress, offerAddress });
 
     await fetchMinaAccount({
       publicKey: offerPublicKey,
@@ -244,13 +245,19 @@ export async function offerInfo(
       force: false,
     });
     if (!Mina.hasAccount(offerPublicKey, tokenId)) {
-      writeOffer({
-        tokenAddress,
-        offerAddress,
-        amount: 0,
-        price: 0,
-        ownerAddress: "",
-      });
+      if (
+        offerInfo?.createdAt &&
+        offerInfo.createdAt.getTime() < Date.now() - 1000 * 60 * 60 * 3
+      ) {
+        writeOffer({
+          tokenAddress,
+          offerAddress,
+          amount: 0,
+          price: 0,
+          ownerAddress: "",
+        });
+      }
+
       return {
         status: 400,
         json: { error: "Offer account not found" },
@@ -262,7 +269,7 @@ export async function offerInfo(
       Mina.getAccount(offerPublicKey, tokenId).balance.toBigInt()
     );
     const ownerAddress = offer.seller.get().toBase58();
-    const offerInfo = await getOffer({ tokenAddress, offerAddress });
+
     if (
       offerInfo === null ||
       amount !== Number(offerInfo?.amount) ||
@@ -323,19 +330,25 @@ export async function bidInfo(
     const tokenContractPublicKey = PublicKey.fromBase58(tokenAddress);
     const bidPublicKey = PublicKey.fromBase58(bidAddress);
     const tokenId = TokenId.derive(tokenContractPublicKey);
+    const bidInfo = await getBid({ tokenAddress, bidAddress });
 
     await fetchMinaAccount({
       publicKey: bidPublicKey,
       force: false,
     });
     if (!Mina.hasAccount(bidPublicKey)) {
-      writeBid({
-        tokenAddress,
-        bidAddress,
-        amount: 0,
-        price: 0,
-        ownerAddress: "",
-      });
+      if (
+        bidInfo?.createdAt &&
+        bidInfo.createdAt.getTime() < Date.now() - 1000 * 60 * 60 * 3
+      ) {
+        writeBid({
+          tokenAddress,
+          bidAddress,
+          amount: 0,
+          price: 0,
+          ownerAddress: "",
+        });
+      }
       return {
         status: 400,
         json: { error: "Bid account not found" },
@@ -345,7 +358,7 @@ export async function bidInfo(
     const price = Number(bid.price.get().toBigInt());
     const amount = Number(Mina.getAccount(bidPublicKey).balance.toBigInt());
     const ownerAddress = bid.buyer.get().toBase58();
-    const bidInfo = await getBid({ tokenAddress, bidAddress });
+
     if (
       bidInfo === null ||
       amount !== Number(bidInfo?.amount) ||
