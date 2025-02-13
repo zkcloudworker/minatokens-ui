@@ -62,7 +62,7 @@ export function OrderbookTab({
             } as Order)
         )
         .sort((a, b) => a.price - b.price);
-      setOffers(offers);
+      setOffers(offers.filter((offer) => offer.amount > 0 && offer.price > 0));
       const bids: Order[] = orderbook.bids
         .map(
           (bid) =>
@@ -77,7 +77,7 @@ export function OrderbookTab({
             } as Order)
         )
         .sort((a, b) => b.price - a.price);
-      setBids(bids);
+      setBids(bids.filter((bid) => bid.amount > 0 && bid.price > 0));
       setIsLoaded(true);
       const length = Math.max(offers.length, bids.length);
       for (let i = 0; i < length; i++) {
@@ -100,7 +100,9 @@ export function OrderbookTab({
             } else {
               offers.splice(i, 1);
             }
-            setOffers(offers);
+            setOffers(
+              offers.filter((offer) => offer.amount > 0 && offer.price > 0)
+            );
           }
         }
         if (i < bids.length) {
@@ -128,7 +130,7 @@ export function OrderbookTab({
             } else {
               bids.splice(i, 1);
             }
-            setBids(bids);
+            setBids(bids.filter((bid) => bid.amount > 0 && bid.price > 0));
           }
         }
         await new Promise((resolve) => setTimeout(resolve, 1000)); // handle rate limit
