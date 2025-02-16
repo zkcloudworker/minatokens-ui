@@ -128,9 +128,13 @@ export async function waitForProveJob(params: {
         groupId,
         update: {
           lineId: "txSent" + lineId,
-          content: `Cannot send transaction to ${chain}: ${
-            sendResult.status ? "status: " + sendResult.status + ", " : ""
-          } ${String(sendResult.error ?? "error D4381")}, retry ${attempt}...`,
+          content: `Error: Unable to send transaction to ${chain}. ${
+            sendResult.status
+              ? "Received status: " + sendResult.status + ". "
+              : ""
+          } Response: ${String(
+            sendResult.error ?? "error D4381"
+          )}. Retrying (attempt ${attempt})...`,
           status: "waiting",
         },
       });
