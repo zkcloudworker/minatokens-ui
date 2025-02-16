@@ -5,6 +5,11 @@ import { getContractInfo } from "@minatokens/abi";
 import { ApiName, ApiResponse } from "../api-types";
 import { checkAddress } from "../utils/address";
 import { getChain } from "@/lib/chain";
+import { log as logtail } from "@logtail/next";
+const log = logtail.with({
+  service: "contract",
+  chain: getChain(),
+});
 const chain = getChain() === "mainnet" ? "mainnet" : "devnet";
 
 import { debug } from "@/lib/debug";
@@ -34,7 +39,7 @@ export async function contract(props: {
       json: contractInfo,
     };
   } catch (error) {
-    console.error("contract catch", params, error);
+    log.error("contract catch", { params, error });
     return {
       status: 500,
       json: { error: "Failed to get contract info" },

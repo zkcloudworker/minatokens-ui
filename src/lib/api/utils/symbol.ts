@@ -3,6 +3,12 @@ import { Mina, PublicKey, Bool, Struct, UInt8 } from "o1js";
 import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
 import { ApiResponse } from "../api-types";
 import { checkAddress } from "./address";
+import { getChain } from "@/lib/chain";
+import { log as logtail } from "@logtail/next";
+const log = logtail.with({
+  service: "symbol",
+  chain: getChain(),
+});
 
 class FungibleTokenState extends Struct({
   decimals: UInt8,
@@ -49,7 +55,7 @@ export async function getTokenSymbolAndAdmin(params: {
 
     const account = Mina.getAccount(tokenContractPublicKey);
     if (account.zkapp?.appState === undefined) {
-      console.error("getTokenState: Token contract state not found", {
+      log.error("getTokenState: Token contract state not found", {
         tokenAddress,
       });
       return {
@@ -64,7 +70,7 @@ export async function getTokenSymbolAndAdmin(params: {
     const adminContractPublicKey = state.admin;
     await fetchMinaAccount({ publicKey: adminContractPublicKey, force: false });
     if (!Mina.hasAccount(adminContractPublicKey)) {
-      console.error("getTokenState: Admin contract account not found", {
+      log.error("getTokenState: Admin contract account not found", {
         tokenAddress,
       });
       return {
@@ -77,7 +83,7 @@ export async function getTokenSymbolAndAdmin(params: {
     const adminAddress0 = adminContract.zkapp?.appState[0];
     const adminAddress1 = adminContract.zkapp?.appState[1];
     if (adminAddress0 === undefined || adminAddress1 === undefined) {
-      console.error("Cannot fetch admin address from admin contract");
+      log.error("Cannot fetch admin address from admin contract");
       return {
         status: 400,
         json: { error: "Cannot fetch admin address from admin contract" },
@@ -97,7 +103,7 @@ export async function getTokenSymbolAndAdmin(params: {
       json: tokenState,
     };
   } catch (error: any) {
-    console.error("getTokenState catch", error);
+    log.error("getTokenState catch", { error });
     return {
       status: 500,
       json: {
