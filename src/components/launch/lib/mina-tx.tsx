@@ -130,17 +130,17 @@ export async function waitForProveJob(params: {
           lineId: "txSent" + lineId,
           content: `Cannot send transaction to ${chain}: ${
             sendResult.status ? "status: " + sendResult.status + ", " : ""
-          } ${String(sendResult.error ?? "error D4381")}, retrying...`,
+          } ${String(sendResult.error ?? "error D4381")}, retry ${attempt}...`,
           status: "waiting",
         },
       });
-      if (attempt > 5)
+      if (attempt % 5 === 0)
         log.error("waitForProveJob: Failed to send transaction to blockchain", {
           sendResult,
           attempt,
           chain,
         });
-      await sleep(10000 * attempt);
+      await sleep(5000 * attempt);
       sendResult = await sendTransaction(transaction);
     }
     if (DEBUG)
@@ -168,6 +168,8 @@ export async function waitForProveJob(params: {
         "waitForProveJob: Failed to send transaction to Mina blockchain",
         {
           sendResult,
+          attempt,
+          chain,
         }
       );
       return false;
