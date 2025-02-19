@@ -12,7 +12,7 @@ import { bidInfo, offerInfo } from "@/lib/api/info/token-info";
 import {
   TokenBuyTransactionParams,
   TokenSellTransactionParams,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { useContext } from "react";
 import { AddressContext } from "@/context/address";
 

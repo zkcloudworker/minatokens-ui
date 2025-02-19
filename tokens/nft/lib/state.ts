@@ -1,6 +1,6 @@
 "use server";
 import { fetchMinaAccount, initBlockchain } from "@/lib/blockchain";
-import { FungibleToken } from "@minatokens/token";
+import { FungibleToken } from "@silvana-one/token";
 import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo, TokenInfo } from "./token";
 import { algoliaGetToken, algoliaWriteToken } from "@/lib/algolia";

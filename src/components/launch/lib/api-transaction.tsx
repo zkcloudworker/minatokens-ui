@@ -18,7 +18,7 @@ import {
   TokenOfferTransactionParams,
   TokenTransactionParams,
   TokenTransactionType,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { writeBid, writeOffer } from "@/lib/trade";
 const DEBUG = debug();
 

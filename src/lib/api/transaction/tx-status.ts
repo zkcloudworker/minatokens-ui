@@ -5,7 +5,7 @@ import {
   TransactionStatus,
   TransactionStatusParams,
   TxStatus,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import { getChain } from "@/lib/chain";
 const chain = getChain();

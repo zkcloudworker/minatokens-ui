@@ -4,7 +4,7 @@ import { airdropTransaction } from "@/lib/api/token/transaction";
 import {
   TokenAirdropTransactionParams,
   TokenTransactions,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 
 export default apiHandler<TokenAirdropTransactionParams, TokenTransactions>({
   name: "token:airdrop",

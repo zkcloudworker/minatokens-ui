@@ -4,7 +4,7 @@ import { tokenTransaction } from "@/lib/api/token/transaction";
 import {
   TokenTransferTransactionParams,
   TokenTransaction,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 
 export default apiHandler<TokenTransferTransactionParams, TokenTransaction>({
   name: "token:transfer",

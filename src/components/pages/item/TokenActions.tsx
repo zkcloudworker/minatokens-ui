@@ -161,7 +161,7 @@ export function TokenActionsTab({
     });
     if (DEBUG) console.log("Token balance", tokenBalance);
     if (tokenBalance.status === 200 && tokenBalance.json.balance !== null) {
-      setTokenBalance(tokenBalance.json.balance / 10 ** decimals);
+      setTokenBalance(tokenBalance.json.balance ?? 0 / 10 ** decimals);
     } else {
       setTokenBalance(undefined);
     }
@@ -172,7 +172,7 @@ export function TokenActionsTab({
       apiKeyAddress: "",
     });
     if (minaBalance.status === 200 && minaBalance.json.balance !== null) {
-      setMinaBalance(minaBalance.json.balance / 10 ** 9);
+      setMinaBalance(minaBalance.json.balance ?? 0 / 10 ** 9);
     } else {
       setMinaBalance(undefined);
     }

@@ -1,7 +1,7 @@
 "use server";
 import { initBlockchain } from "@/lib/blockchain";
-import { ContractInfoRequest, ContractInfo } from "@minatokens/api";
-import { getContractInfo } from "@minatokens/abi";
+import { ContractInfoRequest, ContractInfo } from "@silvana-one/api";
+import { getContractInfo } from "@silvana-one/abi";
 import { ApiName, ApiResponse } from "../api-types";
 import { checkAddress } from "../utils/address";
 import { getChain } from "@/lib/chain";

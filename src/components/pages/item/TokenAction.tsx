@@ -20,7 +20,7 @@ import {
   TokenOfferTransactionParams,
   TokenBidTransactionParams,
   TokenBurnTransactionParams,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { OrderbookTab } from "./Orderbook";
 
 const DEBUG = debug();

@@ -6,12 +6,12 @@ import {
   TokenInfoRequestParams,
   BalanceRequestParams,
   BalanceResponse,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import {
   FungibleTokenOfferContract,
   FungibleTokenBidContract,
-} from "@minatokens/token";
+} from "@silvana-one/token";
 import { checkAddress } from "../utils/address";
 import {
   updateTokenInfo,
@@ -106,7 +106,8 @@ export async function balance(props: {
           tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
           balance: Mina.hasAccount(publicKey, tokenId)
             ? Number(Mina.getAccount(publicKey, tokenId).balance.toBigInt())
-            : null,
+            : undefined,
+          hasAccount: Mina.hasAccount(publicKey, tokenId),
         },
       };
     } catch (error) {
@@ -117,7 +118,8 @@ export async function balance(props: {
           tokenAddress,
           address,
           tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
-          balance: null,
+          balance: undefined,
+          hasAccount: false,
         },
       };
     }

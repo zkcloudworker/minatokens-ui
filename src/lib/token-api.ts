@@ -1,7 +1,7 @@
 "use server";
 
 import { JobStatus, TokenAPI } from "zkcloudworker";
-import { JobResult, TokenTransaction } from "@minatokens/api";
+import { JobResult, TokenTransaction } from "@silvana-one/api";
 import { getChain } from "./chain";
 
 const ZKCW_JWT = process.env.ZKCW_JWT;

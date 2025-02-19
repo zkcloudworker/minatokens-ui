@@ -4,8 +4,8 @@ import {
   FungibleToken,
   FungibleTokenBondingCurveAdmin,
   BondingCurveParams,
-} from "@minatokens/token";
-import { tokenVerificationKeys } from "@minatokens/abi";
+} from "@silvana-one/token";
+import { tokenVerificationKeys } from "@silvana-one/abi";
 import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo, TokenInfo } from "./token";
 import { algoliaGetToken, algoliaWriteToken } from "@/lib/algolia";

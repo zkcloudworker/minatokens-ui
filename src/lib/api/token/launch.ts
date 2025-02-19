@@ -5,13 +5,13 @@ import {
   fetchMinaAccount,
 } from "@/lib/blockchain";
 import { PrivateKey, PublicKey, UInt64, Mina, UInt8 } from "o1js";
-import { buildTokenLaunchTransaction, LAUNCH_FEE } from "@minatokens/abi";
+import { buildTokenLaunchTransaction, LAUNCH_FEE } from "@silvana-one/abi";
 import {
   TokenTransaction,
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
   LaunchTokenBondingCurveAdminParams,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import { createTransactionPayloads } from "zkcloudworker";
 import { checkAddress, checkPrivateKey } from "../utils/address";
@@ -242,7 +242,7 @@ export async function deployToken(props: {
     return {
       status: 200,
       json: {
-        ...payloads,
+        ...(payloads as any),
         request: {
           ...(request as any),
           txType: "token:launch",

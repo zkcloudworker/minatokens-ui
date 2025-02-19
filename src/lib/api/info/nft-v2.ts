@@ -13,7 +13,7 @@ import {
 } from "o1js";
 import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
 import { checkAddress } from "../utils/address";
-import { NFTRequestAnswer, NFTRequestParams } from "@minatokens/api";
+import { NftRequestAnswer, NftRequestParams } from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import { algoliasearch } from "algoliasearch";
 import { getChain } from "@/lib/chain";
@@ -25,10 +25,10 @@ const NFT_ALGOLIA_PROJECT = process.env.NFT_ALGOLIA_PROJECT;
 const NFT_ALGOLIA_KEY = process.env.NFT_ALGOLIA_KEY;
 
 export async function getNFTState(props: {
-  params: NFTRequestParams;
+  params: NftRequestParams;
   name: ApiName;
   apiKeyAddress: string;
-}): Promise<ApiResponse<NFTRequestAnswer>> {
+}): Promise<ApiResponse<NftRequestAnswer>> {
   const { params, name, apiKeyAddress } = props;
   console.log("getNFTState", params);
   const { contractAddress, nftAddress } = params;
@@ -131,12 +131,12 @@ export async function getNFTState(props: {
         },
       };
     }
-    const tokenState: NFTRequestAnswer = {
+    const tokenState: NftRequestAnswer = {
       contractAddress,
       nftAddress,
       tokenId: TokenId.toBase58(tokenId),
       tokenSymbol,
-      contractUri: uri ?? null,
+      contractUri: uri,
       name,
       metadataRoot: {
         data: state.metadata.data.toJSON(),

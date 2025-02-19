@@ -4,7 +4,7 @@ import { tokenTransaction } from "@/lib/api/token/transaction";
 import {
   TokenWithdrawOfferTransactionParams,
   TokenTransaction,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 
 export default apiHandler<
   TokenWithdrawOfferTransactionParams,

@@ -10,7 +10,7 @@ import {
   ProveTokenTransaction,
   JobId,
   TokenTransaction,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 const chain = getChain();
 import { log as logtail } from "@logtail/next";
