@@ -373,6 +373,7 @@ export async function nftTransaction(props: {
       privateMetadata,
       storage,
       collectionName,
+      nftName,
     } = await buildNftTransaction({
       chain,
       args: txParams,
@@ -403,6 +404,7 @@ export async function nftTransaction(props: {
         ...(payloads as any),
         symbol,
         collectionName,
+        nftName,
         request: {
           ...request,
           txType,

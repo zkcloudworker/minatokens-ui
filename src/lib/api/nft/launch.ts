@@ -233,6 +233,7 @@ export async function launchNftCollection(props: {
       metadataRoot,
       privateMetadata,
       collectionName,
+      nftName,
     } = await buildNftCollectionLaunchTransaction({
       chain,
       args: params,
@@ -260,6 +261,7 @@ export async function launchNftCollection(props: {
         },
         symbol,
         collectionName: params.collectionName,
+        nftName,
         metadataRoot,
         privateMetadata,
         storage,
