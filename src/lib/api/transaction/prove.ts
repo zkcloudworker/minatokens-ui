@@ -39,7 +39,8 @@ export async function prove(props: {
       "txs" in transactions ? transactions : { txs: [transactions] };
     const txs: TokenTransaction[] | NftTransaction[] = [];
     for (const params of proveTransactions.txs) {
-      const { signedData, tx, sendTransaction = true } = params;
+      const { signedData, tx } = params;
+      const sendTransaction = tx.sendTransaction ?? true;
 
       if (signedData === undefined)
         return {
