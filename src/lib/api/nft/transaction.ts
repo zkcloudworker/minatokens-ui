@@ -408,6 +408,11 @@ export async function nftTransaction(props: {
         request: {
           ...request,
           txType,
+          nftMintParams: {
+            ...txParams.nftMintParams,
+            storage,
+            metadata: metadataRoot,
+          },
         } as NftTransaction["request"],
         metadataRoot,
         privateMetadata,

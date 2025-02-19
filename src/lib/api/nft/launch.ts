@@ -258,6 +258,11 @@ export async function launchNftCollection(props: {
         request: {
           ...(request as any),
           txType: "nft:launch",
+          masterNFT: {
+            ...(request as any).masterNFT,
+            metadata: metadataRoot,
+            storage,
+          },
         },
         symbol,
         collectionName: params.collectionName,
