@@ -1,6 +1,7 @@
 "use server";
 
-import { proveTransactions } from "@/lib/token-api";
+import { proveTransactions as proveTokenTransactions } from "@/lib/token-api";
+import { proveTransactions as proveNftTransactions } from "@/lib/nft-api";
 import { debug } from "@/lib/debug";
 import { getChain } from "@/lib/chain";
 import { checkAddress } from "../utils/address";
@@ -8,8 +9,11 @@ import { checkAddress as checkSenderAddress } from "@/lib/address";
 import {
   ProveTokenTransactions,
   ProveTokenTransaction,
+  ProveNftTransactions,
+  ProveNftTransaction,
   JobId,
   TokenTransaction,
+  NftTransaction,
 } from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 const chain = getChain();
@@ -21,15 +25,20 @@ const log = logtail.with({
 const DEBUG = debug();
 
 export async function prove(props: {
-  params: ProveTokenTransactions | ProveTokenTransaction;
+  params:
+    | ProveTokenTransactions
+    | ProveTokenTransaction
+    | ProveNftTransactions
+    | ProveNftTransaction;
   name: ApiName;
   apiKeyAddress: string;
 }): Promise<ApiResponse<JobId>> {
   let { name, params: transactions, apiKeyAddress } = props;
   try {
-    if (!("txs" in transactions)) transactions = { txs: [transactions] };
-    const txs: TokenTransaction[] = [];
-    for (const params of transactions.txs) {
+    const proveTransactions =
+      "txs" in transactions ? transactions : { txs: [transactions] };
+    const txs: TokenTransaction[] | NftTransaction[] = [];
+    for (const params of proveTransactions.txs) {
       const { signedData, tx, sendTransaction = true } = params;
 
       if (signedData === undefined)
@@ -42,9 +51,18 @@ export async function prove(props: {
           status: 400,
           json: { error: "Invalid transaction" },
         };
-      console.log("Proving token tx", {
+      console.log(`Proving ${tx.request.txType} tx`, {
         txType: tx.request.txType,
-        tokenAddress: tx.request.tokenAddress,
+        tokenAddress:
+          "tokenAddress" in tx.request ? tx.request.tokenAddress : undefined,
+        collectionAddress:
+          "collectionAddress" in tx.request
+            ? tx.request.collectionAddress
+            : undefined,
+        collectionName:
+          "collectionName" in tx.request
+            ? tx.request.collectionName
+            : undefined,
         symbol: tx.symbol,
       });
       console.log("chain", chain);
@@ -101,10 +119,23 @@ export async function prove(props: {
         };
       }
 
-      if (!checkAddress(tx.request.tokenAddress)) {
+      if (
+        "tokenAddress" in tx.request &&
+        !checkAddress(tx.request.tokenAddress)
+      ) {
         return {
           status: 400,
           json: { error: "Invalid token address" },
+        };
+      }
+
+      if (
+        "collectionAddress" in tx.request &&
+        !checkAddress(tx.request.collectionAddress)
+      ) {
+        return {
+          status: 400,
+          json: { error: "Invalid collection address" },
         };
       }
 
@@ -124,7 +155,11 @@ export async function prove(props: {
           ? tx.request.adminContractAddress
           : undefined;
 
-      if (tx.request.txType === "token:launch" && !adminContractAddress) {
+      if (
+        (tx.request.txType === "token:launch" ||
+          tx.request.txType === "nft:launch") &&
+        !adminContractAddress
+      ) {
         return {
           status: 400,
           json: { error: "Admin contract address is required" },
@@ -156,10 +191,14 @@ export async function prove(props: {
         };
       }
 
-      txs.push(tx);
+      txs.push(tx as any);
     }
 
-    const jobId = await proveTransactions(txs);
+    const isNFT = txs[0].request.txType.startsWith("nft:");
+
+    const jobId = isNFT
+      ? await proveNftTransactions(txs as NftTransaction[])
+      : await proveTokenTransactions(txs as TokenTransaction[]);
 
     if (!jobId) {
       return {
