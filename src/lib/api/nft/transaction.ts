@@ -366,14 +366,20 @@ export async function nftTransaction(props: {
         .toBase58();
 
     if (DEBUG) console.log("building tx", txParams);
-    const { tx, request, metadataRoot, privateMetadata, storage } =
-      await buildNftTransaction({
-        chain,
-        args: txParams,
-        developerAddress: apiKeyAddress,
-        provingKey: wallet.toBase58(),
-        provingFee: FEE,
-      });
+    const {
+      tx,
+      request,
+      metadataRoot,
+      privateMetadata,
+      storage,
+      collectionName,
+    } = await buildNftTransaction({
+      chain,
+      args: txParams,
+      developerAddress: apiKeyAddress,
+      provingKey: wallet.toBase58(),
+      provingFee: FEE,
+    });
     const signers: string[] = [];
     // if (txType === "token:offer:create" && offerPrivateKey)
     //   signers.push(offerPrivateKey);
@@ -396,6 +402,7 @@ export async function nftTransaction(props: {
       json: {
         ...(payloads as any),
         symbol,
+        collectionName,
         request: {
           ...request,
           txType,
