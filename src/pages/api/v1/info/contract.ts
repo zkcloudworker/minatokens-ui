@@ -5,7 +5,7 @@ import {
   ContractInfoRequest,
   ContractInfo,
   getContractInfo,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 
 export default apiHandler<ContractInfoRequest, ContractInfo[]>({
   name: "info:contract",

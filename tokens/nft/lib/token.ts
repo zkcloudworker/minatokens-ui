@@ -21,7 +21,7 @@ import {
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
   TokenTransactionParams,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 //export type TokenAction = Exclude<FungibleTokenTransactionType, "launch">;
 export type TokenAction =
   | "mint"

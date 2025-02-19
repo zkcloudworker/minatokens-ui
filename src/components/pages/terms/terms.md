@@ -163,7 +163,7 @@ You agree not to:
 
 ### 8.4 **Reporting Intellectual Property Violations**
 
-If you become aware of any violation of copyright, intellectual property rights, or licenses related to the Service, you are obliged to immediately inform MinaTokens by contacting [ip@minatokens.com](mailto:ip@minatokens.com) and providing details of the violation.
+If you become aware of any violation of copyright, intellectual property rights, or licenses related to the Service, you are obliged to immediately inform MinaTokens by contacting [ip@silvana-one.com](mailto:ip@silvana-one.com) and providing details of the violation.
 
 ## 9. **Communication Preferences**
 
@@ -234,7 +234,7 @@ You and MinaTokens agree to resolve any disputes arising out of or relating to t
 
 ### **Arbitration Procedures**
 
-- **Initiating Arbitration**: To begin an arbitration proceeding, you must send a letter requesting arbitration and describing your claim to our legal department at [legal@minatokens.com](mailto:legal@minatokens.com) and receive the answer explaining the arbitration process.
+- **Initiating Arbitration**: To begin an arbitration proceeding, you must send a letter requesting arbitration and describing your claim to our legal department at [legal@silvana-one.com](mailto:legal@silvana-one.com) and receive the answer explaining the arbitration process.
 - **Authority of Arbitrator**: The arbitrator has exclusive authority to resolve any dispute relating to the interpretation, applicability, or enforceability of this arbitration agreement.
 
 ### **Waiver of Class Actions**
@@ -269,7 +269,7 @@ These Terms, along with our Privacy Policy and any other legal notices published
 
 If you have any questions about these Terms, please contact us at:
 
-- **Email**: [support@minatokens.com](mailto:support@minatokens.com)
+- **Email**: [support@silvana-one.com](mailto:support@silvana-one.com)
 
 ## 21. **Assignment**
 

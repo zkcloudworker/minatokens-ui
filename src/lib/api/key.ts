@@ -477,7 +477,7 @@ async function sendEmail(params: { email: string; jwt: string }) {
   }
   const { email, jwt } = params;
   const form = new formData();
-  form.append("from", "MinaTokens API <api@minatokens.com>");
+  form.append("from", "MinaTokens API <api@silvana-one.com>");
   form.append("to", email);
   form.append("subject", "Your MinaTokens API Key");
   form.append("template", "API key");
@@ -506,7 +506,7 @@ async function sendSubscriptionEmail(params: { email: string }) {
   }
   const { email } = params;
   const form = new formData();
-  form.append("from", "MinaTokens <news@minatokens.com>");
+  form.append("from", "MinaTokens <news@silvana-one.com>");
   form.append("to", email);
   form.append("subject", "Thank you for subscribing to MinaTokens news");
   form.append("template", "subscription");
@@ -534,7 +534,7 @@ async function sendErrorEmail(params: { email: string; address: string }) {
   }
   const { email, address } = params;
   const form = new formData();
-  form.append("from", "MinaTokens API <api@minatokens.com>");
+  form.append("from", "MinaTokens API <api@silvana-one.com>");
   form.append("to", email);
   form.append("subject", "Your MinaTokens API Key cannot be generated");
   form.append("template", "API key error");

@@ -18,7 +18,7 @@ import {
   BalanceResponse,
   TokenTransactionType,
   JobResults,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { ApiResponse, ApiName } from "./api-types";
 import { debug } from "../debug";
 import { getChain } from "@/lib/chain";

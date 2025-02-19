@@ -4,7 +4,7 @@ import { tokenTransaction } from "@/lib/api/token/transaction";
 import {
   TokenUpdateBidWhitelistTransactionParams,
   TokenTransaction,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 
 export default apiHandler<
   TokenUpdateBidWhitelistTransactionParams,

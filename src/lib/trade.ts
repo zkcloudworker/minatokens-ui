@@ -64,9 +64,9 @@ export async function getOffers(params: {
     where: {
       tokenAddress,
       chain: prismaChainName,
-      // amount: {
-      //   gt: 0,
-      // },
+      amount: {
+        gt: 0,
+      },
       ...(ownerAddress !== undefined && { ownerAddress }),
     },
     orderBy: {
@@ -136,9 +136,9 @@ export async function getBids(params: {
     where: {
       tokenAddress,
       chain: prismaChainName,
-      // amount: {
-      //   gt: 0,
-      // },
+      amount: {
+        gt: 0,
+      },
       ...(ownerAddress !== undefined && { ownerAddress }),
     },
     orderBy: {

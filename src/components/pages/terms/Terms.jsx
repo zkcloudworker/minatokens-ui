@@ -393,10 +393,10 @@ export default function Terms() {
             property rights, or licenses related to the Service, you are obliged
             to immediately inform MinaTokens by contacting{" "}
             <a
-              href="mailto:ip@minatokens.com"
+              href="mailto:ip@silvana-one.com"
               className="text-blue-600 underline"
             >
-              ip@minatokens.com
+              ip@silvana-one.com
             </a>{" "}
             and providing details of the violation.
           </p>
@@ -602,10 +602,10 @@ export default function Terms() {
               proceeding, you must send a letter requesting arbitration and
               describing your claim to our legal department at{" "}
               <a
-                href="mailto:legal@minatokens.com"
+                href="mailto:legal@silvana-one.com"
                 className="text-blue-600 underline"
               >
-                legal@minatokens.com
+                legal@silvana-one.com
               </a>{" "}
               and receive the answer explaining the arbitration process.
             </li>
@@ -703,10 +703,10 @@ export default function Terms() {
             <li>
               <strong>Email</strong>:{" "}
               <a
-                href="mailto:support@minatokens.com"
+                href="mailto:support@silvana-one.com"
                 className="text-blue-600 underline"
               >
-                support@minatokens.com
+                support@silvana-one.com
               </a>
             </li>
           </ul>

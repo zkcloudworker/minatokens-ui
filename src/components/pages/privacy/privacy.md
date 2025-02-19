@@ -146,7 +146,7 @@ Depending on your location and applicable laws, you may have the right to:
 - **Object**: Object to processing your data for certain purposes.
 - **Withdraw Consent**: Withdraw consent where processing is based on consent.
 
-To exercise these rights, please contact us at [privacy@minatokens.com](mailto:privacy@minatokens.com). We may need to verify your identity before fulfilling your request.
+To exercise these rights, please contact us at [privacy@silvana-one.com](mailto:privacy@silvana-one.com). We may need to verify your identity before fulfilling your request.
 
 ---
 
@@ -197,7 +197,7 @@ Your continued use of the Service after any changes to this Privacy Policy const
 
 If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us at:
 
-- **Email**: [privacy@minatokens.com](mailto:privacy@minatokens.com)
+- **Email**: [privacy@silvana-one.com](mailto:privacy@silvana-one.com)
 
 ---
 

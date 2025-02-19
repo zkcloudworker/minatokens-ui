@@ -5,7 +5,7 @@ import {
   fetchMinaAccount,
 } from "@/lib/blockchain";
 import { PublicKey, UInt64, Mina, TokenId, PrivateKey } from "o1js";
-import { buildTokenTransaction, TRANSACTION_FEE } from "@minatokens/abi";
+import { buildTokenTransaction, TRANSACTION_FEE } from "@silvana-one/abi";
 import { createTransactionPayloads } from "zkcloudworker";
 import {
   TokenTransaction,
@@ -20,7 +20,7 @@ import {
   TokenTransactionType,
   TokenOfferTransactionParams,
   TokenBidTransactionParams,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import { getTokenSymbolAndAdmin } from "../utils/symbol";
 import { checkAddress, checkPrivateKey } from "../utils/address";
@@ -598,7 +598,7 @@ export async function tokenTransaction(props: {
     return {
       status: 200,
       json: {
-        ...payloads,
+        ...(payloads as any),
         symbol,
         request: {
           ...request,

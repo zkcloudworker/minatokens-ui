@@ -6,12 +6,12 @@ import {
   TokenInfoRequestParams,
   BalanceRequestParams,
   BalanceResponse,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import {
   FungibleTokenOfferContract,
   FungibleTokenBidContract,
-} from "@minatokens/token";
+} from "@silvana-one/token";
 import { checkAddress } from "../utils/address";
 import {
   updateTokenInfo,
@@ -26,6 +26,13 @@ import {
   getBid,
 } from "../../trade";
 import { debug } from "@/lib/debug";
+import { log as logtail } from "@logtail/next";
+import { getChain } from "@/lib/chain";
+const chain = getChain();
+const log = logtail.with({
+  service: "token-info",
+  chain,
+});
 const DEBUG = debug();
 
 export async function formatBalance(num: number): Promise<string> {
@@ -99,24 +106,25 @@ export async function balance(props: {
           tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
           balance: Mina.hasAccount(publicKey, tokenId)
             ? Number(Mina.getAccount(publicKey, tokenId).balance.toBigInt())
-            : null,
+            : undefined,
+          hasAccount: Mina.hasAccount(publicKey, tokenId),
         },
       };
     } catch (error) {
-      console.error("Cannot fetch account balance", params, error);
-
+      log.error("Cannot fetch account balance", { params, error });
       return {
         status: 200,
         json: {
           tokenAddress,
           address,
           tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
-          balance: null,
+          balance: undefined,
+          hasAccount: false,
         },
       };
     }
   } catch (error) {
-    console.error("balance catch", params, error);
+    log.error("balance catch", { params, error });
     return {
       status: 500,
       json: { error: "Failed to get balance" },
@@ -296,7 +304,7 @@ export async function offerInfo(
       },
     };
   } catch (error) {
-    console.error("Cannot fetch offer info", params, error);
+    log.error("Cannot fetch offer info", { params, error });
     return {
       status: 500,
       json: { error: "Failed to get offer info" },
@@ -385,7 +393,7 @@ export async function bidInfo(
       },
     };
   } catch (error) {
-    console.error("Cannot fetch bid info", params, error);
+    log.error("Cannot fetch bid info", { params, error });
     return {
       status: 500,
       json: { error: "Failed to get bid info" },
@@ -608,7 +616,7 @@ export async function getTokenState(props: {
       };
     }
   } catch (error: any) {
-    console.error("getTokenState catch", error);
+    log.error("getTokenState catch", { error });
     return {
       status: 503,
       json: {

@@ -15,8 +15,8 @@ import { log } from "@/lib/log";
 import {
   LaunchTokenStandardAdminParams,
   LaunchTokenBondingCurveAdminParams,
-} from "@minatokens/api";
-import { deployToken as deployTokenApi } from "@/lib/api/token/deploy";
+} from "@silvana-one/api";
+import { deployToken as deployTokenApi } from "@/lib/api/token/launch";
 const DEBUG = debug();
 const chain = getChain();
 

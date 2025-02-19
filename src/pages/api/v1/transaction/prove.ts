@@ -5,7 +5,7 @@ import {
   ProveTokenTransactions,
   JobId,
   ProveTokenTransaction,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 
 export default apiHandler<
   ProveTokenTransactions | ProveTokenTransaction,

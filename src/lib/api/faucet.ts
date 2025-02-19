@@ -1,5 +1,5 @@
 "use server";
-import { FaucetParams, FaucetResponse, TxStatus } from "@minatokens/api";
+import { FaucetParams, FaucetResponse, TxStatus } from "@silvana-one/api";
 import { checkAddress } from "./utils/address";
 import { getChain } from "@/lib/chain";
 import { ApiName, ApiResponse } from "./api-types";

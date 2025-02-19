@@ -1,29 +1,29 @@
 "use server";
 
-import { JobStatus, TokenAPI } from "zkcloudworker";
-import { JobResult, TokenTransaction } from "@silvana-one/api";
+import { JobStatus, NftAPI } from "zkcloudworker";
+import { JobResult, NftTransaction } from "@silvana-one/api";
 import { getChain } from "./chain";
 
 const ZKCW_JWT = process.env.ZKCW_JWT;
 const chain = getChain();
 
-function getAPI(): TokenAPI {
+function getAPI(): NftAPI {
   if (ZKCW_JWT === undefined) throw new Error("ZKCW_JWT is undefined");
-  return new TokenAPI({
+  return new NftAPI({
     jwt: ZKCW_JWT,
     chain,
   });
 }
 
 export async function proveTransaction(
-  params: TokenTransaction
+  params: NftTransaction
 ): Promise<string | undefined> {
   const api = getAPI();
   return api.proveTransaction(params);
 }
 
 export async function proveTransactions(
-  params: TokenTransaction[]
+  params: NftTransaction[]
 ): Promise<string | undefined> {
   const api = getAPI();
   return api.proveTransactions(params);

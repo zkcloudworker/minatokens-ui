@@ -38,7 +38,7 @@ import { getAccountNonce } from "@/lib/nonce";
 import { waitForProveJob, waitForContractVerification } from "./mina-tx";
 import { deployTokenParams } from "@/lib/keys";
 import { log } from "@/lib/log";
-import { TokenMintTransactionParams } from "@minatokens/api";
+import { TokenMintTransactionParams } from "@silvana-one/api";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
 const chain = getChain();

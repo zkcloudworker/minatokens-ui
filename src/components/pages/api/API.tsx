@@ -433,12 +433,12 @@ const API: React.FC = () => {
                 </a>{" "}
                 and interact with live API endpoints. Test the{" "}
                 <a
-                  href="https://www.npmjs.com/package/@minatokens/api"
+                  href="https://www.npmjs.com/package/@silvana-one/api"
                   className="text-accent"
                   target="_blank"
                   rel="noreferrer noopener"
                 >
-                  @minatokens/api
+                  @silvana-one/api
                 </a>{" "}
                 library using our{" "}
                 <a
