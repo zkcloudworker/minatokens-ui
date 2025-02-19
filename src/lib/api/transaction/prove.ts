@@ -191,6 +191,16 @@ export async function prove(props: {
         };
       }
 
+      // remove private keys from request if they are present
+      if ("collectionContractPrivateKey" in tx.request)
+        tx.request.collectionContractPrivateKey = undefined;
+      if ("tokenContractPrivateKey" in tx.request)
+        tx.request.tokenContractPrivateKey = undefined;
+      if ("adminContractPrivateKey" in tx.request)
+        tx.request.adminContractPrivateKey = undefined;
+      if ("privateMetadata" in tx.request)
+        tx.request.privateMetadata = undefined;
+
       txs.push(tx as any);
     }
 
