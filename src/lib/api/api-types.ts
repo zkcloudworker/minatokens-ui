@@ -10,6 +10,7 @@ export type ApiName =
   | "transaction:prove"
   | "transaction:proof"
   | "transaction:status"
+  | "transaction:send"
   | "ipfs:json"
   | "ipfs:image"
   | "arweave:json"
