@@ -46,12 +46,13 @@ export async function launchNftCollection(props: {
     url = chain === "mainnet"
       ? "https://minanft.io"
       : `https://${chain}.minanft.io`,
-    collectionName,
   } = params;
   if (DEBUG) console.log("Deploying token", params);
   console.log("chain", chain);
   try {
     await initBlockchain();
+    params.symbol = symbol;
+    params.url = url;
 
     if (params.nonce && typeof params.nonce !== "number") {
       return {
@@ -171,7 +172,7 @@ export async function launchNftCollection(props: {
     const fee = 100_000_000;
     params.memo = params.memo
       ? params.memo.substring(0, 30)
-      : `${collectionName} ${symbol} collection launch`.substring(0, 30);
+      : `${params.collectionName} ${symbol} collection launch`.substring(0, 30);
     // const developerFee = params.developerFee
     //   ? UInt64.from(params.developerFee)
     //   : undefined;
@@ -225,13 +226,20 @@ export async function launchNftCollection(props: {
     params.masterNFT.addressPrivateKey = params.collectionContractPrivateKey;
 
     console.log("nonce:", params.nonce);
-    const { tx, request, storage, metadataRoot, privateMetadata } =
-      await buildNftCollectionLaunchTransaction({
-        chain,
-        args: params,
-        provingKey: WALLET,
-        provingFee: LAUNCH_FEE,
-      });
+    const {
+      tx,
+      request,
+      storage,
+      metadataRoot,
+      privateMetadata,
+      collectionName,
+      nftName,
+    } = await buildNftCollectionLaunchTransaction({
+      chain,
+      args: params,
+      provingKey: WALLET,
+      provingFee: LAUNCH_FEE,
+    });
 
     const signers: string[] = [
       params.collectionContractPrivateKey,
@@ -250,8 +258,15 @@ export async function launchNftCollection(props: {
         request: {
           ...(request as any),
           txType: "nft:launch",
+          masterNFT: {
+            ...(request as any).masterNFT,
+            metadata: metadataRoot,
+            storage,
+          },
         },
         symbol,
+        collectionName: params.collectionName,
+        nftName,
         metadataRoot,
         privateMetadata,
         storage,
