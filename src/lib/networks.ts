@@ -60,10 +60,10 @@ export const Devnet: MinaNetworkParams = {
 export const Zeko: MinaNetworkParams = {
   mina: ["https://devnet.zeko.io/graphql"],
   archive: ["https://devnet.zeko.io/graphql"],
-  explorerAccountUrl: "https://zekoscan.io/devnet/account/",
-  explorerTransactionUrl: "https://zekoscan.io/devnet/tx/",
+  explorerAccountUrl: "https://zekoscan.io/testnet/account/",
+  explorerTransactionUrl: "https://zekoscan.io/testnet/tx/",
   chain: "zeko",
   chainId: "zeko:testnet",
-  explorerTokenUrl: "https://zekoscan.io/devnet/token/",
+  explorerTokenUrl: "https://zekoscan.io/testnet/token/",
   launchpadUrl: "https://zekotokens.com",
 };
