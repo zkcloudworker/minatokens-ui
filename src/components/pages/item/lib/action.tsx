@@ -39,6 +39,7 @@ import { waitForProveJob } from "../../../launch/lib/mina-tx";
 import { log } from "@/lib/log";
 import { AccountBalance, getBalances } from "@/lib/api/info/token-info";
 const chain = getChain();
+const chainId = getChainId();
 const DEBUG = debug();
 
 interface UpdateRequest {
@@ -244,10 +245,22 @@ export async function tokenAction(params: {
       keepOnTop: true,
     });
     let walletInfo = await getWalletInfo();
-    if (!walletInfo.address) {
+    if (!walletInfo.address || walletInfo.network !== chainId) {
       await connectWallet();
       walletInfo = await getWalletInfo();
     }
+    if (!walletInfo.address || walletInfo.network !== chainId) {
+      updateTimelineItem({
+        groupId: "mint",
+        update: {
+          lineId: "network",
+          content: `Your wallet is not connected to ${chainId}, please connect to ${chainId}`,
+          status: "error",
+        },
+      });
+      return;
+    }
+
     if (DEBUG) console.log("launchToken: Wallet Info:", walletInfo);
     const senderAddress = walletInfo.address;
     if (DEBUG) console.log("senderAddress", senderAddress);
@@ -606,7 +619,7 @@ export async function tokenAction(params: {
       });
     }, 250); // Fire confetti every 250 milliseconds
     await stopProcessUpdateRequests();
-  } catch (error) {
+  } catch (error: any) {
     log.error(`tokenAction catch: ${tab}`, { error });
     addLog({
       groupId: "error",
@@ -614,8 +627,8 @@ export async function tokenAction(params: {
       title: `Error ${tab}ing token`,
       lines: [
         {
-          lineId: "error",
-          content: String(error),
+          lineId: "catch",
+          content: String(error.message ?? "Unknown error"),
           status: "error",
         },
       ],

@@ -10,7 +10,7 @@ import {
   getChainId,
   getLaunchpadUrl,
 } from "@/lib/chain";
-import { getWalletInfo } from "@/lib/wallet";
+import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
 import { sleep } from "@/lib/sleep";
@@ -42,6 +42,7 @@ import { TokenMintTransactionParams } from "@silvana-one/api";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
 const chain = getChain();
+const chainId = getChainId();
 const DEBUG = debug();
 
 interface UpdateRequest {
@@ -229,6 +230,41 @@ export async function launchToken(params: {
 
     if (DEBUG) console.log("launchToken: launching token:", data);
     const walletInfo = await getWalletInfo();
+    let address = walletInfo.address;
+    if (walletInfo.network !== chainId) {
+      updateTimelineItem({
+        groupId: "verify",
+        update: {
+          lineId: "network",
+          content: `Your wallet is connected to wrong network, please change the network to ${chainId}`,
+          status: "waiting",
+        },
+      });
+      const connectResult = await connectWallet();
+      if (connectResult.success && connectResult.network === chainId) {
+        address = connectResult.address;
+        updateTimelineItem({
+          groupId: "verify",
+          update: {
+            lineId: "network",
+            content: `Your wallet is connected to correct network ${chainId}`,
+            status: "success",
+          },
+        });
+      } else {
+        if (walletInfo.network !== chainId) {
+          updateTimelineItem({
+            groupId: "verify",
+            update: {
+              lineId: "network",
+              content: `Your wallet is connected to wrong network, should be ${chainId}`,
+              status: "error",
+            },
+          });
+          return;
+        }
+      }
+    }
     if (DEBUG) console.log("launchToken: Wallet Info:", walletInfo);
     const systemInfo = await getSystemInfo();
     if (DEBUG) console.log("launchToken: System Info:", systemInfo);
@@ -249,7 +285,7 @@ export async function launchToken(params: {
       log.error("launchToken: admin address is not set", { adminPublicKey });
       return;
     }
-    if (adminPublicKey !== walletInfo.address) {
+    if (adminPublicKey !== address) {
       updateTimelineItem({
         groupId: "verify",
         update: {

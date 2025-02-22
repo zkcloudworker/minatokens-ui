@@ -329,14 +329,14 @@ export async function deployToken(params: {
       success: true,
       jobId,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in deployToken", error);
     log.error("deployToken: Error while deploying token", { error });
     updateTimelineItem({
       groupId,
       update: {
         lineId: "error",
-        content: String(error),
+        content: String(error.message ?? "Unknown error"),
         status: "error",
       },
     });
