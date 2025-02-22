@@ -313,20 +313,24 @@ export async function apiTokenTransaction(params: {
       bidAddress,
       to,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in mintToken", error);
     updateTimelineItem({
       groupId,
       update: {
-        lineId: "error",
-        content: String(error) ?? `Error while ${action}ing token`,
+        lineId: "error-api-catch",
+        content: error?.message
+          ? String(error?.message)
+          : `Error while ${action}ing token`,
         status: "error",
       },
     });
     log.error("tokenTransaction: Error while minting token", { error });
     return {
       success: false,
-      error: String(error) ?? `Error while ${action}ing token`,
+      error: error?.message
+        ? String(error?.message)
+        : `Error while ${action}ing token`,
     };
   }
 }
