@@ -458,6 +458,7 @@ class NFTData extends Struct({
       return undefined;
     }
     const nftData: NftInfo = {
+      contractType: "nft",
       type: "nft",
       tokenAddress: address.toBase58(),
       collectionName: params.collectionName,
@@ -573,6 +574,7 @@ async function getCollectionData(params: {
       return undefined;
     }
     const collectionData: CollectionInfo = {
+      contractType: "collection",
       collectionName,
       collectionAddress: address.toBase58(),
       symbol,
