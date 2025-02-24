@@ -95,6 +95,10 @@ export async function getNFTState(props: {
       for (const key in nftInfo) {
         if (
           key in nft &&
+          key !== "created" &&
+          key !== "updated" &&
+          key !== "rating" &&
+          key !== "status" &&
           nft[key as keyof typeof nft] !== undefined &&
           nft[key as keyof typeof nft] !== (nftInfo as any)[key]
         ) {
@@ -108,6 +112,7 @@ export async function getNFTState(props: {
           nftInfo,
           updatedKeys,
         });
+        nftInfo.updated = Date.now();
         await algoliaWriteNFT(nftInfo);
       }
     } else {
@@ -124,6 +129,10 @@ export async function getNFTState(props: {
       for (const key in collectionInfo) {
         if (
           key in collection &&
+          key !== "created" &&
+          key !== "updated" &&
+          key !== "rating" &&
+          key !== "status" &&
           collection[key as keyof typeof collection] !== undefined &&
           collection[key as keyof typeof collection] !==
             (collectionInfo as any)[key]
@@ -139,6 +148,7 @@ export async function getNFTState(props: {
           collectionInfo,
           updatedKeys,
         });
+        collectionInfo.updated = Date.now();
         await algoliaWriteCollection(collectionInfo);
       }
     } else {
@@ -594,6 +604,10 @@ async function getCollectionData(params: {
       isPaused: collectionIsPaused,
       masterNFT: nftData,
       chain,
+      status: "created",
+      rating: 100,
+      created: Date.now(),
+      updated: Date.now(),
     };
     return {
       collection: collectionData,
