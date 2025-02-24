@@ -649,20 +649,13 @@ async function getContractData({
     return undefined;
   }
 
-  const uri = account.zkapp?.zkappUri;
-  const symbol = account.tokenSymbol;
-  if (!symbol) {
-    log.error("getContractData: no symbol found", {
-      address: address.toBase58(),
-      tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
-    });
-    return undefined;
-  }
+  const uri = account.zkapp?.zkappUri ?? "";
+  const symbol = account.tokenSymbol ?? "";
 
   return {
     contractVerificationKeyHash,
     contractVersion: Number(contractVersion.toBigint()),
-    uri: uri ?? "",
+    uri,
     symbol,
   };
 }
