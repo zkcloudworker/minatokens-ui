@@ -69,6 +69,10 @@ export async function getNFTState(props: {
       collectionAddress,
     });
     if (!info) {
+      log.error("getNFTState: getNftInfo2: NFT not found", {
+        nftAddress,
+        collectionAddress,
+      });
       return { status: 400, json: { error: "NFT not found" } };
     }
 
