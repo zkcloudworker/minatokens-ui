@@ -141,6 +141,7 @@ const LaunchToken: React.FC = () => {
       setLikes,
       isError,
       getMintStatistics,
+      setIsLaunched,
     });
   };
 

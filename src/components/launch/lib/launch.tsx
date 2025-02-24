@@ -104,6 +104,7 @@ export async function launchToken(params: {
   setTotalSupply: (totalSupply: number) => void;
   setTokenAddress: (tokenAddress: string) => void;
   setLikes: (likes: number) => void;
+  setIsLaunched: (isLaunched: boolean) => void;
 }) {
   const {
     data,
@@ -114,6 +115,7 @@ export async function launchToken(params: {
     setLikes,
     isError,
     getMintStatistics,
+    setIsLaunched,
   } = params;
   const {
     symbol,
@@ -986,6 +988,7 @@ export async function apiTokenTransaction(params: {
 
     const duration = 10 * 1000; // 10 seconds
     const end = Date.now() + duration;
+    setIsLaunched(true);
 
     const interval = setInterval(() => {
       if (Date.now() > end) {
