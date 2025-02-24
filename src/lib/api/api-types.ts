@@ -8,6 +8,7 @@ export type ApiName =
   | "info:token"
   | "info:balance"
   | "info:contract"
+  | "info:nonce"
   | "transaction:prove"
   | "transaction:proof"
   | "transaction:status"

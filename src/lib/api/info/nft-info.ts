@@ -1,5 +1,5 @@
 "use server";
-import { Mina, PublicKey, Bool, TokenId, Struct, UInt8 } from "o1js";
+import { Mina, PublicKey, TokenId, Field } from "o1js";
 import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
 import {
   Collection,
@@ -41,69 +41,6 @@ if (NFT_ALGOLIA_PROJECT === undefined) {
 
 const client = algoliasearch(NFT_ALGOLIA_PROJECT, NFT_ALGOLIA_KEY);
 
-export async function formatBalance(num: number): Promise<string> {
-  const fixed = num.toFixed(2);
-  return fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed;
-}
-
-function formatBalanceInternal(num: number): string {
-  const fixed = num.toFixed(2);
-  return fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed;
-}
-
-// export interface NFTDataSerialized {
-//   type: "nft" | "collection";
-//   tokenAddress: string;
-//   collectionName: string;
-//   collectionAddress: string;
-//   symbol: string;
-//   uri: string;
-//   tokenId: string;
-//   adminAddress: string;
-//   name: string;
-//   image: string;
-//   description?: string;
-//   metadataRoot: string;
-//   storage: string;
-//   metadataVerificationKeyHash: string;
-//   owner: string;
-//   approved?: string;
-//   version: number;
-//   id: string;
-//   canChangeOwnerByProof: boolean;
-//   canTransfer: boolean;
-//   canApprove: boolean;
-//   canChangeMetadata: boolean;
-//   canChangeStorage: boolean;
-//   canChangeName: boolean;
-//   canChangeMetadataVerificationKeyHash: boolean;
-//   canPause: boolean;
-//   isPaused: boolean;
-//   requireOwnerAuthorizationToUpgrade: boolean;
-//   metadata: object;
-//   status: string;
-//   rating: number;
-//   updated: number;
-//   created: number;
-//   chain: string;
-//   price?: number;
-//   likes?: number;
-//   like?: boolean;
-// }
-
-// export interface CollectionDataSerialized extends NFTDataSerialized {
-//   type: "collection";
-//   banner?: string;
-//   creator: string;
-//   adminAddress: string;
-//   baseURL: string;
-//   royaltyFee: number;
-//   transferFee: string;
-//   requireTransferApproval: boolean;
-//   mintingIsLimited: boolean;
-//   collectionIsPaused: boolean;
-// }
-
 export async function getNFTState(props: {
   params: NftRequestParams;
   name: ApiName;
@@ -135,6 +72,73 @@ export async function getNFTState(props: {
       return { status: 400, json: { error: "NFT not found" } };
     }
 
+    const { nft, collection } = info;
+    if (collectionAddress !== collection.collectionAddress) {
+      return {
+        status: 500,
+        json: { error: "Internal error: Collection address mismatch" },
+      };
+    }
+    const nftInfo = (await algoliaGetNFT({
+      collectionAddress,
+      nftAddress: nft.tokenAddress,
+    })) as NftInfo | undefined;
+    if (nftInfo) {
+      // Update nftInfo with any changed values from nft
+      let isUpdated = false;
+      const updatedKeys: string[] = [];
+      for (const key in nftInfo) {
+        if (
+          key in nft &&
+          nft[key as keyof typeof nft] !== undefined &&
+          nft[key as keyof typeof nft] !== (nftInfo as any)[key]
+        ) {
+          (nftInfo as any)[key] = nft[key as keyof typeof nft];
+          isUpdated = true;
+          updatedKeys.push(key);
+        }
+      }
+      if (isUpdated) {
+        log.info("algoliaWriteNFT: Updating NFT", {
+          nftInfo,
+          updatedKeys,
+        });
+        await algoliaWriteNFT(nftInfo);
+      }
+    } else {
+      await algoliaWriteNFT(nft);
+    }
+
+    const collectionInfo = (await algoliaGetNFT({
+      collectionAddress,
+    })) as CollectionInfo | undefined;
+    if (collectionInfo) {
+      // Update collectionInfo with any changed values from collection
+      let isUpdated = false;
+      const updatedKeys: string[] = [];
+      for (const key in collectionInfo) {
+        if (
+          key in collection &&
+          collection[key as keyof typeof collection] !== undefined &&
+          collection[key as keyof typeof collection] !==
+            (collectionInfo as any)[key]
+        ) {
+          (collectionInfo as any)[key] =
+            collection[key as keyof typeof collection];
+          isUpdated = true;
+          updatedKeys.push(key);
+        }
+      }
+      if (isUpdated) {
+        log.info("algoliaWriteCollection: Updating Collection", {
+          collectionInfo,
+          updatedKeys,
+        });
+        await algoliaWriteCollection(collectionInfo);
+      }
+    } else {
+      await algoliaWriteCollection(collection);
+    }
     return {
       status: 200,
       json: info,
@@ -152,15 +156,9 @@ export async function getNFTState(props: {
   }
 }
 
-export async function algoliaWriteNFT(
-  info: NftInfo | CollectionInfo
-): Promise<boolean> {
+export async function algoliaWriteNFT(info: NftInfo): Promise<boolean> {
   try {
-    const objectID =
-      info.collectionAddress +
-      (info.type === "nft" ? "." + info.tokenAddress : "");
-    //console.log("objectID", objectID);
-    console.log("NFT", info.name, indexName, objectID);
+    const objectID = info.collectionAddress + "." + info.tokenAddress;
 
     const data = {
       objectID,
@@ -172,13 +170,40 @@ export async function algoliaWriteNFT(
       body: data,
     });
     if (result.taskID === undefined) {
-      console.error("algoliaWriteNFT: Algolia write result is", result);
+      log.error("algoliaWriteNFT: Algolia write result is", result);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("algoliaWriteNFT error:", { error, info });
+    log.error("algoliaWriteNFT error:", { error, info });
+    return false;
+  }
+}
+
+export async function algoliaWriteCollection(
+  info: CollectionInfo
+): Promise<boolean> {
+  try {
+    const objectID = info.collectionAddress;
+
+    const data = {
+      objectID,
+      ...info,
+    };
+
+    const result = await client.saveObject({
+      indexName,
+      body: data,
+    });
+    if (result.taskID === undefined) {
+      log.error("algoliaWriteCollection: Algolia write result is", result);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    log.error("algoliaWriteCollection error:", { error, info });
     return false;
   }
 }
@@ -196,19 +221,25 @@ export async function algoliaGetNFT(params: {
       objectID,
     });
 
-    if (result.type === "nft") {
+    if (
+      nftAddress &&
+      result.tokenAddress === nftAddress &&
+      result.collectionAddress === collectionAddress
+    ) {
       return result as unknown as NftInfo;
-    } else if (result.type === "collection") {
+    } else if (!nftAddress && result.collectionAddress === collectionAddress) {
       return result as unknown as CollectionInfo;
     } else {
       log.error("algoliaGetNFT: Unknown object type", {
         objectID,
         result,
+        nftAddress,
+        collectionAddress,
       });
       return undefined;
     }
   } catch (error) {
-    console.error("algoliaGetNFT error:", { error, params });
+    log.error("algoliaGetNFT error:", { error, params });
     return undefined;
   }
 }
@@ -230,9 +261,9 @@ async function getNftInfo(params: {
         address: nftAddress ?? collectionAddress,
         collection: collectionAddress,
         collectionName: collectionData.collectionName,
-        symbol: collectionData.symbol,
-        uri: collectionData.uri,
-        adminAddress: collectionData.adminAddress,
+        collectionSymbol: collectionData.symbol,
+        collectionUri: collectionData.uri,
+        collectionBaseURL: collectionData.baseURL,
       })
     : masterNft;
   if (!nft) {
@@ -248,20 +279,36 @@ async function getNFTData(params: {
   address: string;
   collection: string;
   collectionName: string;
-  symbol: string;
-  uri: string;
-  adminAddress: string;
+  collectionSymbol: string;
+  collectionUri: string;
+  collectionBaseURL: string;
 }): Promise<NftInfo | undefined> {
+  const { collectionBaseURL, collectionSymbol, collectionUri } = params;
   try {
     const address = PublicKey.fromBase58(params.address);
     const collection = PublicKey.fromBase58(params.collection);
     const tokenId = TokenId.derive(collection);
-    await fetchMinaAccount({ publicKey: address, tokenId, force: true });
+    await fetchMinaAccount({ publicKey: address, tokenId, force: false });
+    if (!Mina.hasAccount(address)) {
+      log.error("NFT account not found", {
+        nftAddress: address.toBase58(),
+      });
+      return undefined;
+    }
     const nft = new NFT(address, tokenId);
     const name = fieldToString(nft.name.get());
     const metadataRoot = nft.metadata.get().toJSON();
     const storage = nft.storage.get().toString();
     const ipfs = createIpfsURL({ hash: storage });
+    const contractData = await getContractData({
+      address,
+      tokenId,
+    });
+    if (!contractData) {
+      return undefined;
+    }
+    const { contractVerificationKeyHash, contractVersion, uri, symbol } =
+      contractData;
     const response = await fetch(ipfs);
     if (!response.ok) {
       console.log("Failed to fetch metadata from IPFS");
@@ -337,9 +384,11 @@ class NFTData extends Struct({
       tokenAddress: address.toBase58(),
       collectionName: params.collectionName,
       collectionAddress: params.collection,
-      symbol: params.symbol,
-      uri: params.uri,
-      adminAddress: params.adminAddress,
+      collectionBaseURL,
+      collectionSymbol,
+      collectionUri,
+      symbol,
+      uri,
       tokenId: TokenId.toBase58(tokenId),
       name,
       image: metadata.image,
@@ -371,6 +420,8 @@ class NFTData extends Struct({
       created: Date.now(),
       updated: Date.now(),
       chain,
+      contractVerificationKeyHash,
+      contractVersion,
     };
     return nftData;
   } catch (error) {
@@ -391,6 +442,15 @@ async function getCollectionData(params: {
       });
       return undefined;
     }
+
+    const contractData = await getContractData({
+      address,
+    });
+    if (!contractData) {
+      return undefined;
+    }
+    const { contractVerificationKeyHash, contractVersion, uri, symbol } =
+      contractData;
     const collection = new Collection(address);
     const collectionName = fieldToString(collection.collectionName.get());
     const creator = collection.creator.get().toBase58();
@@ -402,27 +462,14 @@ async function getCollectionData(params: {
     const requireTransferApproval = data.requireTransferApproval.toBoolean();
     const mintingIsLimited = data.mintingIsLimited.toBoolean();
     const collectionIsPaused = data.isPaused.toBoolean();
-    const uri = Mina.getAccount(address).zkapp?.zkappUri;
-    if (!uri) {
-      log.error("No uri found in collection", {
-        collectionAddress: params.collection,
-      });
-      return undefined;
-    }
-    const symbol = Mina.getAccount(address).tokenSymbol;
-    if (!symbol) {
-      log.error("No symbol found in collection", {
-        collectionAddress: params.collection,
-      });
-      return undefined;
-    }
+
     const nftData = await getNFTData({
       address: params.collection,
       collection: params.collection,
       collectionName,
-      symbol,
-      uri,
-      adminAddress,
+      collectionSymbol: symbol,
+      collectionUri: uri,
+      collectionBaseURL: baseURL,
     });
     if (!nftData) {
       log.error("Failed to get Master NFT data", {
@@ -430,6 +477,7 @@ async function getCollectionData(params: {
       });
       return undefined;
     }
+    nftData.type = "collection";
     const banner = (nftData.metadata as any).banner;
     if (banner && typeof banner !== "string") {
       log.error("Banner is not a string", {
@@ -438,9 +486,8 @@ async function getCollectionData(params: {
       return undefined;
     }
     const collectionData: CollectionInfo = {
-      ...nftData,
-      type: "collection",
       collectionName,
+      collectionAddress: address.toBase58(),
       symbol,
       uri,
       banner,
@@ -452,6 +499,12 @@ async function getCollectionData(params: {
       requireTransferApproval,
       mintingIsLimited,
       collectionIsPaused,
+      contractVerificationKeyHash,
+      contractVersion,
+      tokenId: "",
+      isPaused: collectionIsPaused,
+      masterNFT: nftData,
+      chain,
     };
     return {
       collection: collectionData,
@@ -464,4 +517,71 @@ async function getCollectionData(params: {
     });
     return undefined;
   }
+}
+
+async function getContractData({
+  address,
+  tokenId,
+}: {
+  address: PublicKey;
+  tokenId?: Field;
+}): Promise<
+  | {
+      contractVerificationKeyHash: string;
+      contractVersion: number;
+      uri: string;
+      symbol: string;
+    }
+  | undefined
+> {
+  if (!Mina.hasAccount(address, tokenId)) {
+    log.error("Contract account not found", {
+      address: address.toBase58(),
+      tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
+    });
+    return undefined;
+  }
+
+  const account = Mina.getAccount(address);
+  const contractVerificationKeyHash =
+    account.zkapp?.verificationKey?.hash.toJSON();
+  if (contractVerificationKeyHash === undefined) {
+    log.error("getContractData: contract verification key hash not found", {
+      address: address.toBase58(),
+      tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
+    });
+    return undefined;
+  }
+  const contractVersion = account.zkapp?.zkappVersion;
+  if (contractVersion === undefined) {
+    log.error("getContractData: contract version not found", {
+      address: address.toBase58(),
+      tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
+    });
+    return undefined;
+  }
+
+  const uri = Mina.getAccount(address).zkapp?.zkappUri;
+  if (!uri) {
+    log.error("getContractData: no uri found", {
+      address: address.toBase58(),
+      tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
+    });
+    return undefined;
+  }
+  const symbol = Mina.getAccount(address).tokenSymbol;
+  if (!symbol) {
+    log.error("getContractData: no symbol found", {
+      address: address.toBase58(),
+      tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
+    });
+    return undefined;
+  }
+
+  return {
+    contractVerificationKeyHash,
+    contractVersion: Number(contractVersion.toBigint()),
+    uri,
+    symbol,
+  };
 }

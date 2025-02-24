@@ -207,6 +207,14 @@ export async function deployToken(props: {
     }
 
     params.nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
+    if (params.nonce === undefined) {
+      return {
+        status: 400,
+        json: {
+          error: "Failed to get account nonce for sender " + sender.toBase58(),
+        },
+      };
+    }
     params.tokenContractPrivateKey =
       params.tokenContractPrivateKey ?? PrivateKey.random().toBase58();
     params.tokenAddress =

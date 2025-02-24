@@ -830,6 +830,17 @@ export async function launchToken(params: {
       });
 
       let nonce = await getAccountNonce(adminPublicKey);
+      if (nonce === undefined) {
+        updateTimelineItem({
+          groupId: "mint",
+          update: {
+            lineId: "error",
+            content: `Error getting account nonce for ${adminPublicKey}`,
+            status: "error",
+          },
+        });
+        return;
+      }
       let mintPromises: Promise<boolean>[] = [];
       let supply = 0;
 

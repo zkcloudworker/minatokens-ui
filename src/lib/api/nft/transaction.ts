@@ -355,6 +355,14 @@ export async function nftTransaction(props: {
       "nonce" in txParams && txParams.nonce
         ? txParams.nonce
         : await getAccountNonce(sender.toBase58());
+    if (txParams.nonce === undefined) {
+      return {
+        status: 400,
+        json: {
+          error: "Failed to get account nonce for sender " + sender.toBase58(),
+        },
+      };
+    }
     txParams.txType = txType as unknown as "nft:mint";
     txParams.nftMintParams.addressPrivateKey =
       txParams.nftMintParams.addressPrivateKey ??
