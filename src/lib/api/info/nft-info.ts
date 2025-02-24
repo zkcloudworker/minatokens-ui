@@ -63,11 +63,12 @@ export async function getNFTState(props: {
         json: { error: "Invalid NFT address" },
       };
     }
-
+    log.info("getNFTState: getNftInfo2 before info", { params });
     const info = await getNftInfo({
       nftAddress,
       collectionAddress,
     });
+    log.info("getNFTState: getNftInfo2 info", { info, params });
     if (!info) {
       log.error("getNFTState: getNftInfo2: NFT not found", {
         nftAddress,
@@ -257,6 +258,7 @@ async function getNftInfo(params: {
   const collection = await getCollectionData({
     collection: collectionAddress,
   });
+  log.info("getNftInfo: getCollectionData", { collection });
   if (!collection) {
     log.error("getNftInfo: Collection not found", {
       collectionAddress,
@@ -275,6 +277,7 @@ async function getNftInfo(params: {
         collectionBaseURL: collectionData.baseURL,
       })
     : masterNft;
+  log.info("getNftInfo: getNFTData", { nft });
   if (!nft) {
     log.error("getNftInfo: getNFTData: NFT not found", {
       nftAddress,
