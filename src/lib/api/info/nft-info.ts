@@ -289,9 +289,11 @@ async function getNFTData(params: {
     const collection = PublicKey.fromBase58(params.collection);
     const tokenId = TokenId.derive(collection);
     await fetchMinaAccount({ publicKey: address, tokenId, force: false });
-    if (!Mina.hasAccount(address)) {
+    if (!Mina.hasAccount(address, tokenId)) {
       log.error("NFT account not found", {
         nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
       });
       return undefined;
     }
