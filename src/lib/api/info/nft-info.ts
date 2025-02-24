@@ -249,10 +249,15 @@ async function getNftInfo(params: {
   collectionAddress: string;
 }): Promise<{ nft: NftInfo; collection: CollectionInfo } | undefined> {
   const { nftAddress, collectionAddress } = params;
+  log.info("getNftInfo", { nftAddress, collectionAddress });
   const collection = await getCollectionData({
     collection: collectionAddress,
   });
   if (!collection) {
+    log.error("getNftInfo: Collection not found", {
+      collectionAddress,
+      nftAddress,
+    });
     return undefined;
   }
   const { collection: collectionData, masterNft } = collection;
@@ -267,6 +272,10 @@ async function getNftInfo(params: {
       })
     : masterNft;
   if (!nft) {
+    log.error("getNftInfo: getNFTData: NFT not found", {
+      nftAddress,
+      collectionAddress,
+    });
     return undefined;
   }
   return {
@@ -307,18 +316,33 @@ async function getNFTData(params: {
       tokenId,
     });
     if (!contractData) {
+      log.error("getNftInfo: getNFTData: Contract data not found", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+      });
       return undefined;
     }
     const { contractVerificationKeyHash, contractVersion, uri, symbol } =
       contractData;
     const response = await fetch(ipfs);
     if (!response.ok) {
-      console.log("Failed to fetch metadata from IPFS");
+      log.error("getNftInfo: getNFTData: Failed to fetch metadata from IPFS", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     const metadata = await response.json();
     if (!metadata) {
-      console.log("Failed to parse metadata from IPFS");
+      log.error("getNftInfo: getNFTData: Failed to parse metadata from IPFS", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     const metadataVerificationKeyHash = nft.metadataVerificationKeyHash
@@ -345,40 +369,85 @@ class NFTData extends Struct({
 }) 
   */
     if (!metadata.image) {
-      console.error("No image found in metadata");
+      log.error("getNftInfo: getNFTData: No image found in metadata", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     if (typeof metadata.image !== "string") {
-      console.error("Image url is not a string");
+      log.error("getNftInfo: getNFTData: Image url is not a string", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     if (!metadata.metadataRoot) {
-      console.error("No metadataRoot found in metadata");
+      log.error("getNftInfo: getNFTData: No metadataRoot found in metadata", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     if (typeof metadata.metadataRoot !== "string") {
-      console.error("Metadata root is not a string");
+      log.error("getNftInfo: getNFTData: Metadata root is not a string", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     if (metadataRoot !== metadata.metadataRoot) {
-      console.error("Metadata root does not match");
+      log.error("getNftInfo: getNFTData: Metadata root does not match", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     if (!metadata.name) {
-      console.error("No name found in metadata");
+      log.error("getNftInfo: getNFTData: No name found in metadata", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     if (typeof metadata.name !== "string") {
-      console.error("Name is not a string");
+      log.error("getNftInfo: getNFTData: Name is not a string", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     if (name !== metadata.name) {
-      console.error("Name does not match");
+      log.error("getNftInfo: getNFTData: Name does not match", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
 
     if (metadata.description && typeof metadata.description !== "string") {
-      console.error("Description is not a string");
+      log.error("getNftInfo: getNFTData: Description is not a string", {
+        nftAddress: address.toBase58(),
+        collectionAddress: params.collection,
+        tokenId: TokenId.toBase58(tokenId),
+        storage,
+      });
       return undefined;
     }
     const nftData: NftInfo = {
@@ -427,7 +496,10 @@ class NFTData extends Struct({
     };
     return nftData;
   } catch (error) {
-    console.log("Failed to get NFT data", error);
+    log.error("getNftInfo: getNFTData: Failed to get NFT data", {
+      error,
+      params,
+    });
     return undefined;
   }
 }
@@ -449,6 +521,12 @@ async function getCollectionData(params: {
       address,
     });
     if (!contractData) {
+      log.error(
+        "getCollectionData: getContractData: Failed to get contract data",
+        {
+          collectionAddress: params.collection,
+        }
+      );
       return undefined;
     }
     const { contractVerificationKeyHash, contractVersion, uri, symbol } =
