@@ -6,6 +6,8 @@ import {
   TokenInfoRequestParams,
   BalanceRequestParams,
   BalanceResponse,
+  NonceRequestParams,
+  NonceResponse,
 } from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import {
@@ -13,6 +15,7 @@ import {
   FungibleTokenBidContract,
 } from "@silvana-one/token";
 import { checkAddress } from "../utils/address";
+import { getAccountNonce } from "@/lib/nonce";
 import {
   updateTokenInfo,
   getTokenState as getTokenStateInternal,
@@ -128,6 +131,43 @@ export async function balance(props: {
     return {
       status: 500,
       json: { error: "Failed to get balance" },
+    };
+  }
+}
+
+export async function nonce(props: {
+  params: NonceRequestParams;
+  name: ApiName;
+  apiKeyAddress: string;
+}): Promise<ApiResponse<NonceResponse>> {
+  const { params, name, apiKeyAddress } = props;
+  const { address } = params;
+
+  try {
+    if (!address || !checkAddress(address)) {
+      return {
+        status: 400,
+        json: { error: "Invalid address" },
+      };
+    }
+
+    const nonce = await getAccountNonce(address);
+    if (nonce) {
+      return {
+        status: 200,
+        json: { nonce, address, hasAccount: true },
+      };
+    } else {
+      return {
+        status: 200,
+        json: { nonce: undefined, address, hasAccount: false },
+      };
+    }
+  } catch (error) {
+    log.error("nonce catch", { params, error });
+    return {
+      status: 500,
+      json: { error: "Failed to get nonce" },
     };
   }
 }

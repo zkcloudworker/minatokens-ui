@@ -130,6 +130,14 @@ export async function airdropTransaction(props: {
 
   const symbol = symbolResponse.json.tokenSymbol;
   let nonce = params.nonce ?? (await getAccountNonce(sender.toBase58()));
+  if (nonce === undefined) {
+    return {
+      status: 400,
+      json: {
+        error: "Failed to get account nonce for sender " + sender.toBase58(),
+      },
+    };
+  }
   if (DEBUG) console.log("nonce:", nonce);
   const txs: TokenTransaction[] = [];
   for (const recipient of params.recipients) {
@@ -568,6 +576,14 @@ export async function tokenTransaction(props: {
       "nonce" in txParams && txParams.nonce
         ? txParams.nonce
         : await getAccountNonce(sender.toBase58());
+    if (txParams.nonce === undefined) {
+      return {
+        status: 400,
+        json: {
+          error: "Failed to get account nonce for sender " + sender.toBase58(),
+        },
+      };
+    }
     txParams.txType = txType;
     if ("slippage" in txParams && txParams.slippage === undefined) {
       txParams.slippage = 50;

@@ -104,6 +104,7 @@ export async function launchToken(params: {
   setTotalSupply: (totalSupply: number) => void;
   setTokenAddress: (tokenAddress: string) => void;
   setLikes: (likes: number) => void;
+  setIsLaunched: (isLaunched: boolean) => void;
 }) {
   const {
     data,
@@ -114,6 +115,7 @@ export async function launchToken(params: {
     setLikes,
     isError,
     getMintStatistics,
+    setIsLaunched,
   } = params;
   const {
     symbol,
@@ -828,6 +830,17 @@ export async function launchToken(params: {
       });
 
       let nonce = await getAccountNonce(adminPublicKey);
+      if (nonce === undefined) {
+        updateTimelineItem({
+          groupId: "mint",
+          update: {
+            lineId: "error",
+            content: `Error getting account nonce for ${adminPublicKey}`,
+            status: "error",
+          },
+        });
+        return;
+      }
       let mintPromises: Promise<boolean>[] = [];
       let supply = 0;
 
@@ -986,6 +999,7 @@ export async function apiTokenTransaction(params: {
 
     const duration = 10 * 1000; // 10 seconds
     const end = Date.now() + duration;
+    setIsLaunched(true);
 
     const interval = setInterval(() => {
       if (Date.now() > end) {

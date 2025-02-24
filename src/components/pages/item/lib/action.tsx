@@ -379,6 +379,19 @@ export async function tokenAction(params: {
     // });
 
     let nonce = await getAccountNonce(senderAddress);
+    if (nonce === undefined) {
+      updateTimelineItem({
+        groupId: "mint",
+        update: {
+          lineId: "error",
+          content: `Error getting account nonce for ${senderAddress}`,
+          status: "error",
+        },
+      });
+      await stopProcessUpdateRequests();
+      await onBalanceUpdate();
+      return;
+    }
     let txPromises: Promise<boolean>[] = [];
 
     for (let i = 0; i < txs.length; i++) {

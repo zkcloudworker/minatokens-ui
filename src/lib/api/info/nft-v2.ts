@@ -13,7 +13,7 @@ import {
 } from "o1js";
 import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
 import { checkAddress } from "../utils/address";
-import { NftRequestAnswer, NftRequestParams } from "@silvana-one/api";
+import { NftV2RequestAnswer, NftRequestParams } from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import { algoliasearch } from "algoliasearch";
 import { getChain } from "@/lib/chain";
@@ -28,22 +28,30 @@ export async function getNFTState(props: {
   params: NftRequestParams;
   name: ApiName;
   apiKeyAddress: string;
-}): Promise<ApiResponse<NftRequestAnswer>> {
+}): Promise<ApiResponse<NftV2RequestAnswer>> {
   const { params, name, apiKeyAddress } = props;
   console.log("getNFTState", params);
-  const { contractAddress, nftAddress } = params;
+  const { collectionAddress, nftAddress } = params;
   if (chain === "zeko") {
     return { status: 400, json: { error: "Zeko is not supported" } };
   }
   if (
-    contractAddress !==
+    collectionAddress !==
     "B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT"
   ) {
     return {
       status: 400,
       json: {
         error:
-          "Invalid contract address, must be B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT",
+          "Invalid collection address, must be B62qs2NthDuxAT94tTFg6MtuaP1gaBxTZyNv9D3uQiQciy1VsaimNFT",
+      },
+    };
+  }
+  if (!nftAddress) {
+    return {
+      status: 400,
+      json: {
+        error: "NFT address is required for MinaNFT V2",
       },
     };
   }
@@ -65,7 +73,7 @@ export async function getNFTState(props: {
   }
   try {
     await initBlockchain();
-    const contractPublicKey = PublicKey.fromBase58(contractAddress);
+    const contractPublicKey = PublicKey.fromBase58(collectionAddress);
     const nftPublicKey = PublicKey.fromBase58(nftAddress);
     const tokenId = TokenId.derive(contractPublicKey);
 
@@ -115,7 +123,11 @@ export async function getNFTState(props: {
     const name = Encoding.stringFromFields([state.name]);
     const data = NFTparams.unpack(state.data);
     const ipfs = state.storage.toIpfsHash();
-    const algolia = await algoliaGetNFT({ contractAddress, name, chain });
+    const algolia = await algoliaGetNFT({
+      contractAddress: collectionAddress,
+      name,
+      chain,
+    });
     const metadata = await loadFromIPFS(ipfs);
     if (!metadata.success) {
       console.error("getNFTState: failed to load metadata from IPFS", {
@@ -131,8 +143,8 @@ export async function getNFTState(props: {
         },
       };
     }
-    const tokenState: NftRequestAnswer = {
-      contractAddress,
+    const tokenState: NftV2RequestAnswer = {
+      contractAddress: collectionAddress,
       nftAddress,
       tokenId: TokenId.toBase58(tokenId),
       tokenSymbol,
