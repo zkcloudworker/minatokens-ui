@@ -647,13 +647,6 @@ async function getContractData({
   }
 
   const uri = account.zkapp?.zkappUri;
-  if (!uri) {
-    log.error("getContractData: no uri found", {
-      address: address.toBase58(),
-      tokenId: tokenId ? TokenId.toBase58(tokenId) : undefined,
-    });
-    return undefined;
-  }
   const symbol = account.tokenSymbol;
   if (!symbol) {
     log.error("getContractData: no symbol found", {
@@ -666,7 +659,7 @@ async function getContractData({
   return {
     contractVerificationKeyHash,
     contractVersion: Number(contractVersion.toBigint()),
-    uri,
+    uri: uri ?? "",
     symbol,
   };
 }
