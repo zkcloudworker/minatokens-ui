@@ -614,6 +614,7 @@ async function getContractData({
     }
   | undefined
 > {
+  await fetchMinaAccount({ publicKey: address, tokenId, force: false });
   if (!Mina.hasAccount(address, tokenId)) {
     log.error("Contract account not found", {
       address: address.toBase58(),
@@ -622,7 +623,7 @@ async function getContractData({
     return undefined;
   }
 
-  const account = Mina.getAccount(address);
+  const account = Mina.getAccount(address, tokenId);
   const contractVerificationKeyHash =
     account.zkapp?.verificationKey?.hash.toJSON();
   if (contractVerificationKeyHash === undefined) {
@@ -641,7 +642,7 @@ async function getContractData({
     return undefined;
   }
 
-  const uri = Mina.getAccount(address).zkapp?.zkappUri;
+  const uri = account.zkapp?.zkappUri;
   if (!uri) {
     log.error("getContractData: no uri found", {
       address: address.toBase58(),
@@ -649,7 +650,7 @@ async function getContractData({
     });
     return undefined;
   }
-  const symbol = Mina.getAccount(address).tokenSymbol;
+  const symbol = account.tokenSymbol;
   if (!symbol) {
     log.error("getContractData: no symbol found", {
       address: address.toBase58(),
