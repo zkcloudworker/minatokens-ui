@@ -3,6 +3,7 @@ import { TokenTransactionType, NftTransactionType } from "@silvana-one/api";
 export type ApiName =
   | TokenTransactionType
   | NftTransactionType
+  | "info:nft"
   | "info:nft-v2"
   | "info:token"
   | "info:balance"
