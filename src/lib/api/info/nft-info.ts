@@ -554,7 +554,7 @@ async function getCollectionData(params: {
     const creator = collection.creator.get().toBase58();
     const adminAddress = collection.admin.get().toBase58();
     const data = CollectionData.unpack(collection.packedData.get());
-    const baseURL = collection.baseURL.get().toString();
+    const baseURL = fieldToString(collection.baseURL.get());
     const royaltyFee = Number(data.royaltyFee.toBigint());
     const transferFee = data.transferFee.toBigInt().toString();
     const requireTransferApproval = data.requireTransferApproval.toBoolean();
