@@ -7,6 +7,7 @@ import {
 import { PublicKey, UInt64, Mina, TokenId, PrivateKey } from "o1js";
 import {
   buildNftTransaction,
+  buildNftMintTransaction,
   LAUNCH_FEE,
   TRANSACTION_FEE,
 } from "@silvana-one/abi";
@@ -44,7 +45,7 @@ export async function nftTransaction(props: {
 }): Promise<ApiResponse<NftTransaction>> {
   try {
     const { name, params: txParams, apiKeyAddress } = props;
-    const txType = name as Exclude<NftTransactionType, "nft:launch">;
+    const txType = txParams.txType;
     if (DEBUG) console.log("NFT transaction", name, txParams);
     if (DEBUG) console.log("chain", chain);
     await initBlockchain();
@@ -64,16 +65,16 @@ export async function nftTransaction(props: {
       };
     }
 
-    if (
-      "price" in txParams &&
-      txParams.price &&
-      typeof txParams.price !== "number"
-    ) {
-      return {
-        status: 400,
-        json: { error: "Invalid price" },
-      };
-    }
+    // if (
+    //   "price" in txParams &&
+    //   txParams.price &&
+    //   typeof txParams.price !== "number"
+    // ) {
+    //   return {
+    //     status: 400,
+    //     json: { error: "Invalid price" },
+    //   };
+    // }
 
     // if (
     //   (txType === "token:offer:create" || txType === "token:bid:create") &&
@@ -102,6 +103,16 @@ export async function nftTransaction(props: {
       return {
         status: 400,
         json: { error: "Invalid collection address" },
+      };
+    }
+
+    if (
+      txType !== "nft:mint" &&
+      (!txParams.nftAddress || !checkAddress(txParams.nftAddress))
+    ) {
+      return {
+        status: 400,
+        json: { error: "Invalid NFT address" },
       };
     }
 
@@ -236,6 +247,9 @@ export async function nftTransaction(props: {
       {
         "nft:mint": "mint",
         "nft:transfer": "transfer",
+        "nft:approve": "approve",
+        "nft:buy": "buy",
+        "nft:sell": "sell",
       }[txType ?? ""] || "process";
 
     const memo = txParams.memo ?? `${action} ${symbol}`.substring(0, 30);
@@ -363,15 +377,16 @@ export async function nftTransaction(props: {
         },
       };
     }
-    txParams.txType = txType as unknown as "nft:mint";
-    txParams.nftMintParams.addressPrivateKey =
-      txParams.nftMintParams.addressPrivateKey ??
-      PrivateKey.random().toBase58();
-    txParams.nftMintParams.address =
-      txParams.nftMintParams.address ??
-      PrivateKey.fromBase58(txParams.nftMintParams.addressPrivateKey)
-        .toPublicKey()
-        .toBase58();
+    if (txType === "nft:mint") {
+      txParams.nftMintParams.addressPrivateKey =
+        txParams.nftMintParams.addressPrivateKey ??
+        PrivateKey.random().toBase58();
+      txParams.nftMintParams.address =
+        txParams.nftMintParams.address ??
+        PrivateKey.fromBase58(txParams.nftMintParams.addressPrivateKey)
+          .toPublicKey()
+          .toBase58();
+    }
 
     if (DEBUG) console.log("building tx", txParams);
     const {
@@ -382,13 +397,22 @@ export async function nftTransaction(props: {
       storage,
       collectionName,
       nftName,
-    } = await buildNftTransaction({
-      chain,
-      args: txParams,
-      developerAddress: apiKeyAddress,
-      provingKey: wallet.toBase58(),
-      provingFee: FEE,
-    });
+    } =
+      txType === "nft:mint"
+        ? await buildNftMintTransaction({
+            chain,
+            args: txParams,
+            developerAddress: apiKeyAddress,
+            provingKey: wallet.toBase58(),
+            provingFee: FEE,
+          })
+        : await buildNftTransaction({
+            chain,
+            args: txParams,
+            developerAddress: apiKeyAddress,
+            provingKey: wallet.toBase58(),
+            provingFee: FEE,
+          });
     const signers: string[] = [];
     // if (txType === "token:offer:create" && offerPrivateKey)
     //   signers.push(offerPrivateKey);
@@ -406,6 +430,14 @@ export async function nftTransaction(props: {
       tx.sign(signers.map((s) => PrivateKey.fromBase58(s)));
     const payloads = createTransactionPayloads(tx);
 
+    if (txType === "nft:mint") {
+      (request as NftMintTransactionParams).nftMintParams = {
+        ...txParams.nftMintParams,
+        storage,
+        metadata: metadataRoot,
+      };
+    }
+
     return {
       status: 200,
       json: {
@@ -416,11 +448,6 @@ export async function nftTransaction(props: {
         request: {
           ...request,
           txType,
-          nftMintParams: {
-            ...txParams.nftMintParams,
-            storage,
-            metadata: metadataRoot,
-          },
         } as NftTransaction["request"],
         metadataRoot,
         privateMetadata,
