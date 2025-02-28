@@ -21,6 +21,7 @@ import {
   NftMintTransactionParams,
   NftTransactionType,
   NftTransactionParams,
+  NftSellTransactionParams,
 } from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import { checkAddress, checkPrivateKey } from "../utils/address";
@@ -65,16 +66,18 @@ export async function nftTransaction(props: {
       };
     }
 
-    // if (
-    //   "price" in txParams &&
-    //   txParams.price &&
-    //   typeof txParams.price !== "number"
-    // ) {
-    //   return {
-    //     status: 400,
-    //     json: { error: "Invalid price" },
-    //   };
-    // }
+    if (
+      "nftSellParams" in txParams &&
+      txParams.nftSellParams &&
+      (!txParams.nftSellParams.price ||
+        typeof txParams.nftSellParams.price !== "number" ||
+        txParams.nftSellParams.price <= 0)
+    ) {
+      return {
+        status: 400,
+        json: { error: "Invalid price" },
+      };
+    }
 
     // if (
     //   (txType === "token:offer:create" || txType === "token:bid:create") &&
@@ -131,6 +134,19 @@ export async function nftTransaction(props: {
       return {
         status: 400,
         json: { error: "Invalid sender private key" },
+      };
+    }
+
+    if (
+      "nftSellParams" in txParams &&
+      txParams.nftSellParams &&
+      txParams.nftSellParams.offerPrivateKey &&
+      (typeof txParams.nftSellParams.offerPrivateKey !== "string" ||
+        !checkPrivateKey(txParams.nftSellParams.offerPrivateKey))
+    ) {
+      return {
+        status: 400,
+        json: { error: "Invalid offer contract private key" },
       };
     }
 
@@ -302,37 +318,42 @@ export async function nftTransaction(props: {
         },
       };
     }
-    // let offerPrivateKey: string | undefined =
-    //   "offerPrivateKey" in txParams ? txParams.offerPrivateKey : undefined;
-    // let offerAddress: string | undefined =
-    //   "offerAddress" in txParams ? txParams.offerAddress : undefined;
-    // if (txType === "token:offer:create") {
-    //   if (!offerPrivateKey) {
-    //     offerPrivateKey = PrivateKey.random().toBase58();
-    //     offerAddress = PrivateKey.fromBase58(offerPrivateKey)
-    //       .toPublicKey()
-    //       .toBase58();
-    //   }
-    //   (txParams as TokenOfferTransactionParams).offerPrivateKey =
-    //     offerPrivateKey;
-    //   (txParams as TokenOfferTransactionParams).offerAddress = offerAddress;
+    let offerPrivateKey: string | undefined =
+      "nftSellParams" in txParams && txParams.nftSellParams
+        ? txParams.nftSellParams.offerPrivateKey
+        : undefined;
+    let offerAddress: string | undefined =
+      "nftSellParams" in txParams && txParams.nftSellParams
+        ? txParams.nftSellParams.offerAddress
+        : undefined;
+    if (txType === "nft:sell") {
+      if (!offerPrivateKey) {
+        offerPrivateKey = PrivateKey.random().toBase58();
+        offerAddress = PrivateKey.fromBase58(offerPrivateKey)
+          .toPublicKey()
+          .toBase58();
+      }
+      (txParams as NftSellTransactionParams).nftSellParams.offerPrivateKey =
+        offerPrivateKey;
+      (txParams as NftSellTransactionParams).nftSellParams.offerAddress =
+        offerAddress;
 
-    //   if (!offerAddress) {
-    //     return {
-    //       status: 400,
-    //       json: { error: "Invalid offer address" },
-    //     };
-    //   }
+      if (!offerAddress) {
+        return {
+          status: 400,
+          json: { error: "Invalid offer contract address" },
+        };
+      }
 
-    //   if (
-    //     PrivateKey.fromBase58(offerPrivateKey).toPublicKey().toBase58() !==
-    //     PublicKey.fromBase58(offerAddress).toBase58()
-    //   )
-    //     return {
-    //       status: 400,
-    //       json: { error: "Invalid offer private key" },
-    //     };
-    // }
+      if (
+        PrivateKey.fromBase58(offerPrivateKey).toPublicKey().toBase58() !==
+        PublicKey.fromBase58(offerAddress).toBase58()
+      )
+        return {
+          status: 400,
+          json: { error: "Invalid offer contract private key" },
+        };
+    }
 
     // let bidPrivateKey: string | undefined =
     //   "bidPrivateKey" in txParams ? txParams.bidPrivateKey : undefined;
@@ -414,8 +435,7 @@ export async function nftTransaction(props: {
             provingFee: FEE,
           });
     const signers: string[] = [];
-    // if (txType === "token:offer:create" && offerPrivateKey)
-    //   signers.push(offerPrivateKey);
+    if (txType === "nft:sell" && offerPrivateKey) signers.push(offerPrivateKey);
 
     // if (txType === "token:bid:create" && bidPrivateKey)
     //   signers.push(bidPrivateKey);
