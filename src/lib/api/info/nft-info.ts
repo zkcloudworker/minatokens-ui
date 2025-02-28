@@ -372,7 +372,7 @@ async function getNFTData(params: {
 
     if (approved) {
       await fetchMinaAccount({ publicKey: data.approved, force: false });
-      if (Mina.hasAccount(data.approved, tokenId)) {
+      if (Mina.hasAccount(data.approved)) {
         const account = Mina.getAccount(data.approved);
         const contractVerificationKeyHash =
           account.zkapp?.verificationKey?.hash.toJSON();
