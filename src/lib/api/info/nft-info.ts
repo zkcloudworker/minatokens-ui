@@ -94,14 +94,12 @@ export async function getNFTState(props: {
       // Update nftInfo with any changed values from nft
       let isUpdated = false;
       const updatedKeys: string[] = [];
-      for (const key in nftInfo) {
+      for (const key in nft) {
         if (
-          key in nft &&
           key !== "created" &&
           key !== "updated" &&
           key !== "rating" &&
           key !== "status" &&
-          nft[key as keyof typeof nft] !== undefined &&
           nft[key as keyof typeof nft] !== (nftInfo as any)[key]
         ) {
           (nftInfo as any)[key] = nft[key as keyof typeof nft];
@@ -128,14 +126,12 @@ export async function getNFTState(props: {
       // Update collectionInfo with any changed values from collection
       let isUpdated = false;
       const updatedKeys: string[] = [];
-      for (const key in collectionInfo) {
+      for (const key in collection) {
         if (
-          key in collection &&
           key !== "created" &&
           key !== "updated" &&
           key !== "rating" &&
           key !== "status" &&
-          collection[key as keyof typeof collection] !== undefined &&
           collection[key as keyof typeof collection] !==
             (collectionInfo as any)[key]
         ) {
