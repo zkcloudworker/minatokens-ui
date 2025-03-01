@@ -2,7 +2,7 @@
 
 import { JobId, JobResult } from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
-import { TokenAPI } from "zkcloudworker";
+import { TokenAPI } from "@silvana-one/mina-prover";
 import { getChain } from "@/lib/chain";
 
 const ZKCW_JWT = process.env.ZKCW_JWT;

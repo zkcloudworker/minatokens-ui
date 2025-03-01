@@ -1,5 +1,5 @@
 "use server";
-import { fetchMinaAccount } from "zkcloudworker";
+import { fetchMinaAccount } from "@silvana-one/mina-utils";
 import { initBlockchain } from "@/lib/blockchain";
 import { FungibleToken } from "@silvana-one/token";
 import { Mina, PublicKey, TokenId, fetchAccount } from "o1js";

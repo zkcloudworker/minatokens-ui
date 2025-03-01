@@ -6,7 +6,7 @@ import {
 } from "@/lib/blockchain";
 import { PublicKey, UInt64, Mina, TokenId, PrivateKey } from "o1js";
 import { buildTokenTransaction, TRANSACTION_FEE } from "@silvana-one/abi";
-import { createTransactionPayloads } from "zkcloudworker";
+import { createTransactionPayloads } from "@silvana-one/mina-utils";
 import {
   TokenTransaction,
   TokenTransactions,
