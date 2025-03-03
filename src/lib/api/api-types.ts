@@ -9,6 +9,8 @@ export type ApiName =
   | "info:balance"
   | "info:contract"
   | "info:nonce"
+  | "info:transactions"
+  | "info:holders"
   | "transaction:prove"
   | "transaction:proof"
   | "transaction:status"

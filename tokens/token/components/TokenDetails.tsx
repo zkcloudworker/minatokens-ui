@@ -31,21 +31,20 @@ function formatBalance(num: number | undefined): string {
   return fixed;
 }
 
-export function Socials({ i }: { i: number }) {
-  const elm = socials_item[i];
+export function Socials({ icon, svgPath }: { icon: string; svgPath: string }) {
   return (
-    <div key={i} className="group rtl:ml-4 rtl:mr-0">
+    <div key={icon} className="group rtl:ml-4 rtl:mr-0">
       <svg
         aria-hidden="true"
         focusable="false"
         data-prefix="fab"
-        data-icon={elm.icon}
+        data-icon={icon}
         className="h-12 w-12 fill-jacarta-300 group-hover:fill-accent dark:group-hover:fill-white"
         role="img"
         xmlns="http://www.w3.org/2000/svg"
-        viewBox={elm.icon == "discord" ? "0 0 640 512" : "0 0 512 512"}
+        viewBox={icon == "discord" ? "0 0 640 512" : "0 0 512 512"}
       >
-        <path d={elm.svgPath}></path>
+        <path d={svgPath}></path>
       </svg>
     </div>
   );
@@ -233,8 +232,17 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   }, [item]);
 
   function isNotEmpty(value: string | undefined) {
-    return value && value.length > 0;
+    return (
+      value !== undefined &&
+      value !== null &&
+      typeof value === "string" &&
+      value.length > 0
+    );
   }
+
+  const socials = item
+    ? socials_item.filter((social) => isNotEmpty((item as any)[social.icon]))
+    : [];
 
   const addLike = async () => {
     if (!like) {
@@ -503,22 +511,25 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                 </>
               )}
 
-              {/* Creator / Owner */}
+              {/* Socials */}
+
               <div className="flex flex-wrap">
-                {isNotEmpty(item?.twitter) && (
+                {socials.map((social) => (
                   <div className="mr-8 mb-4 flex">
                     <figure className="mr-4 shrink-0">
                       <Link
-                        href={`https://twitter.com/${item?.twitter}`}
+                        href={`${social.href}${
+                          (item as any)?.[social.icon] ?? ""
+                        }`}
                         className="relative block"
                         rel="noopener noreferrer"
                         target="_blank"
                       >
-                        <Socials i={1} />
+                        <Socials icon={social.icon} svgPath={social.svgPath} />
 
                         <div
                           className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                          data-tippy-content="Twitter"
+                          data-tippy-content={social.icon}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -535,180 +546,29 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                     </figure>
                     <div className="flex flex-col justify-center">
                       <span className="block text-sm text-jacarta-400 dark:text-white">
-                        <strong>Twitter:</strong>
+                        <strong>
+                          {social.icon === "website"
+                            ? "Web site"
+                            : social.icon.charAt(0).toUpperCase() +
+                              social.icon.slice(1)}
+                        </strong>
                       </span>
                       <Link
-                        href={`https://twitter.com/${item?.twitter}`}
+                        href={`${social.href}${
+                          (item as any)?.[social.icon] ?? ""
+                        }`}
                         className="block text-accent"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
                         <span className="text-sm font-bold">
-                          @{item?.twitter ?? ""}
+                          {social.symbol}
+                          {(item as any)?.[social.icon] ?? ""}
                         </span>
                       </Link>
                     </div>
                   </div>
-                )}
-
-                {isNotEmpty(item?.discord) && (
-                  <div className="mb-4 flex">
-                    <figure className="mr-4 shrink-0">
-                      <Link href={`/user/4`} className="relative block">
-                        <Socials i={2} />
-                        <div
-                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                          data-tippy-content="Verified Collection"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="h-[.875rem] w-[.875rem] fill-white"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      </Link>
-                    </figure>
-                    <div className="flex flex-col justify-center">
-                      <span className="block text-sm text-jacarta-400 dark:text-white">
-                        Discord:
-                      </span>
-                      <Link href={`/user/6`} className="block text-accent">
-                        <span className="text-sm font-bold">
-                          {item?.discord ?? ""}
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-wrap">
-                {isNotEmpty(item?.website) && (
-                  <div className="mr-8 mb-4 flex">
-                    <figure className="mr-4 shrink-0">
-                      <Link
-                        href={`${item?.website}`}
-                        className="relative block"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <Socials i={5} />
-
-                        <div
-                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                          data-tippy-content="Twitter"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="fill-white"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      </Link>
-                    </figure>
-                    <div className="flex flex-col justify-center">
-                      <span className="block text-sm text-jacarta-400 dark:text-white">
-                        <strong>Website:</strong>
-                      </span>
-                      <Link
-                        href={`${item?.website}`}
-                        className="block text-accent"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <span className="text-sm font-bold">
-                          {item?.website ?? ""}
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap">
-                  {isNotEmpty(item?.instagram) && (
-                    <div className="mr-8 mb-4 flex">
-                      <figure className="mr-4 shrink-0">
-                        <Link
-                          href={`https://twitter.com/${item?.twitter}`}
-                          className="relative block"
-                        >
-                          <Socials i={3} />
-
-                          <div
-                            className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                            data-tippy-content="Twitter"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              width="24"
-                              height="24"
-                              className="fill-white"
-                            >
-                              <path fill="none" d="M0 0h24v24H0z"></path>
-                              <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                            </svg>
-                          </div>
-                        </Link>
-                      </figure>
-                      <div className="flex flex-col justify-center">
-                        <span className="block text-sm text-jacarta-400 dark:text-white">
-                          <strong>Instagram:</strong>
-                        </span>
-                        <Link href={`/user/2`} className="block text-accent">
-                          <span className="text-sm font-bold">
-                            @{item?.instagram ?? ""}
-                          </span>
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {isNotEmpty(item?.facebook) && (
-                  <div className="mb-4 flex">
-                    <figure className="mr-4 shrink-0">
-                      <Link href={`/user/4`} className="relative block">
-                        <Socials i={0} />
-                        <div
-                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                          data-tippy-content="Verified Collection"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="h-[.875rem] w-[.875rem] fill-white"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      </Link>
-                    </figure>
-                    <div className="flex flex-col justify-center">
-                      <span className="block text-sm text-jacarta-400 dark:text-white">
-                        Facebook:
-                      </span>
-                      <Link href={`/user/6`} className="block text-accent">
-                        <span className="text-sm font-bold">
-                          {item?.discord ?? ""}
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
+                ))}
               </div>
 
               {/* Trade */}

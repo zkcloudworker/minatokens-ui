@@ -71,6 +71,7 @@ function timeAgo(unixTime: number): string {
 }
 
 export function Transactions({ transactions }: TransactionsProps) {
+  console.log("Transactions", transactions);
   const [filterAction, setfilterAction] = useState<string | undefined>(
     undefined
   );

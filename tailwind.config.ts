@@ -17,6 +17,16 @@ const config: Config = {
     fontFamily: {
       display: ['"CalSans-SemiBold"', "sans-serif"],
       body: ['"DM Sans"', "sans-serif"],
+      mono: [
+        "ui-monospace",
+        "SFMono-Regular",
+        "Menlo",
+        "Monaco",
+        "Consolas",
+        "Liberation Mono",
+        "Courier New",
+        "monospace",
+      ],
     },
     container: {
       center: true,
