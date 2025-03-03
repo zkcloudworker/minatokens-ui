@@ -369,6 +369,7 @@ async function getNFTData(params: {
       : data.approved.toBase58();
     let approvedVerificationKeyHash: string | undefined;
     let price: number | undefined;
+    let approvedType: string | undefined = undefined;
 
     if (approved) {
       await fetchMinaAccount({ publicKey: data.approved, force: false });
@@ -388,6 +389,7 @@ async function getNFTData(params: {
           ) {
             const offer = new Offer(data.approved);
             price = Number(offer.price.get().toBigInt() / 1_000_000n) / 1000;
+            approvedType = "Offer contract";
           } else {
             log.error(
               "getNftInfo: getNFTData: Approved account is not an offer",
@@ -399,8 +401,13 @@ async function getNFTData(params: {
                 offerVerificationKeyHash: vk.NonFungibleTokenOfferContract.hash,
               }
             );
+            approvedType = "Unknown contract";
           }
+        } else {
+          approvedType = "regular account";
         }
+      } else {
+        approvedType = "Uninitialized account";
       }
     }
 
@@ -526,6 +533,7 @@ class NFTData extends Struct({
       owner: data.owner.toBase58(),
       approved,
       approvedVerificationKeyHash,
+      approvedType,
       price,
       version: Number(data.version.toBigint()),
       id: data.id.toBigInt().toString(),
