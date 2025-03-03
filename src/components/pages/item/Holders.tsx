@@ -25,7 +25,7 @@ export function Holders({ holders }: HoldersProps) {
         </div>
 
         <div
-          className="sticky top-0 bg-light-base py-2 px-4 dark:bg-jacarta-600"
+          className="sticky  top-0 bg-light-base py-2 px-4 dark:bg-jacarta-600"
           role="columnheader"
         >
           <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">

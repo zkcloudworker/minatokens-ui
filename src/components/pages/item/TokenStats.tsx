@@ -12,10 +12,10 @@ import {
   BlockberryTokenHolder,
   BlockberryTokenTransaction,
 } from "@/lib/blockberry-tokens";
-
+import { Loading } from "./Loading";
 interface TokenStatsProps {
-  holders: BlockberryTokenHolder[];
-  transactions: BlockberryTokenTransaction[];
+  holders?: BlockberryTokenHolder[];
+  transactions?: BlockberryTokenTransaction[];
   tokenState: TokenState | undefined;
   tokenAddress: string;
   tokenSymbol: string;
@@ -275,7 +275,8 @@ export function TokenStats({
             role="tabpanel"
             aria-labelledby="holders-tab"
           >
-            <Holders holders={holders} />
+            {holders && <Holders holders={holders} />}
+            {!holders && <Loading />}
           </div>
 
           {/* Properties */}
@@ -308,7 +309,8 @@ export function TokenStats({
             aria-labelledby="activity-tab"
           >
             {/* Filter */}
-            <Transactions transactions={transactions} />
+            {transactions && <Transactions transactions={transactions} />}
+            {!transactions && <Loading />}
           </div>
 
           {/* Trade */}

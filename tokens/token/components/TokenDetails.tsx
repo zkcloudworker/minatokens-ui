@@ -125,11 +125,11 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
       payload: { tokenAddress, tokenState },
     });
 
-  const holders = tokenDetails.holders || [];
+  const holders = tokenDetails.holders;
   const setHolders = (holders: BlockberryTokenHolder[]) =>
     dispatch({ type: "SET_HOLDERS", payload: { tokenAddress, holders } });
 
-  const transactions = tokenDetails.transactions || [];
+  const transactions = tokenDetails.transactions;
   const setTransactions = (transactions: BlockberryTokenTransaction[]) =>
     dispatch({
       type: "SET_TRANSACTIONS",

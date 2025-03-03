@@ -179,9 +179,8 @@ export function TokenActionComponent({
   tab,
   onBalanceUpdate,
 }: TokenActionProps) {
-  const { transactionStates, setTokenData, setFormData } = useTransactionStore(
-    (state) => state
-  );
+  const { transactionStates, setTokenData, setFormData, setIsProcessing } =
+    useTransactionStore((state) => state);
 
   const state: TransactionTokenState = transactionStates[tokenAddress]?.[
     tab
@@ -212,6 +211,14 @@ export function TokenActionComponent({
       tokenAddress,
       tab,
       formData,
+    });
+  }
+
+  function onClose() {
+    setIsProcessing({
+      tokenAddress,
+      tab,
+      isProcessing: false,
     });
   }
 
@@ -276,7 +283,7 @@ export function TokenActionComponent({
     <>
       {isProcessing && (
         <div className="container rounded-t-2lg rounded-b-2lg rounded-tl-none border border-jacarta-100 p-6 dark:border-jacarta-600">
-          <TimeLine items={timelineItems} dark={true} />
+          <TimeLine items={timelineItems} dark={true} onClose={onClose} />
         </div>
       )}
       {!isProcessing && tab !== "orderbook" && tab !== "withdraw" && (
