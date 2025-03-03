@@ -1,6 +1,7 @@
 "use server";
 
-import { JobStatus, TokenAPI } from "zkcloudworker";
+import { TokenAPI } from "@silvana-one/mina-prover";
+import { JobStatus } from "@silvana-one/prover";
 import { JobResult, TokenTransaction } from "@silvana-one/api";
 import { getChain } from "./chain";
 

@@ -69,7 +69,7 @@ export async function deployToken(params: {
         Field,
       },
       abi: { buildTokenLaunchTransaction, LAUNCH_FEE },
-      zkcloudworker: {
+      minaUtils: {
         createTransactionPayloads,
         initBlockchain,
         accountBalanceMina,

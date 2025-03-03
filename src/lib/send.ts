@@ -1,5 +1,5 @@
 "use server";
-import { initBlockchain } from "zkcloudworker";
+import { initBlockchain } from "@silvana-one/mina-utils";
 import { Mina } from "o1js";
 import { getChain } from "./chain";
 import { debug } from "./debug";

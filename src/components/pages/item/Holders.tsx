@@ -20,12 +20,12 @@ export function Holders({ holders }: HoldersProps) {
           role="columnheader"
         >
           <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
-            Amount
+            {"Amount".padStart(25, "\u00A0")}
           </span>
         </div>
 
         <div
-          className="sticky top-0 bg-light-base py-2 px-4 dark:bg-jacarta-600"
+          className="sticky  top-0 bg-light-base py-2 px-4 dark:bg-jacarta-600"
           role="columnheader"
         >
           <span className="w-full overflow-hidden text-ellipsis text-jacarta-700 dark:text-jacarta-100">
@@ -36,10 +36,27 @@ export function Holders({ holders }: HoldersProps) {
       {holders.map((elm: BlockberryTokenHolder, i: number) => (
         <div key={i} className="contents" role="row">
           <div
-            className="flex items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
+            className="flex items-left border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600 font-mono tabular-nums"
             role="cell"
           >
-            {elm.balance}
+            {(() => {
+              const parts = elm.balance
+                .toLocaleString(undefined, {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 9,
+                })
+                .split(".");
+              return (
+                <>
+                  {parts[0].padStart(15, "\u00A0")}
+                  {parts[1] && (
+                    <>
+                      .<span className="text-jacarta-400">{parts[1]}</span>
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           <div

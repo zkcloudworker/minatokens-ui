@@ -1,6 +1,7 @@
 "use server";
 
-import { JobStatus, NftAPI } from "zkcloudworker";
+import { NftAPI } from "@silvana-one/mina-prover";
+import { JobStatus } from "@silvana-one/prover";
 import { JobResult, NftTransaction } from "@silvana-one/api";
 import { getChain } from "./chain";
 

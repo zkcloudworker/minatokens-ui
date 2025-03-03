@@ -1,6 +1,6 @@
 "use server";
 import { checkZkappTransaction } from "o1js";
-import { initBlockchain, sleep } from "zkcloudworker";
+import { initBlockchain, sleep } from "@silvana-one/mina-utils";
 import { getChain } from "./chain";
 import { debug } from "./debug";
 const DEBUG = debug();

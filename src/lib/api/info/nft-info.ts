@@ -8,6 +8,7 @@ import {
   NFTData,
   fieldToString,
   CollectionData,
+  Offer,
 } from "@silvana-one/nft";
 import { createIpfsURL } from "@silvana-one/storage";
 import {
@@ -16,6 +17,7 @@ import {
   NftRequestParams,
   NftRequestAnswer,
 } from "@silvana-one/api";
+import { tokenVerificationKeys } from "@silvana-one/abi";
 import { ApiName, ApiResponse } from "../api-types";
 import { checkAddress } from "../utils/address";
 import { debug } from "@/lib/debug";
@@ -92,14 +94,12 @@ export async function getNFTState(props: {
       // Update nftInfo with any changed values from nft
       let isUpdated = false;
       const updatedKeys: string[] = [];
-      for (const key in nftInfo) {
+      for (const key in nft) {
         if (
-          key in nft &&
           key !== "created" &&
           key !== "updated" &&
           key !== "rating" &&
           key !== "status" &&
-          nft[key as keyof typeof nft] !== undefined &&
           nft[key as keyof typeof nft] !== (nftInfo as any)[key]
         ) {
           (nftInfo as any)[key] = nft[key as keyof typeof nft];
@@ -126,14 +126,12 @@ export async function getNFTState(props: {
       // Update collectionInfo with any changed values from collection
       let isUpdated = false;
       const updatedKeys: string[] = [];
-      for (const key in collectionInfo) {
+      for (const key in collection) {
         if (
-          key in collection &&
           key !== "created" &&
           key !== "updated" &&
           key !== "rating" &&
           key !== "status" &&
-          collection[key as keyof typeof collection] !== undefined &&
           collection[key as keyof typeof collection] !==
             (collectionInfo as any)[key]
         ) {
@@ -366,6 +364,53 @@ async function getNFTData(params: {
       .get()
       .toJSON();
     const data = NFTData.unpack(nft.packedData.get());
+    const approved = data.approved.equals(PublicKey.empty()).toBoolean()
+      ? undefined
+      : data.approved.toBase58();
+    let approvedVerificationKeyHash: string | undefined;
+    let price: number | undefined;
+    let approvedType: string | undefined = undefined;
+
+    if (approved) {
+      await fetchMinaAccount({ publicKey: data.approved, force: false });
+      if (Mina.hasAccount(data.approved)) {
+        const account = Mina.getAccount(data.approved);
+        const contractVerificationKeyHash =
+          account.zkapp?.verificationKey?.hash.toJSON();
+        if (contractVerificationKeyHash) {
+          approvedVerificationKeyHash = contractVerificationKeyHash;
+
+          const vk =
+            tokenVerificationKeys[chain === "mainnet" ? "mainnet" : "devnet"]
+              .vk;
+          if (
+            contractVerificationKeyHash ===
+            vk.NonFungibleTokenOfferContract.hash
+          ) {
+            const offer = new Offer(data.approved);
+            price = Number(offer.price.get().toBigInt() / 1_000_000n) / 1000;
+            approvedType = "Offer contract";
+          } else {
+            log.error(
+              "getNftInfo: getNFTData: Approved account is not an offer",
+              {
+                nftAddress: address.toBase58(),
+                collectionAddress: params.collection,
+                tokenId: TokenId.toBase58(tokenId),
+                contractVerificationKeyHash,
+                offerVerificationKeyHash: vk.NonFungibleTokenOfferContract.hash,
+              }
+            );
+            approvedType = "Unknown contract";
+          }
+        } else {
+          approvedType = "regular account";
+        }
+      } else {
+        approvedType = "Uninitialized account";
+      }
+    }
+
     /*
 class NFTData extends Struct({
 
@@ -486,9 +531,10 @@ class NFTData extends Struct({
       storage,
       metadataVerificationKeyHash,
       owner: data.owner.toBase58(),
-      approved: data.approved.equals(PublicKey.empty()).toBoolean()
-        ? undefined
-        : data.approved.toBase58(),
+      approved,
+      approvedVerificationKeyHash,
+      approvedType,
+      price,
       version: Number(data.version.toBigint()),
       id: data.id.toBigInt().toString(),
       canChangeOwnerByProof: data.canChangeOwnerByProof.toBoolean(),
@@ -554,7 +600,7 @@ async function getCollectionData(params: {
     const creator = collection.creator.get().toBase58();
     const adminAddress = collection.admin.get().toBase58();
     const data = CollectionData.unpack(collection.packedData.get());
-    const baseURL = collection.baseURL.get().toString();
+    const baseURL = fieldToString(collection.baseURL.get());
     const royaltyFee = Number(data.royaltyFee.toBigint());
     const transferFee = data.transferFee.toBigInt().toString();
     const requireTransferApproval = data.requireTransferApproval.toBoolean();

@@ -1,5 +1,9 @@
 "use server";
-import { getNonce, fetchMinaAccount, initBlockchain } from "zkcloudworker";
+import {
+  getNonce,
+  fetchMinaAccount,
+  initBlockchain,
+} from "@silvana-one/mina-utils";
 import { Mina, PublicKey } from "o1js";
 import { getChain } from "./chain";
 import { log as logtail } from "@logtail/next";

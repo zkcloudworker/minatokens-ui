@@ -11,8 +11,8 @@ import { log } from "@/lib/log";
 interface TokenDetailsState {
   info: DeployedTokenInfo | undefined;
   tokenState: TokenState | undefined;
-  holders: BlockberryTokenHolder[];
-  transactions: BlockberryTokenTransaction[];
+  holders?: BlockberryTokenHolder[];
+  transactions?: BlockberryTokenTransaction[];
   action: TokenAction | undefined;
   bid: Order | undefined;
   offer: Order | undefined;
