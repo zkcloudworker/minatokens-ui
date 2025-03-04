@@ -2,17 +2,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import { AddressContext } from "@/context/address";
 
 export default function Hero() {
   const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
+  const { address } = useContext(AddressContext);
 
   useEffect(() => {
-    checkAvailability().then((result) => {
+    checkAvailability({ address }).then((result) => {
       setIsAvailable(!result);
       if (result) window.location.href = "/not-available";
     });
-  }, []);
+  }, [address]);
 
   return (
     <>

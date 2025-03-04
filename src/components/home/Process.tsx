@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { getSiteName, getSiteType } from "@/lib/chain";
 import { generateSubscription } from "@/lib/api/key";
-import { FormEvent, useState, useEffect } from "react";
+import { FormEvent, useState, useEffect, useContext } from "react";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
+import { AddressContext } from "@/context/address";
 import { log } from "@/lib/log";
 import Link from "next/link";
 
@@ -66,13 +67,13 @@ const emailMessages = {
 export default function Process(): React.ReactElement {
   const [emailMessage, setEmailMessage] = useState(emailMessages.initial);
   const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
-
+  const { address } = useContext(AddressContext);
   useEffect(() => {
-    checkAvailability().then((result) => {
+    checkAvailability({ address }).then((result) => {
       setIsAvailable(!result);
       if (result) window.location.href = "/not-available";
     });
-  }, []);
+  }, [address]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();

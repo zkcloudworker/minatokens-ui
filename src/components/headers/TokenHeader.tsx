@@ -37,13 +37,13 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
 
   useEffect(() => {
     addMobileMenuToggle();
-    checkAvailability().then((result) => {
+    checkAvailability({ address }).then((result) => {
       setIsAvailable(!result);
     });
     return () => {
       removeMenuActive();
     };
-  }, []);
+  }, [address]);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -350,28 +350,28 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
             {/* Actions */}
             <div className="ml-8  hidden lg:flex xl:ml-12">
               {/* Wallet */}
-              {isAvailable && (
-                <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2 mr-6 flex items-center justify-center  transition-colors">
-                  {address && (
-                    <a
-                      href={`${explorerAccountUrl()}${address}`}
-                      className="dark:hover:text-accent hover:text-accent"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {shortenString(address)}
-                    </a>
-                  )}
-                  {!address && (
-                    <button
-                      onClick={connect}
-                      className="rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
-                    >
-                      Connect
-                    </button>
-                  )}
-                </div>
-              )}
+
+              <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2 mr-6 flex items-center justify-center  transition-colors">
+                {address && (
+                  <a
+                    href={`${explorerAccountUrl()}${address}`}
+                    className="dark:hover:text-accent hover:text-accent"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {shortenString(address)}
+                  </a>
+                )}
+                {!address && (
+                  <button
+                    onClick={connect}
+                    className="rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                  >
+                    Connect
+                  </button>
+                )}
+              </div>
+
               {/* <Profile /> */}
               {/* Dark Mode */}
               <div
@@ -423,29 +423,28 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
             </Link> */}
 
             {/* Wallet */}
-            {isAvailable && (
-              <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2  flex items-center justify-center  transition-colors">
-                {address && (
-                  <a
-                    href={`${explorerAccountUrl()}${address}`}
-                    className="dark:hover:text-accent hover:text-accent"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={fetchWalletInfo}
-                  >
-                    {shortenString(address)}
-                  </a>
-                )}
-                {!address && (
-                  <button
-                    onClick={connect}
-                    className="rounded-full bg-accent py-2 px-5 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
-                  >
-                    Connect
-                  </button>
-                )}
-              </div>
-            )}
+
+            <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2  flex items-center justify-center  transition-colors">
+              {address && (
+                <a
+                  href={`${explorerAccountUrl()}${address}`}
+                  className="dark:hover:text-accent hover:text-accent"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={fetchWalletInfo}
+                >
+                  {shortenString(address)}
+                </a>
+              )}
+              {!address && (
+                <button
+                  onClick={connect}
+                  className="rounded-full bg-accent py-2 px-5 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                >
+                  Connect
+                </button>
+              )}
+            </div>
 
             {/* Dark Mode */}
             <div

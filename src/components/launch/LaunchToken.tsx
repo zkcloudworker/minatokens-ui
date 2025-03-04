@@ -1,8 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useEffect, useState } from "react";
-
+import React, { useEffect, useState, useContext } from "react";
+import { AddressContext } from "@/context/address";
 import { TokenProgress } from "./TokenProgress";
 import { LaunchForm } from "./LaunchForm";
 import { LaunchTokenData } from "@/tokens/lib/token";
@@ -40,13 +40,14 @@ export function isError(): boolean {
 const LaunchToken: React.FC = () => {
   const { state, dispatch } = useLaunchToken();
   const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
+  const { address } = useContext(AddressContext);
 
   useEffect(() => {
-    checkAvailability().then((result) => {
+    checkAvailability({ address }).then((result) => {
       setIsAvailable(!result);
       if (result) window.location.href = "/not-available";
     });
-  }, []);
+  }, [address]);
 
   function addLog(item: TimelineGroup) {
     dispatch({

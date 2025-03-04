@@ -154,7 +154,7 @@ export function LaunchForm({
       await getAddress();
       return;
     }
-    if ((await checkAvailability()) !== null) {
+    if ((await checkAvailability({ address: adminAddress })) !== null) {
       log.info("LaunchForm: not available", { adminAddress });
       window.location.href = "/not-available";
       return;

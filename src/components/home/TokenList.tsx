@@ -117,11 +117,11 @@ export default function TokenList({
 
   useEffect(() => {
     // tippy("[data-tippy-content]");
-    checkAvailability().then((result) => {
+    checkAvailability({ address }).then((result) => {
       setIsAvailable(!result);
       if (result) window.location.href = "/not-available";
     });
-  }, []);
+  }, [address]);
 
   const listOfNumberOfItems =
     initialNumberOfItems && !numberOfItemsOptions.includes(initialNumberOfItems)
