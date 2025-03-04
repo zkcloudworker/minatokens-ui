@@ -249,7 +249,7 @@ export async function algoliaGetTokenList(params: {
     return tokenList;
   } catch (error: any) {
     console.log("error", error);
-    log.error("algoliaGetToken error:", {
+    log.info("algoliaGetToken error:", {
       error: error?.message ?? String(error),
       params,
     });

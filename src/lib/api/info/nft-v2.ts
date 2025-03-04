@@ -17,7 +17,13 @@ import { NftV2RequestAnswer, NftRequestParams } from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
 import { algoliasearch } from "algoliasearch";
 import { getChain } from "@/lib/chain";
+
+import { log as logtail } from "@logtail/next";
 const chain = getChain();
+const log = logtail.with({
+  service: "nft-info-v2",
+  chain,
+});
 
 const IPFS_URL = process.env.IPFS_URL;
 const IPFS_TOKEN = process.env.IPFS_TOKEN;
@@ -310,7 +316,7 @@ export async function algoliaGetNFT(params: {
     });
     return result;
   } catch (error: any) {
-    console.error("algoliaGetNFT:", {
+    log.info("algoliaGetNFT v2:", {
       error: error?.message ?? String(error),
       params,
     });
