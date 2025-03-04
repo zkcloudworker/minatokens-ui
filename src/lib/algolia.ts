@@ -62,7 +62,7 @@ export async function algoliaGetToken(params: {
     });
     return result as unknown as DeployedTokenInfo | undefined;
   } catch (error: any) {
-    log.error("algoliaGetToken error:", {
+    log.info("algoliaGetToken error:", {
       error: error?.message ?? String(error),
       params,
     });

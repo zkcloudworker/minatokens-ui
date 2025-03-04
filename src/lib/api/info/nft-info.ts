@@ -252,7 +252,7 @@ export async function algoliaGetNFT(params: {
       return undefined;
     }
   } catch (error) {
-    log.error("algoliaGetNFT error:", { error, params });
+    log.info("algoliaGetNFT error:", { error, params });
     return undefined;
   }
 }
