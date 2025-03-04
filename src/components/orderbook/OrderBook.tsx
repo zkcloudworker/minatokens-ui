@@ -247,7 +247,7 @@ function OrderRow({ order, type, onClick, isSelected }: OrderRowProps) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            {order.amount.toFixed(2)}
+            {order.amount.toFixed(4)}
           </Link>
         </span>
       </span>
