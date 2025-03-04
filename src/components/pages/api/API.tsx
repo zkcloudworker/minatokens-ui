@@ -352,11 +352,11 @@ const API: React.FC = () => {
   };
 
   useEffect(() => {
-    checkAvailability().then((result) => {
+    checkAvailability({ address }).then((result) => {
       setIsAvailable(!result);
       if (result) window.location.href = "/not-available";
     });
-  }, []);
+  }, [address]);
 
   useEffect(() => {
     if (DEBUG) console.log("address", address);
