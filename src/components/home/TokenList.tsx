@@ -91,7 +91,7 @@ export type TokenListProps = {
   collectionAddress?: string;
 };
 
-const numberOfItemsOptions = [20, 50, 100];
+const numberOfItemsOptions = [4, 8, 20, 50, 100];
 let connectWalletError = false;
 
 export default function TokenList({
@@ -109,7 +109,7 @@ export default function TokenList({
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [numberOfItems, setNumberOfItems] = useState<number>(
-    initialNumberOfItems ?? numberOfItemsOptions[0]
+    initialNumberOfItems ?? numberOfItemsOptions[2]
   );
   const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
   const { search } = useContext(SearchContext);
@@ -260,12 +260,7 @@ export default function TokenList({
       });
 
       let newItems: DeployedTokenInfo[] = searchResult?.hits ?? [];
-      // Sort to put TESTME token first
-      newItems.sort((a, b) => {
-        if (a.symbol === "TESTME") return -1;
-        if (b.symbol === "TESTME") return 1;
-        return 0;
-      });
+
       setItems(newItems);
       setTotalPages(searchResult?.nbPages ?? 1);
 
@@ -408,7 +403,26 @@ export default function TokenList({
   return (
     <>
       {isAvailable && (
-        <section className={`${collectionAddress ? "" : "py-32"}`}>
+        <section>
+          <picture className="pointer-events-none absolute inset-x-0 top-0 -z-10 dark:hidden">
+            <Image
+              width={1920}
+              height={900}
+              src="/img/gradient.jpg"
+              alt="gradient"
+              className="w-full"
+            />
+          </picture>
+          <picture className="pointer-events-none absolute inset-x-0 top-0 -z-10 hidden dark:block">
+            <Image
+              width={1920}
+              height={900}
+              priority
+              src="/img/gradient_dark.jpg"
+              alt="gradient dark"
+              className="w-full"
+            />
+          </picture>
           <div className="ml-20 mr-20">
             {title && (
               <h2 className="mb-8 text-center font-display text-5xl text-jacarta-700 dark:text-white">
@@ -473,8 +487,8 @@ export default function TokenList({
                           categories[i].selected ? "bg-jacarta-100" : "bg-white"
                         }  ${
                           categories[i].selected
-                            ? "dark:bg-jacarta-600"
-                            : "dark:bg-jacarta-900"
+                            ? "dark:bg-jacarta-500"
+                            : "dark:bg-jacarta-700"
                         } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
                       >
                         <svg

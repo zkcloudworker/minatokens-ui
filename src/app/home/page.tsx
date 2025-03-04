@@ -17,12 +17,12 @@ const HomeToken: FC = () => {
   return (
     <>
       {/* <TokenHeader showSearch={true} /> */}
-      <main>
-        {siteType === "token" && <Hero />}
+      <main className="mt-36">
+        {/* <Hero /> */}
         <TokenList
-          title={siteType === "token" ? "Trending" : undefined}
+          title={"Trending"}
           showIcon={true}
-          initialNumberOfItems={siteType === "token" ? 8 : 50}
+          initialNumberOfItems={4}
           key="home-list"
         />
         <Process />
