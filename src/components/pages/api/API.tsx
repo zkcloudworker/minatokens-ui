@@ -404,6 +404,25 @@ const API: React.FC = () => {
     <>
       {isAvailable && (
         <section className="relative py-24">
+          <picture className="pointer-events-none absolute inset-x-0 top-0 -z-10 dark:hidden">
+            <Image
+              width={1920}
+              height={900}
+              src="/img/gradient.jpg"
+              alt="gradient"
+              className="w-full"
+            />
+          </picture>
+          <picture className="pointer-events-none absolute inset-x-0 top-0 -z-10 hidden dark:block">
+            <Image
+              width={1920}
+              height={900}
+              priority
+              src="/img/gradient_dark.jpg"
+              alt="gradient dark"
+              className="w-full"
+            />
+          </picture>
           <picture className="pointer-events-none absolute inset-0 -z-10 dark:hidden">
             <Image
               width={1920}
