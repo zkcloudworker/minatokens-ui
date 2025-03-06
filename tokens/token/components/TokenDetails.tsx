@@ -578,7 +578,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                   <div className="w-full">
                       <div className="block overflow-hidden text-ellipsis whitespace-nowrap text-center">
                         <span className="text-bold text-lg text-jacarta-400 dark:text-jacarta-100">
-                          WETH/MINA
+                          {item?.symbol ?? "TOKEN"}/MINA
                         </span>
                       </div>
                     </div>
@@ -586,7 +586,8 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                     <div className="w-1/2 flex justify-center">
                       <div className="mt-3 flex flex-col items-center">
                         <div>
-                          <div className="flex items-center whitespace-nowrap">
+
+                          <div className="flex items-center justify-center text-center whitespace-nowrap">
                             <span className="text-lg font-medium leading-tight tracking-tight text-green">
                               {formatBalance(bid?.price)} MINA
                             </span>
@@ -630,7 +631,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                     <div className="w-1/2 flex justify-center">
                       <div className="mt-3 flex flex-col items-center">
                         <div>
-                          <div className="flex items-center justify-center whitespace-nowrap">
+                          <div className="flex items-center justify-center text-center whitespace-nowrap">
                             <span className="text-lg font-medium leading-tight tracking-tight text-red">
                               {formatBalance(offer?.price)} MINA
                             </span>
