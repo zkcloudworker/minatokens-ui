@@ -573,43 +573,26 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
 
               {/* Trade */}
               {(bid || offer) && (
-                <div className="min-w-80 max-w-md rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
-                  <div className="mb-8 sm:flex sm:flex-wrap">
-                    <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
-                      <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
-                        <span className="text-medium text-jacarta-400 dark:text-jacarta-300">
-                          Highest bid
+                <div className="max-w-md rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
+                  
+                  <div className="w-full">
+                      <div className="block overflow-hidden text-ellipsis whitespace-nowrap text-center">
+                        <span className="text-bold text-lg text-jacarta-400 dark:text-jacarta-100">
+                          WETH/MINA
                         </span>
                       </div>
-                      <div className="mt-3 flex">
+                    </div>
+                    <div className="mb-2 w-full flex flex-wrap">
+                    <div className="w-1/2 flex justify-center">
+                      <div className="mt-3 flex flex-col items-center">
                         <div>
                           <div className="flex items-center whitespace-nowrap">
                             <span className="text-lg font-medium leading-tight tracking-tight text-green">
                               {formatBalance(bid?.price)} MINA
                             </span>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
-                      <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
-                        <span className="text-medium text-jacarta-400 dark:text-jacarta-300">
-                          Lowest offer
-                        </span>
-                      </div>
-                      <div className="mt-3 flex">
-                        <div>
-                          <div className="flex items-center whitespace-nowrap">
-                            <span className="text-lg font-medium leading-tight tracking-tight text-red">
-                              {formatBalance(offer?.price)} MINA
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
+                          <div className="mt-6">
+                          <button
                     onClick={() => {
                       const tradeTab = document.getElementById("trade-tab");
                       const tradePane = document.getElementById("trade");
@@ -638,8 +621,59 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                     }}
                     className="inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
                   >
-                    Trade
+                      Buy
                   </button>
+                        </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="w-1/2 flex justify-center">
+                      <div className="mt-3 flex flex-col items-center">
+                        <div>
+                          <div className="flex items-center justify-center whitespace-nowrap">
+                            <span className="text-lg font-medium leading-tight tracking-tight text-red">
+                              {formatBalance(offer?.price)} MINA
+                            </span>
+                          </div>
+                          <div className="mt-6">
+                          <button
+                    onClick={() => {
+                      const tradeTab = document.getElementById("trade-tab");
+                      const tradePane = document.getElementById("trade");
+                      if (tradeTab && tradePane) {
+                        // Remove active class from all tabs and panes
+                        document
+                          .querySelectorAll(".nav-link")
+                          .forEach((tab) => {
+                            tab.classList.remove("active");
+                            tab.setAttribute("aria-selected", "false");
+                          });
+                        document
+                          .querySelectorAll(".tab-pane")
+                          .forEach((pane) => {
+                            pane.classList.remove("show", "active");
+                          });
+
+                        // Activate trade tab and pane
+                        tradeTab.classList.add("active");
+                        tradeTab.setAttribute("aria-selected", "true");
+                        tradePane.classList.add("show", "active");
+
+                        // Scroll to the trade section
+                        tradePane.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className="inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                  >
+                    Sell
+                  </button>
+                  </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+               
                 </div>
               )}
               {/* end bid */}
