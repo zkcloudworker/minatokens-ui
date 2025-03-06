@@ -89,6 +89,7 @@ export type TokenListProps = {
   initialNumberOfItems?: number;
   hideSidebar?: boolean;
   collectionAddress?: string;
+  showButtons: boolean;
 };
 
 const numberOfItemsOptions = [4, 8, 20, 50, 100];
@@ -100,6 +101,7 @@ export default function TokenList({
   initialNumberOfItems,
   hideSidebar,
   collectionAddress,
+  showButtons,
 }: TokenListProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
@@ -441,6 +443,7 @@ export default function TokenList({
             {hideSidebar !== true && (
               <div className="mb-8 flex flex-wrap items-center justify-between">
                 <ul className="flex flex-wrap items-center">
+                  {showButtons && (
                   <li className="my-1 mr-2.5">
                     <div
                       onClick={() => setCategories(initialCategories)}
@@ -448,21 +451,24 @@ export default function TokenList({
                         categories.every(
                           (category) => category.selected === false
                         )
-                          ? "bg-jacarta-100"
+                          ? "bg-accent text-white"
                           : "bg-white"
                       }  ${
                         categories.every(
                           (category) => category.selected === false
                         )
-                          ? "dark:bg-jacarta-600"
+                          ? "dark:bg-accent"
                           : "dark:bg-jacarta-900"
-                      } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
+                      } cursor-pointer group flex h-9 items-center rounded-lg border  border-jacarta-100  px-4 font-display text-sm font-semibold  transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white `}
                     >
                       All
                     </div>
-                  </li>
-                  {categories.map((elm, i) => (
-                    <li
+                    </li>
+                   )}
+
+                  {showButtons &&
+                    categories.map((elm, i) => (
+                      <li
                       onClick={() =>
                         setCategories((prev) => {
                           const newCategories = prev.map((category, index) => {
@@ -484,10 +490,10 @@ export default function TokenList({
                     >
                       <div
                         className={`  ${
-                          categories[i].selected ? "bg-jacarta-100" : "bg-white"
+                          categories[i].selected ? "bg-accent text-white" : "bg-white"
                         }  ${
                           categories[i].selected
-                            ? "dark:bg-jacarta-500"
+                            ? "dark:bg-accent"
                             : "dark:bg-jacarta-700"
                         } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
                       >
@@ -504,8 +510,11 @@ export default function TokenList({
                         <span>{elm.name}</span>
                       </div>
                     </li>
+                  
                   ))}
+                  
                 </ul>
+              {showButtons && (
                 <div className="flex items-center gap-2 my-1">
                   <button
                     onClick={() => setRefreshCounter(refreshCounter + 1)}
@@ -578,7 +587,8 @@ export default function TokenList({
                       ))}
                     </div>
                   </div>
-                </div>
+                </div> 
+              )}
               </div>
             )}
 
