@@ -589,7 +589,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
 
                           <div className="flex items-center justify-center text-center whitespace-nowrap">
                             <span className="text-lg font-medium leading-tight tracking-tight text-green">
-                              {formatBalance(offer?.price)} MINA
+                              {formatBalance(offer?.price)+ (offer?.price? " MINA" : "")}
                             </span>
                           </div>
                           <div className="mt-6">
@@ -633,7 +633,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                         <div>
                           <div className="flex items-center justify-center text-center whitespace-nowrap">
                             <span className="text-lg font-medium leading-tight tracking-tight text-red">
-                              {formatBalance(bid?.price)} MINA
+                              {formatBalance(bid?.price) + (bid?.price? " MINA" : "")} 
                             </span>
                           </div>
                           <div className="mt-6">
