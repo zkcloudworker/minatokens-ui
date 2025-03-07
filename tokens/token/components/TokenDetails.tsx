@@ -21,6 +21,7 @@ import {
 import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
 import { getOrderbook } from "@/lib/trade";
 import { Order } from "@/components/orderbook/OrderBook";
+import { BuySellDialog } from "@/components/orderbook/BuySell";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 function formatBalance(num: number | undefined): string {
@@ -56,13 +57,43 @@ interface ItemDetailsProps {
 
 export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   const { state, dispatch } = useTokenDetails();
+  const [operation, setOperation] = useState<"buy" | "sell" | undefined>(undefined);
   const tokenDetails = state.tokens[tokenAddress] || {};
   const item = tokenDetails.info;
+  const tokenId = item?.tokenId;
   const bid = tokenDetails.bid;
   const offer = tokenDetails.offer;
   const likes = state.likes[tokenAddress] || 0;
   const like = state.favorites.includes(tokenAddress);
   const isPriceLoaded = tokenDetails.isPriceLoaded;
+
+  const onConfirm = () => {
+    setOperation(undefined);
+    const tradeTab = document.getElementById("trade-tab");
+    const tradePane = document.getElementById("trade");
+    if (tradeTab && tradePane) {
+      // Remove active class from all tabs and panes
+      document
+        .querySelectorAll(".nav-link")
+        .forEach((tab) => {
+          tab.classList.remove("active");
+          tab.setAttribute("aria-selected", "false");
+        });
+      document
+        .querySelectorAll(".tab-pane")
+        .forEach((pane) => {
+          pane.classList.remove("show", "active");
+        });
+
+      // Activate trade tab and pane
+      tradeTab.classList.add("active");
+      tradeTab.setAttribute("aria-selected", "true");
+      tradePane.classList.add("show", "active");
+
+      // Scroll to the trade section
+      tradePane.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const setBid = (bid: Order) =>
     dispatch({ type: "SET_BID", payload: { tokenAddress, bid } });
@@ -138,9 +169,6 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
 
-  useEffect(() => {
-    if (DEBUG) console.log("tokenDetails", tokenDetails);
-  }, [state]);
 
   useEffect(() => {
     if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
@@ -216,7 +244,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
       }
     };
     fetchHolders();
-  }, [item]);
+  }, [tokenId]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -229,7 +257,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
       }
     };
     fetchTransactions();
-  }, [item]);
+  }, [tokenId]);
 
   function isNotEmpty(value: string | undefined) {
     return (
@@ -514,7 +542,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
 
               <div className="flex flex-wrap mb-6">
                 {socials.map((social) => (
-                  <div className="mr-8 mb-4 flex">
+                  <div className="mr-8 mb-4 flex" key={social.icon}>
                     <figure className="mr-4 shrink-0">
                       <Link
                         href={`${social.href}${(item as any)?.[social.icon] ?? ""
@@ -574,10 +602,10 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                 
                 <div className="max-w-md mb-16 w-full flex flex-wrap">
                 {offer && (
-                  <div className="w-1/2 flex justify-center">
+                  <div className="w-1/2 flex justify-center" key={"offer"}>
                   <div>
                     <button
-                      onClick={() => { }}
+                      onClick={() => setOperation("buy")}
                       className=" mb-3 inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
                       >
                       Buy {item?.symbol ?? ""}
@@ -591,11 +619,11 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                   </div>
                   )}
                   {bid && (
-                  <div className="w-1/2 flex justify-center">
+                  <div className="w-1/2 flex justify-center" key={"bid"}>
                   <div className="">
                   
                     <button
-                      onClick={() => { }}
+                      onClick={() => setOperation("sell")}
                       className="mb-3 inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
                     >
                       Sell {item?.symbol ?? ""}
@@ -731,6 +759,16 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
             decimals={tokenState?.decimals ?? item?.decimals ?? 9}
           />
           {/* end tabs */}
+          <BuySellDialog
+        operation={operation}
+        onClose={() => setOperation(undefined)}
+        onConfirm={onConfirm}
+        offer={offer}
+        bid={bid}
+        symbol={item?.symbol ?? "TOKEN"}
+        tokenAddress={tokenAddress}
+        tokenState={tokenState}
+      />
         </div>
       </section>
     </>

@@ -136,8 +136,8 @@ export default function TokenList({
       : state.list;
     const filteredByCollection = collectionAddress
       ? filtered.filter(
-          (item) => (item as any).collectionAddress === collectionAddress
-        )
+        (item) => (item as any).collectionAddress === collectionAddress
+      )
       : filtered;
     const filteredByMasterNFT = filteredByCollection.filter(
       (item) => (item as any).collectionAddress !== item.tokenAddress
@@ -366,11 +366,11 @@ export default function TokenList({
             rawOffer === null
               ? undefined
               : ({
-                  amount: Number(rawOffer.amount) / 10 ** decimals,
-                  price: Number(rawOffer.price) / 10 ** 9,
-                  address: rawOffer.offerAddress,
-                  type: "offer",
-                } as Order);
+                amount: Number(rawOffer.amount) / 10 ** decimals,
+                price: Number(rawOffer.price) / 10 ** 9,
+                address: rawOffer.offerAddress,
+                type: "offer",
+              } as Order);
 
           if (offer) setOffer(address, offer);
         }
@@ -389,11 +389,11 @@ export default function TokenList({
             rawBid === null
               ? undefined
               : ({
-                  amount: Number(rawBid.amount) / 10 ** decimals,
-                  price: Number(rawBid.price) / 10 ** 9,
-                  address: rawBid.bidAddress,
-                  type: "bid",
-                } as Order);
+                amount: Number(rawBid.amount) / 10 ** decimals,
+                price: Number(rawBid.price) / 10 ** 9,
+                address: rawBid.bidAddress,
+                type: "bid",
+              } as Order);
           if (bid) setBid(address, bid);
           setIsPriceLoaded(address, true);
         }
@@ -444,151 +444,147 @@ export default function TokenList({
               <div className="mb-8 flex flex-wrap items-center justify-between">
                 <ul className="flex flex-wrap items-center">
                   {showButtons && (
-                  <li className="my-1 mr-2.5">
-                    <div
-                      onClick={() => setCategories(initialCategories)}
-                      className={`  ${
-                        categories.every(
+                    <li className="my-1 mr-2.5">
+                      <div
+                        onClick={() => setCategories(initialCategories)}
+                        className={`  ${categories.every(
                           (category) => category.selected === false
                         )
-                          ? "bg-accent text-white"
-                          : "bg-white"
-                      }  ${
-                        categories.every(
-                          (category) => category.selected === false
-                        )
-                          ? "dark:bg-accent"
-                          : "dark:bg-jacarta-900"
-                      } cursor-pointer group flex h-9 items-center rounded-lg border  border-jacarta-100  px-4 font-display text-sm font-semibold  transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white `}
-                    >
-                      All
-                    </div>
+                            ? "bg-accent text-white"
+                            : "bg-white"
+                          }  ${categories.every(
+                            (category) => category.selected === false
+                          )
+                            ? "dark:bg-accent"
+                            : "dark:bg-jacarta-900"
+                          } cursor-pointer group flex h-9 items-center rounded-lg border  border-jacarta-100  px-4 font-display text-sm font-semibold  transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white `}
+                      >
+                        All
+                      </div>
                     </li>
-                   )}
+                  )}
 
                   {showButtons &&
                     categories.map((elm, i) => (
                       <li
-                      onClick={() =>
-                        setCategories((prev) => {
-                          const newCategories = prev.map((category, index) => {
-                            if (index === i) {
-                              return {
-                                ...category,
-                                selected: !category.selected,
-                              };
-                            }
-                            return category;
-                          });
-                          if (DEBUG)
-                            console.log("New categories", newCategories);
-                          return newCategories;
-                        })
-                      }
-                      key={i}
-                      className="my-1 mr-2.5"
-                    >
-                      <div
-                        className={`  ${
-                          categories[i].selected ? "bg-accent text-white" : "bg-white"
-                        }  ${
-                          categories[i].selected
-                            ? "dark:bg-accent"
-                            : "dark:bg-jacarta-700"
-                        } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
+                        onClick={() =>
+                          setCategories((prev) => {
+                            const newCategories = prev.map((category, index) => {
+                              if (index === i) {
+                                return {
+                                  ...category,
+                                  selected: !category.selected,
+                                };
+                              }
+                              return category;
+                            });
+                            if (DEBUG)
+                              console.log("New categories", newCategories);
+                            return newCategories;
+                          })
+                        }
+                        key={i}
+                        className="my-1 mr-2.5"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 25 28"
-                          width="24"
-                          height="24"
-                          className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
+                        <div
+                          className={`  ${categories[i].selected ? "bg-accent text-white" : "bg-white"
+                            }  ${categories[i].selected
+                              ? "dark:bg-accent"
+                              : "dark:bg-jacarta-700"
+                            } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
                         >
-                          <path fill="none" d="M0 0h24v24H0z" />
-                          <path d={elm.icon} />
-                        </svg>
-                        <span>{elm.name}</span>
-                      </div>
-                    </li>
-                  
-                  ))}
-                  
-                </ul>
-              {showButtons && (
-                <div className="flex items-center gap-2 my-1">
-                  <button
-                    onClick={() => setRefreshCounter(refreshCounter + 1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-jacarta-100 bg-white hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      height="24"
-                      className="h-4 w-4 fill-jacarta-700 group-hover:fill-white dark:fill-jacarta-100"
-                    >
-                      <path fill="none" d="M0 0h24v24H0z" />
-                      <path d="M5.463 4.433A9.961 9.961 0 0 1 12 2c5.523 0 10 4.477 10 10 0 2.136-.67 4.116-1.81 5.74L17 12h3A8 8 0 0 0 6.46 6.228l-.997-1.795zm13.074 15.134A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12c0-2.136.67-4.116 1.81-5.74L7 12H4a8 8 0 0 0 13.54 5.772l.997 1.795z" />
-                    </svg>
-                  </button>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 25 28"
+                            width="24"
+                            height="24"
+                            className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
+                          >
+                            <path fill="none" d="M0 0h24v24H0z" />
+                            <path d={elm.icon} />
+                          </svg>
+                          <span>{elm.name}</span>
+                        </div>
+                      </li>
 
-                  <div className="dropdown my-1 cursor-pointer">
-                    <div
-                      className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
-                      role="button"
-                      id="numberOfItems"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
+                    ))}
+
+                </ul>
+                {showButtons && (
+                  <div className="flex items-center gap-2 my-1">
+                    <button
+                      onClick={() => setRefreshCounter(refreshCounter + 1)}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-jacarta-100 bg-white hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:hover:border-transparent dark:hover:bg-accent"
                     >
-                      <span className="font-display">{numberOfItems}</span>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         width="24"
                         height="24"
-                        className="h-4 w-4 fill-jacarta-500 dark:fill-white"
+                        className="h-4 w-4 fill-jacarta-700 group-hover:fill-white dark:fill-jacarta-100"
                       >
                         <path fill="none" d="M0 0h24v24H0z" />
-                        <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
+                        <path d="M5.463 4.433A9.961 9.961 0 0 1 12 2c5.523 0 10 4.477 10 10 0 2.136-.67 4.116-1.81 5.74L17 12h3A8 8 0 0 0 6.46 6.228l-.997-1.795zm13.074 15.134A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12c0-2.136.67-4.116 1.81-5.74L7 12H4a8 8 0 0 0 13.54 5.772l.997 1.795z" />
                       </svg>
-                    </div>
+                    </button>
 
-                    <div
-                      className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
-                      aria-labelledby="numberOfItems"
-                    >
-                      <span className="block px-5 py-2 font-display text-sm font-semibold text-jacarta-300">
-                        Number of items
-                      </span>
-                      {listOfNumberOfItems.map((elm, i) => (
-                        <button
-                          onClick={() => setNumberOfItems(elm)}
-                          key={i}
-                          className={
-                            numberOfItems == elm
-                              ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                              : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
-                          }
+                    <div className="dropdown my-1 cursor-pointer">
+                      <div
+                        className="dropdown-toggle inline-flex w-48 items-center justify-between rounded-lg border border-jacarta-100 bg-white py-2 px-3 text-sm dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
+                        role="button"
+                        id="numberOfItems"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <span className="font-display">{numberOfItems}</span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          width="24"
+                          height="24"
+                          className="h-4 w-4 fill-jacarta-500 dark:fill-white"
                         >
-                          {elm}
-                          {numberOfItems == elm && (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              width="24"
-                              height="24"
-                              className="mb-[3px] h-4 w-4 fill-accent"
-                            >
-                              <path fill="none" d="M0 0h24v24H0z" />
-                              <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
-                            </svg>
-                          )}
-                        </button>
-                      ))}
+                          <path fill="none" d="M0 0h24v24H0z" />
+                          <path d="M12 13.172l4.95-4.95 1.414 1.414L12 16 5.636 9.636 7.05 8.222z" />
+                        </svg>
+                      </div>
+
+                      <div
+                        className="dropdown-menu z-10 hidden min-w-[220px] whitespace-nowrap rounded-xl bg-white py-4 px-2 text-left shadow-xl dark:bg-jacarta-800"
+                        aria-labelledby="numberOfItems"
+                      >
+                        <span className="block px-5 py-2 font-display text-sm font-semibold text-jacarta-300">
+                          Number of items
+                        </span>
+                        {listOfNumberOfItems.map((elm, i) => (
+                          <button
+                            onClick={() => setNumberOfItems(elm)}
+                            key={i}
+                            className={
+                              numberOfItems == elm
+                                ? "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm text-jacarta-700 transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                                : "dropdown-item flex w-full items-center justify-between rounded-xl px-5 py-2 text-left font-display text-sm transition-colors hover:bg-jacarta-50 dark:text-white dark:hover:bg-jacarta-600"
+                            }
+                          >
+                            {elm}
+                            {numberOfItems == elm && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                height="24"
+                                className="mb-[3px] h-4 w-4 fill-accent"
+                              >
+                                <path fill="none" d="M0 0h24v24H0z" />
+                                <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div> 
-              )}
+                )}
               </div>
             )}
 
@@ -633,16 +629,24 @@ export default function TokenList({
                             loading="lazy"
                             crossOrigin="anonymous"
                           />
+                          {elm.rating === 1 && (
+                          <Image
+                            width={100}
+                            height={100}
+                            src="/img/featured2.png"
+                            alt="image"
+                            className="absolute top-0 animate-fly md:-left+[10%] rtl:md:left+[10%]"
+                          />
+                          )}
                         </Link>
                         <div className="absolute top-3 right-3 flex items-center space-x-1 rounded-md bg-white p-2 dark:bg-jacarta-700">
                           <span
                             onClick={() => addLike(elm.tokenAddress)}
-                            className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
-                              isLiked(elm.tokenAddress)
+                            className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${isLiked(elm.tokenAddress)
                                 ? "js-likes--active"
                                 : ""
-                            }`}
-                            // data-tippy-content="Favorite"
+                              }`}
+                          // data-tippy-content="Favorite"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -676,8 +680,8 @@ export default function TokenList({
                         <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
                           {state.tokens[elm.tokenAddress]?.offer?.price
                             ? state.tokens[
-                                elm.tokenAddress
-                              ]?.offer?.price.toString() + ` MINA`
+                              elm.tokenAddress
+                            ]?.offer?.price.toString() + ` MINA`
                             : ""}
                         </span>
 
@@ -726,9 +730,8 @@ export default function TokenList({
                       {siteType === "nft" && (
                         <div className="mt-2 text-sm">
                           <Link
-                            href={`/collection/${
-                              (elm as any).collectionAddress
-                            }`}
+                            href={`/collection/${(elm as any).collectionAddress
+                              }`}
                             className="flex hover:text-accent"
                           >
                             <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-left">
@@ -742,21 +745,20 @@ export default function TokenList({
                         </div>
                       )}
                       {siteType === "token" && (
-                        <div className="mt-2 text-sm">
+                        <div className="mt-2 mb-6 text-sm">
                           <span className="text-jacarta-500 dark:text-jacarta-300 float-left">
                             <Highlight item={elm} attribute="symbol" />
                           </span>
 
                           <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                            {`Supply: ${
-                              (elm as any).totalSupply?.toLocaleString(
-                                undefined,
-                                {
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 2,
-                                }
-                              ) ?? "0"
-                            }`}
+                            {`Supply: ${(elm as any).totalSupply?.toLocaleString(
+                              undefined,
+                              {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 2,
+                              }
+                            ) ?? "0"
+                              }`}
                           </span>
                         </div>
                       )}

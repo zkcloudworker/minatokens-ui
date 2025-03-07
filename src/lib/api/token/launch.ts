@@ -20,12 +20,13 @@ import { getWallet, getChain } from "@/lib/chain";
 import { getAccountNonce } from "../../nonce";
 import { accountExists } from "../../account";
 import { log as logtail } from "@logtail/next";
+const chain = getChain();
 const log = logtail.with({
   service: "token",
   chain: getChain(),
 });
 const WALLET = getWallet();
-const chain = getChain();
+
 const DEBUG = debug();
 
 export async function deployToken(props: {
