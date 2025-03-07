@@ -232,7 +232,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
 
   useEffect(() => {
     const fetchHolders = async () => {
-      if (item?.tokenId) {
+      if (item?.tokenId && !holders) {
         const holders = await getTokenHoldersByTokenId({
           tokenId: item.tokenId,
         });
@@ -248,7 +248,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (item?.tokenId) {
+      if (item?.tokenId && !transactions) {
         const transactions = await getTransactionsByToken({
           tokenId: item.tokenId,
         });
