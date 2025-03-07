@@ -160,9 +160,9 @@ export function Orderbook({
           {/* Order Input Section */}
           {selectedOrder && (
             <div className="mt-6 p-4 border border-jacarta-100 dark:border-jacarta-600 rounded-lg bg-white dark:bg-jacarta-700">
-              <h3 className="text-lg font-semibold mb-4 text-jacarta-700 dark:text-white">
-                {tab === "orderbook" ? "Accept" : "Withdraw"}{" "}
-                {selectedOrder.type === "offer" ? "Offer" : "Bid"}
+              <h3 className="text-sm font-semibold mb-4 text-jacarta-700 dark:text-white">
+                {tab === "orderbook" ? ("Enter the amount of " + offerSymbol + " you want to " + (selectedOrder.type === "offer" ? "buy" : "sell")) : ""}{" "}
+                
               </h3>
               <div className="flex items-center space-x-4">
                 <Input
