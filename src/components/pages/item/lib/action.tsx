@@ -463,13 +463,32 @@ export async function tokenAction(params: {
           "": "process",
         }[item.txType ?? ""] || "process";
 
+        const successAction=
+        {
+          "token:mint": "minted",
+          "token:burn": "burned",
+          "token:redeem": "redeemed",
+          "token:transfer": "transferred",
+          "token:airdrop": "airdropped",
+          "token:offer:create": "offered",
+          "token:bid:create": "bid",
+          "token:admin:whitelist": "whitelisted",
+          "token:bid:sell": "sold",
+          "token:bid:whitelist": "whitelisted",
+          "token:bid:withdraw": "withdrawn",
+          "token:offer:buy": "bought",
+          "token:offer:whitelist": "whitelisted",
+          "token:offer:withdraw": "withdrawn",
+          "": "processed",
+        }[item.txType ?? ""] || "processed";
+
       addLog({
         groupId,
         status: "waiting",
         title: `${
           action[0].toUpperCase() + action.slice(1)
         }ing ${symbol} tokens`,
-        successTitle: `${symbol} tokens ${action}ed`,
+        successTitle: `${symbol} tokens ${successAction}`,
         errorTitle: `Failed to ${action} ${symbol} tokens`,
         lines: [messages.txMint, ...timeLineItems],
         requiredForSuccess: ["txIncluded"],
