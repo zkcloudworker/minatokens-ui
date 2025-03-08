@@ -231,7 +231,7 @@ export function BuySellDialog({
             </div>
           </p>
           <p>
-            <strong className="inline-block w-32 mb-4">Total:</strong>{" "}
+            <strong className="inline-block w-32 mb-4">Total Payment:</strong>{" "}
             {formatBalance(total)} MINA
           </p>
           {tokenBalance && (
