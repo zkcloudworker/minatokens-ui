@@ -82,8 +82,8 @@ export function BuySellDialog({
   const exceeded = chain === "mainnet" && total > 500;
 
   const { state, dispatch } = useTokenDetails();
-    const tokenBalance = state.tokens[tokenAddress]?.balance;
-    const minaBalance = state.minaBalance;
+  const tokenBalance = state.tokens[tokenAddress]?.balance;
+  const minaBalance = state.minaBalance;
 
 
   const setTokenBalance = (balance: number | undefined) =>
@@ -99,29 +99,32 @@ export function BuySellDialog({
       setMinaBalance(undefined);
       return;
     }
-
-    const tokenBalance = await balance({
+    const minaBalancePromise = balance({
+      params: { address },
+      name: "info:balance",
+      apiKeyAddress: "",
+    });
+    const tokenBalancePromise = balance({
       params: { address, tokenAddress },
       name: "info:balance",
       apiKeyAddress: "",
     });
-    if (DEBUG) console.log("Token balance", tokenBalance);
+
+    const minaBalance = await minaBalancePromise;
+    if (minaBalance.status === 200 && minaBalance.json.balance !== null) {
+      setMinaBalance((minaBalance.json.balance ?? 0) / 10 ** 9);
+    } else {
+      setMinaBalance(undefined);
+    }
+
+    const tokenBalance = await tokenBalancePromise;
     if (tokenBalance.status === 200 && tokenBalance.json.balance !== null) {
       setTokenBalance((tokenBalance.json.balance ?? 0) / 10 ** (decimals ?? 9));
     } else {
       setTokenBalance(undefined);
     }
 
-    const minaBalance = await balance({
-      params: { address },
-      name: "info:balance",
-      apiKeyAddress: "",
-    });
-    if (minaBalance.status === 200 && minaBalance.json.balance !== null) {
-      setMinaBalance((minaBalance.json.balance ?? 0) / 10 ** 9);
-    } else {
-      setMinaBalance(undefined);
-    }
+
     if (DEBUG) console.log("fetchBalance done", { minaBalance, tokenBalance });
   }, [address, tokenAddress]);
 
@@ -234,14 +237,14 @@ export function BuySellDialog({
             <strong className="inline-block w-32 mb-4">Total Payment:</strong>{" "}
             {formatBalance(total)} MINA
           </p>
-          {tokenBalance && (
+          {(tokenBalance !== undefined) && (
             <p>
               <span className="text-sm inline-block w-40">Your {symbol} Balance: </span>{" "}
               <span className="text-sm inline-block"> {formatBalance(tokenBalance)} {symbol}</span>{" "}
             
           </p>
           )}
-          {minaBalance && (
+          {(minaBalance !== undefined ) && (
             <p>
               <span className="text-sm inline-block w-40">Your MINA Balance: </span>{" "}
               <span className="text-sm inline-block"> {formatBalance(minaBalance)} MINA</span>{" "}
@@ -249,7 +252,7 @@ export function BuySellDialog({
           )}
           {exceeded && (
             <p className="text-red mt-4 mb-4">
-              Maximum order size is 500 MINA during alpha stage.
+              Maximum order size is 500 MINA during mainnet alpha stage.
             </p>
           )}
         </div>

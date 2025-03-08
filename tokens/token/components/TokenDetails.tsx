@@ -597,11 +597,11 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
               </div>
 
               {/* Trade */}
-              {(bid || offer) && (
+              {((bid && bid.price !== 0) || (offer && offer.price !== 0)) && (
                 <>         
                 
                 <div className="max-w-md mb-16 w-full flex flex-wrap">
-                {offer && (
+                {offer && offer.price !== 0 && (
                   <div className="w-1/2 flex justify-center" key={"offer"}>
                   <div>
                     <button
@@ -618,7 +618,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                       </div>
                   </div>
                   )}
-                  {bid && (
+                  {bid && bid.price !== 0 && (
                   <div className="w-1/2 flex justify-center" key={"bid"}>
                   <div className="">
                   
