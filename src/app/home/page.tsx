@@ -24,6 +24,7 @@ const HomeToken: FC = () => {
           showIcon={true}
           initialNumberOfItems={4}
           key="home-list"
+          showButtons={false}
         />
         <Process />
       </main>

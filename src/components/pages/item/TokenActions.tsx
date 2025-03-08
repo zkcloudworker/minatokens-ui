@@ -11,14 +11,14 @@ import { TokenStateTabLoading } from "./TokenStateLoading";
 import { AddressContext } from "@/context/address";
 import { balance } from "@/lib/api/info/token-info";
 import { debug } from "@/lib/debug";
+import { useTokenDetails } from "@/context/details";
 const DEBUG = debug();
 const chainId = getChainId();
 
 function formatBalance(num: number | undefined): string {
   if (num === undefined) return "0";
   const fixed = num.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumSignificantDigits: 4
   });
   return fixed.endsWith(".00") ? fixed.slice(0, fixed.length - 3) : fixed;
 }
@@ -139,12 +139,17 @@ export function TokenActionsTab({
 }: TokenActionsTabProps) {
   const [tab, setTab] = useState<string>(actions_types[actions][0].tab);
   const { address, setAddress } = useContext(AddressContext);
-  const [tokenBalance, setTokenBalance] = useState<number | undefined>(
-    undefined
-  );
-  const [minaBalance, setMinaBalance] = useState<number | undefined>(undefined);
+  const { state, dispatch } = useTokenDetails();
+  const tokenBalance = state.tokens[tokenAddress]?.balance;
+  const minaBalance = state.minaBalance;
 
   const symbol = tokenState?.tokenSymbol ?? tokenSymbol ?? "tokens";
+
+  const setTokenBalance = (balance: number | undefined) =>
+    dispatch({ type: "SET_BALANCE", payload: { tokenAddress, balance } });
+
+  const setMinaBalance = (minaBalance: number | undefined) =>
+    dispatch({ type: "SET_MINA_BALANCE", payload: { minaBalance } });
 
   const fetchBalance = useCallback(async () => {
     if (DEBUG) console.log("fetchBalance", address);
@@ -177,7 +182,7 @@ export function TokenActionsTab({
       setMinaBalance(undefined);
     }
     if (DEBUG) console.log("fetchBalance done", { minaBalance, tokenBalance });
-  }, [address, tokenAddress, tokenState, setTokenBalance, setMinaBalance]);
+  }, [address, tokenAddress]);
 
   useEffect(() => {
     fetchBalance();

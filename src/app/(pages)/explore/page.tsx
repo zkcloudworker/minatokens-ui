@@ -15,7 +15,7 @@ const ExploreTokens: FC = () => {
     <>
       {/* <TokenHeader /> */}
       <main className="mt-36">
-        <TokenList title="Explore" showIcon={false} key="explore-list" />
+        <TokenList title="Explore" showIcon={false} key="explore-list" showButtons={true} />
       </main>
       <TokenFooter />
     </>

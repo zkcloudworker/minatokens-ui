@@ -96,6 +96,10 @@ export function Orderbook({
     <section className="relative">
       <div className="container">
         <div className="w-full max-w-4xl mx-auto">
+        <h3 className="font-semibold mb-4 text-jacarta-700 dark:text-white">
+                Choose an offer or bid
+                
+              </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Offers Column */}
             <div className="min-w-[300px]">
@@ -160,9 +164,9 @@ export function Orderbook({
           {/* Order Input Section */}
           {selectedOrder && (
             <div className="mt-6 p-4 border border-jacarta-100 dark:border-jacarta-600 rounded-lg bg-white dark:bg-jacarta-700">
-              <h3 className="text-lg font-semibold mb-4 text-jacarta-700 dark:text-white">
-                {tab === "orderbook" ? "Accept" : "Withdraw"}{" "}
-                {selectedOrder.type === "offer" ? "Offer" : "Bid"}
+              <h3 className="text-sm font-semibold mb-4 text-jacarta-700 dark:text-white">
+                {tab === "orderbook" ? ("Enter the amount of " + offerSymbol + " you want to " + (selectedOrder.type === "offer" ? "buy" : "sell")) : ""}{" "}
+                
               </h3>
               <div className="flex items-center space-x-4">
                 <Input
@@ -327,7 +331,7 @@ function ConfirmDialog({
           >
             Cancel
           </button>
-          {!exceeded && (
+          
             <button
               onClick={onConfirm}
               className="rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"
@@ -340,7 +344,7 @@ function ConfirmDialog({
                 ? `Withdraw ${offerSymbol}`
                 : `Withdraw ${bidSymbol}`}
             </button>
-          )}
+          
         </DialogFooter>
       </DialogContent>
     </Dialog>

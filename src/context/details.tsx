@@ -17,6 +17,7 @@ interface TokenDetailsState {
   bid: Order | undefined;
   offer: Order | undefined;
   isPriceLoaded: boolean;
+  balance: number | undefined;
 }
 
 interface TokenDetailsStates {
@@ -24,6 +25,7 @@ interface TokenDetailsStates {
   likes: { [tokenAddress: string]: number };
   list: DeployedTokenInfo[];
   favorites: string[];
+  minaBalance: number | undefined;
 }
 type Action =
   | {
@@ -80,6 +82,14 @@ type Action =
   | {
       type: "ADD_FAVORITE";
       payload: { tokenAddress: string };
+    }
+  | {
+      type: "SET_BALANCE";
+      payload: { tokenAddress: string; balance: number | undefined };
+    }
+  | {
+      type: "SET_MINA_BALANCE";
+      payload: { minaBalance: number | undefined };
     };
 
 const initialState: TokenDetailsStates = {
@@ -87,6 +97,7 @@ const initialState: TokenDetailsStates = {
   list: [],
   favorites: [],
   likes: {},
+  minaBalance: undefined,
 };
 
 const TokenDetailsContext = createContext<{
@@ -251,6 +262,23 @@ const tokenDetailsReducer = (
           ? state.favorites
           : [...state.favorites, action.payload.tokenAddress],
       };
+    case "SET_BALANCE":
+      return {
+        ...state,
+        tokens: {
+          ...state.tokens,
+          [action.payload.tokenAddress]: {
+            ...(state.tokens[action.payload.tokenAddress] || {}),
+            balance: action.payload.balance,
+          },
+        },
+      };
+    case "SET_MINA_BALANCE":
+      return {
+        ...state,
+        minaBalance: action.payload.minaBalance,
+      };
+
     default:
       return state;
   }

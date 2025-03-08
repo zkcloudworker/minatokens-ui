@@ -4,6 +4,7 @@ import {
   accountBalanceMina,
   fetchMinaAccount,
 } from "@/lib/blockchain";
+import { checkLimit } from "@/lib/limit";
 import { PublicKey, UInt64, Mina, TokenId, PrivateKey } from "o1js";
 import { buildTokenTransaction, TRANSACTION_FEE } from "@silvana-one/abi";
 import { createTransactionPayloads } from "@silvana-one/mina-utils";
@@ -28,8 +29,13 @@ import { accountExists } from "@/lib/account";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
 import { getAccountNonce } from "../../nonce";
-const WALLET = getWallet();
+import { log as logtail } from "@logtail/next";
 const chain = getChain();
+const log = logtail.with({
+  service: "api:token:transaction",
+  chain: getChain(),
+});
+const WALLET = getWallet();
 const DEBUG = debug();
 const MINT_FEE = 1e8;
 const TRANSFER_FEE = 1e8;
@@ -81,6 +87,7 @@ export async function airdropTransaction(props: {
   const sender = PublicKey.fromBase58(params.sender);
   const tokenAddress = PublicKey.fromBase58(params.tokenAddress);
   const tokenId = TokenId.derive(tokenAddress);
+
   await fetchMinaAccount({
     publicKey: sender,
     force: false,
@@ -361,6 +368,22 @@ export async function tokenTransaction(props: {
 
     const sender = PublicKey.fromBase58(txParams.sender);
 
+    let limitCheck: Promise<{ passed: boolean; limit: number }> | undefined =
+      undefined;
+    if (
+      chain === "mainnet" &&
+      "amount" in txParams &&
+      "price" in txParams &&
+      txParams.amount &&
+      txParams.price
+    ) {
+      limitCheck = checkLimit({
+        address: sender.toBase58(),
+        amount: txParams.amount / 1_000_000_000,
+        price: txParams.price / 1_000_000_000,
+      });
+    }
+
     const symbolResponse = await getTokenSymbolAndAdmin({
       tokenAddress: txParams.tokenAddress,
     });
@@ -587,6 +610,30 @@ export async function tokenTransaction(props: {
     txParams.txType = txType;
     if ("slippage" in txParams && txParams.slippage === undefined) {
       txParams.slippage = 50;
+    }
+    if (limitCheck) {
+      const check = await limitCheck;
+      if (!check.passed) {
+        log.error("Transaction limit exceeded", {
+          sender: sender.toBase58(),
+          amount:
+            "amount" in txParams && txParams.amount
+              ? txParams.amount
+              : undefined,
+          price:
+            "price" in txParams && txParams.price ? txParams.price : undefined,
+          limit: check.limit,
+          txType,
+          args: txParams,
+          developerAddress: apiKeyAddress,
+        });
+        return {
+          status: 400,
+          json: {
+            error: `For transactions above ${check.limit} MINA, you need to be whitelisted. Please contact support@minatokens.com to pass the KYC.`,
+          },
+        };
+      }
     }
 
     if (DEBUG) console.log("building tx", txParams);

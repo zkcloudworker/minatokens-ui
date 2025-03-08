@@ -21,6 +21,7 @@ import {
 import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
 import { getOrderbook } from "@/lib/trade";
 import { Order } from "@/components/orderbook/OrderBook";
+import { BuySellDialog } from "@/components/orderbook/BuySell";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 function formatBalance(num: number | undefined): string {
@@ -56,13 +57,43 @@ interface ItemDetailsProps {
 
 export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   const { state, dispatch } = useTokenDetails();
+  const [operation, setOperation] = useState<"buy" | "sell" | undefined>(undefined);
   const tokenDetails = state.tokens[tokenAddress] || {};
   const item = tokenDetails.info;
+  const tokenId = item?.tokenId;
   const bid = tokenDetails.bid;
   const offer = tokenDetails.offer;
   const likes = state.likes[tokenAddress] || 0;
   const like = state.favorites.includes(tokenAddress);
   const isPriceLoaded = tokenDetails.isPriceLoaded;
+
+  const onConfirm = () => {
+    setOperation(undefined);
+    const tradeTab = document.getElementById("trade-tab");
+    const tradePane = document.getElementById("trade");
+    if (tradeTab && tradePane) {
+      // Remove active class from all tabs and panes
+      document
+        .querySelectorAll(".nav-link")
+        .forEach((tab) => {
+          tab.classList.remove("active");
+          tab.setAttribute("aria-selected", "false");
+        });
+      document
+        .querySelectorAll(".tab-pane")
+        .forEach((pane) => {
+          pane.classList.remove("show", "active");
+        });
+
+      // Activate trade tab and pane
+      tradeTab.classList.add("active");
+      tradeTab.setAttribute("aria-selected", "true");
+      tradePane.classList.add("show", "active");
+
+      // Scroll to the trade section
+      tradePane.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const setBid = (bid: Order) =>
     dispatch({ type: "SET_BID", payload: { tokenAddress, bid } });
@@ -87,22 +118,22 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
         offers.length === 0
           ? null
           : ({
-              amount: Number(offers[0].amount) / 10 ** (item?.decimals ?? 9),
-              price: Number(offers[0].price) / 10 ** 9,
-              address: offers[0].offerAddress,
-              type: "offer",
-            } as Order);
+            amount: Number(offers[0].amount) / 10 ** (item?.decimals ?? 9),
+            price: Number(offers[0].price) / 10 ** 9,
+            address: offers[0].offerAddress,
+            type: "offer",
+          } as Order);
 
       if (offer) setOffer(offer);
       const bid: Order | null =
         bids.length === 0
           ? null
           : ({
-              amount: Number(bids[0].amount) / 10 ** (item?.decimals ?? 9),
-              price: Number(bids[0].price) / 10 ** 9,
-              address: bids[0].bidAddress,
-              type: "bid",
-            } as Order);
+            amount: Number(bids[0].amount) / 10 ** (item?.decimals ?? 9),
+            price: Number(bids[0].price) / 10 ** 9,
+            address: bids[0].bidAddress,
+            type: "bid",
+          } as Order);
       if (bid) setBid(bid);
       setIsPriceLoaded(true);
     };
@@ -138,9 +169,6 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
 
-  useEffect(() => {
-    if (DEBUG) console.log("tokenDetails", tokenDetails);
-  }, [state]);
 
   useEffect(() => {
     if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
@@ -204,7 +232,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
 
   useEffect(() => {
     const fetchHolders = async () => {
-      if (item?.tokenId) {
+      if (item?.tokenId && !holders) {
         const holders = await getTokenHoldersByTokenId({
           tokenId: item.tokenId,
         });
@@ -216,11 +244,11 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
       }
     };
     fetchHolders();
-  }, [item]);
+  }, [tokenId]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (item?.tokenId) {
+      if (item?.tokenId && !transactions) {
         const transactions = await getTransactionsByToken({
           tokenId: item.tokenId,
         });
@@ -229,7 +257,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
       }
     };
     fetchTransactions();
-  }, [item]);
+  }, [tokenId]);
 
   function isNotEmpty(value: string | undefined) {
     return (
@@ -453,16 +481,15 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                   Supply:{" "}
                   {item?.totalSupply
                     ? item?.totalSupply.toLocaleString(undefined, {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 2,
-                      })
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })
                     : ""}
                 </span>
                 <div className="flex items-center space-x-1 rounded-xl border border-jacarta-100 bg-white py-2 px-4 dark:border-jacarta-600 dark:bg-jacarta-700">
                   <span
-                    className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
-                      like ? "js-likes--active" : ""
-                    }`}
+                    className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${like ? "js-likes--active" : ""
+                      }`}
                     data-tippy-content="Favorite"
                     onClick={() => addLike()}
                   >
@@ -513,14 +540,13 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
 
               {/* Socials */}
 
-              <div className="flex flex-wrap">
+              <div className="flex flex-wrap mb-6">
                 {socials.map((social) => (
-                  <div className="mr-8 mb-4 flex">
+                  <div className="mr-8 mb-4 flex" key={social.icon}>
                     <figure className="mr-4 shrink-0">
                       <Link
-                        href={`${social.href}${
-                          (item as any)?.[social.icon] ?? ""
-                        }`}
+                        href={`${social.href}${(item as any)?.[social.icon] ?? ""
+                          }`}
                         className="relative block"
                         rel="noopener noreferrer"
                         target="_blank"
@@ -550,13 +576,12 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                           {social.icon === "website"
                             ? "Web site"
                             : social.icon.charAt(0).toUpperCase() +
-                              social.icon.slice(1)}
+                            social.icon.slice(1)}
                         </strong>
                       </span>
                       <Link
-                        href={`${social.href}${
-                          (item as any)?.[social.icon] ?? ""
-                        }`}
+                        href={`${social.href}${(item as any)?.[social.icon] ?? ""
+                          }`}
                         className="block text-accent"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -573,74 +598,151 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
 
               {/* Trade */}
               {(bid || offer) && (
-                <div className="min-w-80 max-w-md rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
-                  <div className="mb-8 sm:flex sm:flex-wrap">
-                    <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
-                      <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
-                        <span className="text-medium text-jacarta-400 dark:text-jacarta-300">
-                          Highest bid
+                <>         
+                
+                <div className="max-w-md mb-16 w-full flex flex-wrap">
+                {offer && (
+                  <div className="w-1/2 flex justify-center" key={"offer"}>
+                  <div>
+                    <button
+                      onClick={() => setOperation("buy")}
+                      className=" mb-3 inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                      >
+                      Buy {item?.symbol ?? ""}
+                    </button>
+                    <div className="block overflow-hidden text-ellipsis whitespace-nowrap text-center">
+                        <span className="text-bold text-sm text-jacarta-400 dark:text-jacarta-100">
+                          1 {item?.symbol ?? "TOKEN"} = {formatBalance(offer?.price) } MINA
                         </span>
                       </div>
-                      <div className="mt-3 flex">
-                        <div>
-                          <div className="flex items-center whitespace-nowrap">
-                            <span className="text-lg font-medium leading-tight tracking-tight text-green">
-                              {formatBalance(bid?.price)} MINA
-                            </span>
-                          </div>
-                        </div>
                       </div>
-                    </div>
-                    <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
-                      <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
-                        <span className="text-medium text-jacarta-400 dark:text-jacarta-300">
-                          Lowest offer
-                        </span>
-                      </div>
-                      <div className="mt-3 flex">
-                        <div>
-                          <div className="flex items-center whitespace-nowrap">
-                            <span className="text-lg font-medium leading-tight tracking-tight text-red">
-                              {formatBalance(offer?.price)} MINA
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
-
-                  <button
-                    onClick={() => {
-                      const tradeTab = document.getElementById("trade-tab");
-                      const tradePane = document.getElementById("trade");
-                      if (tradeTab && tradePane) {
-                        // Remove active class from all tabs and panes
-                        document
-                          .querySelectorAll(".nav-link")
-                          .forEach((tab) => {
-                            tab.classList.remove("active");
-                            tab.setAttribute("aria-selected", "false");
-                          });
-                        document
-                          .querySelectorAll(".tab-pane")
-                          .forEach((pane) => {
-                            pane.classList.remove("show", "active");
-                          });
-
-                        // Activate trade tab and pane
-                        tradeTab.classList.add("active");
-                        tradeTab.setAttribute("aria-selected", "true");
-                        tradePane.classList.add("show", "active");
-
-                        // Scroll to the trade section
-                        tradePane.scrollIntoView({ behavior: "smooth" });
-                      }
-                    }}
-                    className="inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
-                  >
-                    Trade
-                  </button>
+                  )}
+                  {bid && (
+                  <div className="w-1/2 flex justify-center" key={"bid"}>
+                  <div className="">
+                  
+                    <button
+                      onClick={() => setOperation("sell")}
+                      className="mb-3 inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                    >
+                      Sell {item?.symbol ?? ""}
+                    </button>
+                    
+                    <div className="block overflow-hidden text-ellipsis whitespace-nowrap text-center">
+                        <span className="text-bold text-sm text-jacarta-400 dark:text-jacarta-100">
+                          1 {item?.symbol ?? "TOKEN"} = {formatBalance(bid?.price) } MINA
+                        </span>
+                      </div>
+                      </div>
+                      
+                  </div>
+                  )}
                 </div>
+                  {/* <div className="max-w-md rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
+
+                    <div className="w-full">
+                      <div className="block overflow-hidden text-ellipsis whitespace-nowrap text-center">
+                        <span className="text-bold text-lg text-jacarta-400 dark:text-jacarta-100">
+                          {item?.symbol ?? "TOKEN"}/MINA
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mb-2 w-full flex flex-wrap">
+                      <div className="w-1/2 flex justify-center">
+                        <div className="mt-3 flex flex-col items-center">
+                          <div>
+
+                            <div className="flex items-center justify-center text-center whitespace-nowrap">
+                              <span className="text-lg font-medium leading-tight tracking-tight text-green">
+                                {formatBalance(offer?.price) + (offer?.price ? " MINA" : "")}
+                              </span>
+                            </div>
+                            <div className="mt-6">
+                              <button
+                                onClick={() => {
+                                  const tradeTab = document.getElementById("trade-tab");
+                                  const tradePane = document.getElementById("trade");
+                                  if (tradeTab && tradePane) {
+                                    // Remove active class from all tabs and panes
+                                    document
+                                      .querySelectorAll(".nav-link")
+                                      .forEach((tab) => {
+                                        tab.classList.remove("active");
+                                        tab.setAttribute("aria-selected", "false");
+                                      });
+                                    document
+                                      .querySelectorAll(".tab-pane")
+                                      .forEach((pane) => {
+                                        pane.classList.remove("show", "active");
+                                      });
+
+                                    // Activate trade tab and pane
+                                    tradeTab.classList.add("active");
+                                    tradeTab.setAttribute("aria-selected", "true");
+                                    tradePane.classList.add("show", "active");
+
+                                    // Scroll to the trade section
+                                    tradePane.scrollIntoView({ behavior: "smooth" });
+                                  }
+                                }}
+                                className="inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                              >
+                                Buy
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="w-1/2 flex justify-center">
+                        <div className="mt-3 flex flex-col items-center">
+                          <div>
+                            <div className="flex items-center justify-center text-center whitespace-nowrap">
+                              <span className="text-lg font-medium leading-tight tracking-tight text-red">
+                                {formatBalance(bid?.price) + (bid?.price ? " MINA" : "")}
+                              </span>
+                            </div>
+                            <div className="mt-6">
+                              <button
+                                onClick={() => {
+                                  const tradeTab = document.getElementById("trade-tab");
+                                  const tradePane = document.getElementById("trade");
+                                  if (tradeTab && tradePane) {
+                                    // Remove active class from all tabs and panes
+                                    document
+                                      .querySelectorAll(".nav-link")
+                                      .forEach((tab) => {
+                                        tab.classList.remove("active");
+                                        tab.setAttribute("aria-selected", "false");
+                                      });
+                                    document
+                                      .querySelectorAll(".tab-pane")
+                                      .forEach((pane) => {
+                                        pane.classList.remove("show", "active");
+                                      });
+
+                                    // Activate trade tab and pane
+                                    tradeTab.classList.add("active");
+                                    tradeTab.setAttribute("aria-selected", "true");
+                                    tradePane.classList.add("show", "active");
+
+                                    // Scroll to the trade section
+                                    tradePane.scrollIntoView({ behavior: "smooth" });
+                                  }
+                                }}
+                                className="inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+                              >
+                                Sell
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+
+                  </div> */}
+                </>
               )}
               {/* end bid */}
             </div>
@@ -657,6 +759,16 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
             decimals={tokenState?.decimals ?? item?.decimals ?? 9}
           />
           {/* end tabs */}
+          <BuySellDialog
+        operation={operation}
+        onClose={() => setOperation(undefined)}
+        onConfirm={onConfirm}
+        offer={offer}
+        bid={bid}
+        symbol={item?.symbol ?? "TOKEN"}
+        tokenAddress={tokenAddress}
+        tokenState={tokenState}
+      />
         </div>
       </section>
     </>
