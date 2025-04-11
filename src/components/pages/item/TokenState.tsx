@@ -70,7 +70,11 @@ export function TokenStateTab({ tokenState }: { tokenState: TokenState }) {
               Contract Address:
             </span>
             <Link
-              href={`${explorerAccountUrl()}${tokenState.tokenAddress}`}
+              href={`${explorerAccountUrl()}${
+                tab === "token"
+                  ? tokenState.tokenAddress
+                  : tokenState.adminContractAddress
+              }`}
               className=" text-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"
