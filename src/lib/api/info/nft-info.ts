@@ -535,7 +535,7 @@ class NFTData extends Struct({
       approvedVerificationKeyHash,
       approvedType,
       price,
-      version: Number(data.version.toBigint()),
+      version: Number(data.version.toBigInt()),
       id: data.id.toBigInt().toString(),
       canChangeOwnerByProof: data.canChangeOwnerByProof.toBoolean(),
       canTransfer: data.canTransfer.toBoolean(),

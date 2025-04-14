@@ -1,6 +1,6 @@
 "use server";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { withLogtail, LogtailAPIRequest } from "@logtail/next";
+import { withLogtail, BetterStackRequest } from "@logtail/next";
 import {
   rateLimit,
   initializeMemoryRateLimiter,
@@ -99,7 +99,10 @@ function apiHandlerInternal<T, V>(params: {
 }) {
   const { name, handler, isInternal = false, isReadme = false } = params;
 
-  return async (req: LogtailAPIRequest & { body: T }, res: NextApiResponse) => {
+  return async (
+    req: BetterStackRequest & { body: T },
+    res: NextApiResponse
+  ) => {
     req.log.info("apiHandler", { name });
     const start = Date.now();
     if (req.method === "OPTIONS") {
@@ -117,8 +120,8 @@ function apiHandlerInternal<T, V>(params: {
     }
 
     const ip =
-      req.headers["x-forwarded-for"]?.toString().split(",").shift() ||
-      req.socket.remoteAddress ||
+      req.headers.get("x-forwarded-for")?.toString().split(",").shift() ||
+      req.headers.get("x-real-ip") ||
       "0.0.0.0";
 
     if (await rateLimit({ name: "ipMemory", key: ip })) {
@@ -155,7 +158,7 @@ function apiHandlerInternal<T, V>(params: {
     //   return res.status(status).json(json);
     // }
 
-    const apiKey = req.headers["x-api-key"];
+    const apiKey = req.headers.get("x-api-key");
     if (!apiKey || typeof apiKey !== "string" || apiKey === "") {
       return reply(401, { error: "Unauthorized" });
     }
@@ -305,18 +308,18 @@ function apiHandlerInternal<T, V>(params: {
       if (await rateLimit({ name: "apiRedis", key: userKey })) {
         return await reply(429, { error: "Too many requests" });
       }
-      if (name === "token:launch" && req.body.uri?.imageBase64) {
-        if (typeof req.body.uri?.imageBase64 !== "string") {
+      if (name === "token:launch" && (req.body as any)?.uri?.imageBase64) {
+        if (typeof (req.body as any)?.uri?.imageBase64 !== "string") {
           req.log.error("Invalid image, should be base64 string", {
-            imageBase64: req.body.uri?.imageBase64,
+            imageBase64: (req.body as any)?.uri?.imageBase64,
           });
           return await reply(400, {
             error: "Invalid image, should be base64 string",
           });
         }
-        if (req.body.uri.imageBase64.length > 2000000) {
+        if ((req.body as any).uri.imageBase64.length > 2000000) {
           req.log.error("Image too large", {
-            imageLength: req.body.uri.imageBase64.length,
+            imageLength: (req.body as any).uri.imageBase64.length,
           });
           return await reply(400, {
             error: "Image too large, the maximum size is 1MB",
