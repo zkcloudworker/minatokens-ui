@@ -86,71 +86,85 @@ export async function getNFTState(props: {
         json: { error: "Internal error: Collection address mismatch" },
       };
     }
-    const nftInfo = (await algoliaGetNFT({
-      collectionAddress,
-      nftAddress: nft.tokenAddress,
-    })) as NftInfo | undefined;
-    if (nftInfo) {
-      // Update nftInfo with any changed values from nft
-      let isUpdated = false;
-      const updatedKeys: string[] = [];
-      for (const key in nft) {
-        if (
-          key !== "created" &&
-          key !== "updated" &&
-          key !== "rating" &&
-          key !== "status" &&
-          nft[key as keyof typeof nft] !== (nftInfo as any)[key]
-        ) {
-          (nftInfo as any)[key] = nft[key as keyof typeof nft];
-          isUpdated = true;
-          updatedKeys.push(key);
+    if (
+      info.collection.contractVerificationKeyHash ===
+        tokenVerificationKeys[chain === "mainnet" ? "mainnet" : "devnet"].vk
+          .Collection.hash &&
+      info.nft.contractVerificationKeyHash ===
+        tokenVerificationKeys[chain === "mainnet" ? "mainnet" : "devnet"].vk.NFT
+          .hash
+    ) {
+      const nftInfo = (await algoliaGetNFT({
+        collectionAddress,
+        nftAddress: nft.tokenAddress,
+      })) as NftInfo | undefined;
+      if (nftInfo) {
+        // Update nftInfo with any changed values from nft
+        let isUpdated = false;
+        const updatedKeys: string[] = [];
+        for (const key in nft) {
+          if (
+            key !== "created" &&
+            key !== "updated" &&
+            key !== "rating" &&
+            key !== "status" &&
+            nft[key as keyof typeof nft] !== (nftInfo as any)[key]
+          ) {
+            (nftInfo as any)[key] = nft[key as keyof typeof nft];
+            isUpdated = true;
+            updatedKeys.push(key);
+          }
         }
+        if (isUpdated) {
+          log.info("algoliaWriteNFT: Updating NFT", {
+            nftInfo,
+            updatedKeys,
+          });
+          nftInfo.updated = Date.now();
+          await algoliaWriteNFT(nftInfo);
+        }
+      } else {
+        await algoliaWriteNFT(nft);
       }
-      if (isUpdated) {
-        log.info("algoliaWriteNFT: Updating NFT", {
-          nftInfo,
-          updatedKeys,
-        });
-        nftInfo.updated = Date.now();
-        await algoliaWriteNFT(nftInfo);
-      }
-    } else {
-      await algoliaWriteNFT(nft);
-    }
 
-    const collectionInfo = (await algoliaGetNFT({
-      collectionAddress,
-    })) as CollectionInfo | undefined;
-    if (collectionInfo) {
-      // Update collectionInfo with any changed values from collection
-      let isUpdated = false;
-      const updatedKeys: string[] = [];
-      for (const key in collection) {
-        if (
-          key !== "created" &&
-          key !== "updated" &&
-          key !== "rating" &&
-          key !== "status" &&
-          collection[key as keyof typeof collection] !==
-            (collectionInfo as any)[key]
-        ) {
-          (collectionInfo as any)[key] =
-            collection[key as keyof typeof collection];
-          isUpdated = true;
-          updatedKeys.push(key);
+      const collectionInfo = (await algoliaGetNFT({
+        collectionAddress,
+      })) as CollectionInfo | undefined;
+      if (collectionInfo) {
+        // Update collectionInfo with any changed values from collection
+        let isUpdated = false;
+        const updatedKeys: string[] = [];
+        for (const key in collection) {
+          if (
+            key !== "created" &&
+            key !== "updated" &&
+            key !== "rating" &&
+            key !== "status" &&
+            collection[key as keyof typeof collection] !==
+              (collectionInfo as any)[key]
+          ) {
+            (collectionInfo as any)[key] =
+              collection[key as keyof typeof collection];
+            isUpdated = true;
+            updatedKeys.push(key);
+          }
         }
-      }
-      if (isUpdated) {
-        log.info("algoliaWriteCollection: Updating Collection", {
-          collectionInfo,
-          updatedKeys,
-        });
-        collectionInfo.updated = Date.now();
-        await algoliaWriteCollection(collectionInfo);
+        if (isUpdated) {
+          log.info("algoliaWriteCollection: Updating Collection", {
+            collectionInfo,
+            updatedKeys,
+          });
+          collectionInfo.updated = Date.now();
+          await algoliaWriteCollection(collectionInfo);
+        }
+      } else {
+        await algoliaWriteCollection(collection);
       }
     } else {
-      await algoliaWriteCollection(collection);
+      log.error("getNFTState: Contract verification key hash mismatch", {
+        collectionAddress,
+        nftAddress,
+      });
     }
     return {
       status: 200,
