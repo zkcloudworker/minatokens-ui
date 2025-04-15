@@ -164,6 +164,8 @@ export async function getNFTState(props: {
       log.error("getNFTState: Contract verification key hash mismatch", {
         collectionAddress,
         nftAddress,
+        nftHash: info.nft.contractVerificationKeyHash,
+        collectionHash: info.collection.contractVerificationKeyHash,
       });
     }
     return {
