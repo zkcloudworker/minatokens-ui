@@ -242,13 +242,24 @@ function apiHandlerInternal<T, V>(params: {
           console.error("api reply", { status, error: (json as any)?.error });
         }
         const end = Date.now();
+        let error: string | undefined;
+        try {
+          error =
+            typeof (json as any)?.error === "string"
+              ? (json as any)?.error
+              : (json as any)?.error
+              ? JSON.stringify(json)
+              : undefined;
+        } catch (e) {
+          error = "Unknown error";
+        }
         await prisma.aPIKeyCalls.create({
           data: {
             address: userKey,
             status,
             chain: getChainId(),
             endpoint: name,
-            error: (json as any)?.error,
+            error,
             result: getResult(json),
             responseTimeMs: end - start,
           },
