@@ -140,6 +140,10 @@ export async function nonce(props: {
   name: ApiName;
   apiKeyAddress: string;
 }): Promise<ApiResponse<NonceResponse>> {
+  return {
+    status: 500,
+    json: { error: "Please decrease nonce" },
+  };
   const { params, name, apiKeyAddress } = props;
   const { address } = params;
 
