@@ -18,6 +18,7 @@ import {
   BalanceResponse,
   TokenTransactionType,
   JobResults,
+  NonceResponse,
 } from "@silvana-one/api";
 import { ApiResponse, ApiName } from "./api-types";
 import { debug } from "../debug";
@@ -206,6 +207,8 @@ function apiHandlerInternal<T, V>(params: {
           return (json as TokenState)?.tokenSymbol;
         case "info:balance":
           return (json as BalanceResponse)?.balance?.toString();
+        case "info:nonce":
+          return (json as NonceResponse)?.nonce?.toString();
         default:
           return (json as TokenTransaction)?.memo;
       }
