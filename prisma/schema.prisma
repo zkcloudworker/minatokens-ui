@@ -234,3 +234,23 @@ model Likes {
   @@index([tokenId])
 }
 
+model NFTCMS {
+  id          Int      @id @default(autoincrement())
+  chain       Chain
+  collectionAddress String
+  symbol      String?
+  name        String
+  description String?
+  imageURL    String
+  traits      Json?
+  nftData     Json?
+  price       Float?
+  mintStart   DateTime?
+  mintEnd     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([chain])
+  @@index([collectionAddress])
+  @@index([name])
+}
