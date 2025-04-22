@@ -86,6 +86,7 @@ export async function cmsStoreNFT(props: {
   name: ApiName;
   apiKeyAddress: string;
 }): Promise<ApiResponse<CmsStoreNFTResponse>> {
+  console.log("cmsStoreNFT", props);
   try {
     const { params, name, apiKeyAddress } = props;
     const { signature, nft } = params;

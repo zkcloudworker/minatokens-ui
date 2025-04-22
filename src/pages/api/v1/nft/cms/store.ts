@@ -1,9 +1,12 @@
 "use server";
 import { apiHandler } from "@/lib/api/api";
-import { balance } from "@/lib/api/info/token-info";
-import { BalanceRequestParams, BalanceResponse } from "@silvana-one/api";
+import {
+  CmsStoreNFTParams,
+  CmsStoreNFTResponse,
+  cmsStoreNFT,
+} from "@/lib/api/nft/cms";
 
-export default apiHandler<BalanceRequestParams, BalanceResponse>({
-  name: "info:balance",
-  handler: balance,
+export default apiHandler<CmsStoreNFTParams, CmsStoreNFTResponse>({
+  name: "cms:store",
+  handler: cmsStoreNFT,
 });
