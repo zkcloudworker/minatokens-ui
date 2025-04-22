@@ -7,6 +7,8 @@ import { ApiName, ApiResponse } from "../api-types";
 import { getChain, getPrismaChainName } from "@/lib/chain";
 import { log as logtail } from "@logtail/next";
 import { getNftInfo } from "../info/nft-info";
+import { initBlockchain, fetchMinaAccount } from "@/lib/blockchain";
+import { checkAddress } from "@/lib/address";
 
 const chain = getChain();
 const prismaChain = getPrismaChainName();
@@ -162,6 +164,14 @@ export async function cmsStoreNFT(props: {
       };
     }
 
+    await initBlockchain();
+    if (!checkAddress(nft.collectionAddress)) {
+      return {
+        status: 400,
+        json: { error: "Invalid collection address" },
+      };
+    }
+
     const collectionInfo = await getNftInfo({
       collectionAddress: nft.collectionAddress,
     });
@@ -292,6 +302,14 @@ export async function cmsReadNFT(props: {
         };
       }
 
+      await initBlockchain();
+      if (!checkAddress(collectionAddress)) {
+        return {
+          status: 400,
+          json: { error: "Invalid collection address" },
+        };
+      }
+
       const collectionInfo = await getNftInfo({
         collectionAddress,
       });
@@ -316,6 +334,7 @@ export async function cmsReadNFT(props: {
     const savedNfts = await prisma.nFTCMS.findMany({
       where: {
         collectionAddress,
+        chain: prismaChain as PrismaChain,
         ...(nftName ? { name: nftName } : {}),
         // TODO: add on mainnet launch mintDate range filter using mintStart and mintEnd and isSigned
       },
