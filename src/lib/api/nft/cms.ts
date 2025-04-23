@@ -366,6 +366,32 @@ export async function cmsReadNFT(props: {
   }
 }
 
+const reserveQuestionary = `
+  Questionary for Collection Creator for implementing reserve feature for collection:
+
+  - Mint start date and time
+  - Mint end date and time
+  - What address should receive mint fees. Can it be the creator address or NFTadmin admin address?
+  - Max number of NFTs per address (public key B62...)
+  - Max number of NFTs per ip address
+  - Max mint rate per minute and per hour
+  - Whitelist of addresses that are allowed to mint
+  - Blacklist of addresses that are not allowed to mint
+  - Blacklist of ip addresses that are not allowed to mint
+  - List of allowed countries (by country code)
+  - List of not allowed countries (by country code)
+  - Should be fully decentralized mint using token accounts of admin contract? (will cost 1.2 MINA per NFT in advance for network fees for creation of token accounts in advance, or pre-generated private keys for all NFTs can be used) or should use centralized sequencer with rate limits (no upfront cost)
+  - Should be minted NFTs shown to user after mint request or after the inclusion in the block (can take few hours in case of airdrop)
+  - What methods should be used for nonce management: graphql, blockberry, redis, increment with timeouts (affect fail rate of mint)
+  - Will the mint be sent by the one address in case of airdrop of should txs be signed by users
+  - Who is paying network fees
+  - Should the address and the private key be generated on saving the NFT to the CMS. Where NFT private key should be stored
+  - What progress info should see the user after mint request. Should it be cached in case of mint taking several hours?
+
+  Please answer the questions above and send to support@minanft.io. 
+  If you have any questions, need help or would like to discuss the implementation details, please contact us.
+`;
+
 export async function cmsReserveNFT(props: {
   params: CmsReserveNFTParams;
   name: ApiName;
@@ -375,7 +401,8 @@ export async function cmsReserveNFT(props: {
     status: 400,
     json: {
       error:
-        "Contact support@minanft.io to enable reserve feature for your collection",
+        "Contact support@minanft.io to enable reserve feature for your collection, answering the questions:" +
+        reserveQuestionary,
     },
   };
 }
