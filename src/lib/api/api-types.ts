@@ -20,7 +20,10 @@ export type ApiName =
   | "arweave:json"
   | "arweave:image"
   | "faucet"
-  | "key";
+  | "key"
+  | "cms:store"
+  | "cms:read"
+  | "cms:reserve";
 
 export type ApiResponse<T> =
   | {

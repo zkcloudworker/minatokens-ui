@@ -273,7 +273,7 @@ export async function algoliaGetNFT(params: {
   }
 }
 
-async function getNftInfo(params: {
+export async function getNftInfo(params: {
   nftAddress?: string;
   collectionAddress: string;
 }): Promise<{ nft: NftInfo; collection: CollectionInfo } | undefined> {
