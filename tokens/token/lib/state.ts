@@ -437,7 +437,7 @@ async function getPrice(adminAddress: PublicKey): Promise<{
     supply === 0n ? 10_000 : (balance * 1_000_000_000n) / supply;
   const mintPrice = 10_000 + Math.ceil(Number(supply) / 10_000_000_000);
   return {
-    redeemPrice: (Number(redeemPrice) * 0.9) / 1_000_000_000,
-    mintPrice: (Number(mintPrice) * 1.1) / 1_000_000_000,
+    redeemPrice: (Number(redeemPrice) * 0.8) / 1_000_000_000,
+    mintPrice: (Number(mintPrice) * 1.2) / 1_000_000_000,
   };
 }

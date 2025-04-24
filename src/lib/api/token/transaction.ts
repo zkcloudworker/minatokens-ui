@@ -609,7 +609,7 @@ export async function tokenTransaction(props: {
     }
     txParams.txType = txType;
     if ("slippage" in txParams && txParams.slippage === undefined) {
-      txParams.slippage = 50;
+      txParams.slippage = 100;
     }
     if (limitCheck) {
       const check = await limitCheck;
