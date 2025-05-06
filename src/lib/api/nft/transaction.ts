@@ -270,6 +270,7 @@ export async function nftTransaction(props: {
 
     const memo = txParams.memo ?? `${action} ${symbol}`.substring(0, 30);
     if (DEBUG) console.log("memo:", memo);
+    txParams.memo = memo;
     try {
       await fetchMinaAccount({
         publicKey: sender,

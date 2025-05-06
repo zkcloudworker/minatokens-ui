@@ -96,10 +96,9 @@ export function Orderbook({
     <section className="relative">
       <div className="container">
         <div className="w-full max-w-4xl mx-auto">
-        <h3 className="font-semibold mb-4 text-jacarta-700 dark:text-white">
-                Choose an offer or bid
-                
-              </h3>
+          <h3 className="font-semibold mb-4 text-jacarta-700 dark:text-white">
+            Choose an offer or bid
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Offers Column */}
             <div className="min-w-[300px]">
@@ -165,8 +164,12 @@ export function Orderbook({
           {selectedOrder && (
             <div className="mt-6 p-4 border border-jacarta-100 dark:border-jacarta-600 rounded-lg bg-white dark:bg-jacarta-700">
               <h3 className="text-sm font-semibold mb-4 text-jacarta-700 dark:text-white">
-                {tab === "orderbook" ? ("Enter the amount of " + offerSymbol + " you want to " + (selectedOrder.type === "offer" ? "buy" : "sell")) : ""}{" "}
-                
+                {tab === "orderbook"
+                  ? "Enter the amount of " +
+                    offerSymbol +
+                    " you want to " +
+                    (selectedOrder.type === "offer" ? "buy" : "sell")
+                  : ""}{" "}
               </h3>
               <div className="flex items-center space-x-4">
                 <Input
@@ -319,7 +322,7 @@ function ConfirmDialog({
             {exceeded && (
               <p className="text-red-500">
                 Note: This order exceeds the maximum amount for the mainnet
-                during the alpha phase. The maximum amount is 500 MINA.
+                during the beta phase. The maximum amount is 500 MINA.
               </p>
             )}
           </div>
@@ -331,20 +334,19 @@ function ConfirmDialog({
           >
             Cancel
           </button>
-          
-            <button
-              onClick={onConfirm}
-              className="rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"
-            >
-              {tab === "orderbook"
-                ? order.type === "offer"
-                  ? `Buy ${offerSymbol}`
-                  : `Sell ${bidSymbol}`
-                : order.type === "offer"
-                ? `Withdraw ${offerSymbol}`
-                : `Withdraw ${bidSymbol}`}
-            </button>
-          
+
+          <button
+            onClick={onConfirm}
+            className="rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"
+          >
+            {tab === "orderbook"
+              ? order.type === "offer"
+                ? `Buy ${offerSymbol}`
+                : `Sell ${bidSymbol}`
+              : order.type === "offer"
+              ? `Withdraw ${offerSymbol}`
+              : `Withdraw ${bidSymbol}`}
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -69,22 +69,21 @@ export function BuySellDialog({
   tokenState: TokenState | undefined;
   decimals?: number;
 }) {
-  
   const { transactionStates, setTokenData, setFormData, setIsProcessing } =
-  useTransactionStore((state) => state);
+    useTransactionStore((state) => state);
   const { address, setAddress } = useContext(AddressContext);
   const [amount, setAmount] = useState<number | undefined>(undefined);
 
   const order = operation === "buy" ? offer : bid;
   const price = order?.price;
-  const maxAmount = operation === "buy" ? order?.amount : (order?.amount ?? 0) / (price ?? 1);
+  const maxAmount =
+    operation === "buy" ? order?.amount : (order?.amount ?? 0) / (price ?? 1);
   const total = (price ?? 0) * (amount ?? 0);
   const exceeded = chain === "mainnet" && total > 500;
 
   const { state, dispatch } = useTokenDetails();
   const tokenBalance = state.tokens[tokenAddress]?.balance;
   const minaBalance = state.minaBalance;
-
 
   const setTokenBalance = (balance: number | undefined) =>
     dispatch({ type: "SET_BALANCE", payload: { tokenAddress, balance } });
@@ -124,14 +123,12 @@ export function BuySellDialog({
       setTokenBalance(undefined);
     }
 
-
     if (DEBUG) console.log("fetchBalance done", { minaBalance, tokenBalance });
   }, [address, tokenAddress]);
 
   useEffect(() => {
     fetchBalance();
   }, [fetchBalance]);
-
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -176,12 +173,8 @@ export function BuySellDialog({
       symbol,
       txs: [
         {
-          txType:
-            
-              order.type === "offer"
-                ? "token:offer:buy"
-                : "token:bid:sell",
-              
+          txType: order.type === "offer" ? "token:offer:buy" : "token:bid:sell",
+
           amount: amount * 10 ** (decimals ?? 9),
           tokenAddress,
           sender: tokenState?.adminAddress,
@@ -190,14 +183,15 @@ export function BuySellDialog({
         } as TokenBuyTransactionParams | TokenSellTransactionParams,
       ],
     });
-    
   };
 
   return (
     <Dialog open={operation !== undefined} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{operation === "buy" ? "Buy" : "Sell"} {symbol}</DialogTitle>
+          <DialogTitle>
+            {operation === "buy" ? "Buy" : "Sell"} {symbol}
+          </DialogTitle>
           {/* <DialogDescription>
             Please enter the amount of {symbol} you want to{" "}
             {operation === "buy"
@@ -213,11 +207,9 @@ export function BuySellDialog({
           </p>
           <p>
             <strong className="inline-block mb-2">Amount in {symbol}:</strong>{" "}
-
           </p>
           <p>
             <div className="flex gap-2">
-
               <Input
                 type="number"
                 value={amount}
@@ -237,22 +229,31 @@ export function BuySellDialog({
             <strong className="inline-block w-32 mb-4">Total Payment:</strong>{" "}
             {formatBalance(total)} MINA
           </p>
-          {(tokenBalance !== undefined) && (
+          {tokenBalance !== undefined && (
             <p>
-              <span className="text-sm inline-block w-40">Your {symbol} Balance: </span>{" "}
-              <span className="text-sm inline-block"> {formatBalance(tokenBalance)} {symbol}</span>{" "}
-            
-          </p>
+              <span className="text-sm inline-block w-40">
+                Your {symbol} Balance:{" "}
+              </span>{" "}
+              <span className="text-sm inline-block">
+                {" "}
+                {formatBalance(tokenBalance)} {symbol}
+              </span>{" "}
+            </p>
           )}
-          {(minaBalance !== undefined ) && (
+          {minaBalance !== undefined && (
             <p>
-              <span className="text-sm inline-block w-40">Your MINA Balance: </span>{" "}
-              <span className="text-sm inline-block"> {formatBalance(minaBalance)} MINA</span>{" "}
+              <span className="text-sm inline-block w-40">
+                Your MINA Balance:{" "}
+              </span>{" "}
+              <span className="text-sm inline-block">
+                {" "}
+                {formatBalance(minaBalance)} MINA
+              </span>{" "}
             </p>
           )}
           {exceeded && (
             <p className="text-red mt-4 mb-4">
-              Maximum order size is 500 MINA during mainnet alpha stage.
+              Maximum order size is 500 MINA during mainnet beta stage.
             </p>
           )}
         </div>
@@ -269,17 +270,17 @@ export function BuySellDialog({
             disabled={!amount || !order || !tokenState}
             onClick={() => {
               if (amount && order && tokenState) {
-                
                 handleSubmit(order, amount);
               }
             }}
-            className={`rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold ${!amount ? 'opacity-50 cursor-not-allowed' : 'text-accent transition-all hover:bg-accent hover:text-white'}`}
+            className={`rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold ${
+              !amount
+                ? "opacity-50 cursor-not-allowed"
+                : "text-accent transition-all hover:bg-accent hover:text-white"
+            }`}
           >
-            {operation === "buy"
-              ? `Buy ${symbol}`
-              : `Sell ${symbol}`}
+            {operation === "buy" ? `Buy ${symbol}` : `Sell ${symbol}`}
           </button>
-
         </DialogFooter>
       </DialogContent>
     </Dialog>
