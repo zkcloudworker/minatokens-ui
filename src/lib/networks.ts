@@ -8,7 +8,7 @@ export interface MinaNetworkParams {
   /** The chain name */
   chain: "mainnet" | "devnet" | "zeko";
 
-  chainId: "mina:mainnet" | "mina:devnet" | "zeko:testnet" | "zeko:alphanet";
+  chainId: "mina:mainnet" | "mina:devnet" | "zeko:testnet";
 
   /** The explorer account URL  */
   explorerAccountUrl: string;
