@@ -347,6 +347,8 @@ export async function cmsReadNFT(props: {
         symbol: nft.symbol || undefined,
         nftData: nft.nftData ? JSON.parse(nft.nftData as string) : undefined,
         description: nft.description || undefined,
+        metadataVerificationKeyHash:
+          nft.metadataVerificationKeyHash || undefined,
         mintStart: nft.mintStart ? nft.mintStart.valueOf() : undefined,
         mintEnd: nft.mintEnd ? nft.mintEnd.valueOf() : undefined,
         price: nft.price || undefined,
