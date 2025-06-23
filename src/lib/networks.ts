@@ -57,20 +57,9 @@ export const Devnet: MinaNetworkParams = {
   launchpadUrl: "https://minatokens.com",
 };
 
-// export const Zeko: MinaNetworkParams = {
-//   mina: ["https://devnet.zeko.io/graphql"],
-//   archive: ["https://devnet.zeko.io/graphql"],
-//   explorerAccountUrl: "https://zekoscan.io/testnet/account/",
-//   explorerTransactionUrl: "https://zekoscan.io/testnet/tx/",
-//   chain: "zeko",
-//   chainId: "zeko:testnet",
-//   explorerTokenUrl: "https://zekoscan.io/testnet/token/",
-//   launchpadUrl: "https://zekotokens.com",
-// };
-
 export const Zeko: MinaNetworkParams = {
-  mina: ["http://m1.zeko.io/graphql"],
-  archive: ["http://m1.zeko.io/graphql"],
+  mina: ["https://devnet.zeko.io/graphql"],
+  archive: ["https://devnet.zeko.io/graphql"],
   explorerAccountUrl: "https://zekoscan.io/testnet/account/",
   explorerTransactionUrl: "https://zekoscan.io/testnet/tx/",
   chain: "zeko",
@@ -78,3 +67,14 @@ export const Zeko: MinaNetworkParams = {
   explorerTokenUrl: "https://zekoscan.io/testnet/token/",
   launchpadUrl: "https://zekotokens.com",
 };
+
+// export const Zeko: MinaNetworkParams = {
+//   mina: ["http://m1.zeko.io/graphql"],
+//   archive: ["http://m1.zeko.io/graphql"],
+//   explorerAccountUrl: "https://zekoscan.io/testnet/account/",
+//   explorerTransactionUrl: "https://zekoscan.io/testnet/tx/",
+//   chain: "zeko",
+//   chainId: "zeko:testnet",
+//   explorerTokenUrl: "https://zekoscan.io/testnet/token/",
+//   launchpadUrl: "https://zekotokens.com",
+// };
