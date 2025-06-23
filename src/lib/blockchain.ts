@@ -65,8 +65,8 @@ const Devnet: MinaNetwork = {
 };
 
 const Zeko: MinaNetwork = {
-  mina: ["http://m1.zeko.io/graphql"],
-  archive: ["http://m1.zeko.io/graphql"],
+  mina: ["https://devnet.zeko.io/graphql"],
+  archive: ["https://devnet.zeko.io/graphql"],
   explorerAccountUrl: "https://zekoscan.io/devnet/account/",
   explorerTransactionUrl: "https://zekoscan.io/devnet/tx/",
   chainId: "zeko",
