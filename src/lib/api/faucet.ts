@@ -87,7 +87,7 @@ export async function faucet(props: {
 
     if (chain === "zeko") {
       try {
-        const response = await fetch("https://zeko-faucet-a1ct.onrender.com/", {
+        const response = await fetch("https://zeko.io/api/faucet", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -104,11 +104,16 @@ export async function faucet(props: {
             json: { error: result },
           };
         }
-        const result = await response.text();
-        if (result === "Successfully sent") {
-          return { status: 200, json: { success: true } };
+        const result = await response.json();
+        const message = result?.message;
+        const hash = result?.hash;
+        if (message === "Successfully sent" && hash) {
+          return { status: 200, json: { success: true, hash } };
         } else {
-          return { status: 503, json: { error: result } };
+          return {
+            status: 503,
+            json: { error: message ?? "Zeko faucet error" },
+          };
         }
       } catch (error: any) {
         console.error("Zeko faucet error:", error);
