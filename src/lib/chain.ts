@@ -16,7 +16,11 @@ export function getChain(): "mainnet" | "devnet" | "zeko" {
   return chain;
 }
 
-export function getChainId(): "mina:mainnet" | "mina:devnet" | "zeko:testnet" {
+export function getChainId():
+  | "mina:mainnet"
+  | "mina:devnet"
+  | "zeko:testnet"
+  | "zeko:alphanet" {
   const chain = getChain();
   const chainId = [Mainnet, Devnet, Zeko].find(
     (network) => network.chain === chain

@@ -16,11 +16,7 @@ export async function proof(props: {
   const { params, name, apiKeyAddress } = props;
   const { jobId } = params;
 
-  if (
-    !jobId ||
-    typeof jobId !== "string" ||
-    jobId.startsWith("zkCW") === false
-  ) {
+  if (!jobId || typeof jobId !== "string") {
     return {
       status: 400,
       json: { error: "Invalid jobId" },

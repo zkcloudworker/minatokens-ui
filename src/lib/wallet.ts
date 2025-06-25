@@ -250,5 +250,6 @@ export async function getWalletInfo(): Promise<{
     walletInfo = info;
     log.info("getWalletInfo", info);
   }
+  if (DEBUG) console.log("getWalletInfo", info);
   return info;
 }

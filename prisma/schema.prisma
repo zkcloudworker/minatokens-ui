@@ -240,6 +240,7 @@ model NFTCMS {
   collectionAddress String
   symbol      String?
   name        String
+  metadataVerificationKeyHash String?
   description String?
   imageURL    String
   traits      Json?
