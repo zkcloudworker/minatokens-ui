@@ -17,6 +17,7 @@ import { createTransactionPayloads } from "@silvana-one/mina-utils";
 import { checkAddress, checkPrivateKey } from "../utils/address";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
+import { getFee } from "@/lib/fee";
 import { getAccountNonce } from "../../nonce";
 import { accountExists } from "../../account";
 import { log as logtail } from "@logtail/next";
@@ -171,7 +172,8 @@ export async function deployToken(props: {
     // const adminContractPublicKey = adminContractPrivateKey.toPublicKey();
     // if (DEBUG) console.log("Admin Contract", adminContractPublicKey.toBase58());
     const wallet = PublicKey.fromBase58(WALLET);
-    const fee = 100_000_000;
+    const fee = params.fee ?? (await getFee({ params: { weight: 6 } }));
+    params.fee = fee;
     params.memo = params.memo
       ? params.memo.substring(0, 30)
       : `deploy token ${symbol}`;
