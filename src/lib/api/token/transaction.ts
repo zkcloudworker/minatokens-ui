@@ -28,6 +28,7 @@ import { checkAddress, checkPrivateKey } from "../utils/address";
 import { accountExists } from "@/lib/account";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
+import { getFee } from "@/lib/fee";
 import { getAccountNonce } from "../../nonce";
 import { log as logtail } from "@logtail/next";
 const chain = getChain();
@@ -400,7 +401,8 @@ export async function tokenTransaction(props: {
       };
     }
 
-    const fee = 100_000_000;
+    const fee = txParams.fee ?? (await getFee({ params: { weight: 6 } }));
+    txParams.fee = fee;
     const tokenAddress = PublicKey.fromBase58(txParams.tokenAddress);
     if (DEBUG) console.log("Contract", tokenAddress.toBase58());
     const adminContractPublicKey = PublicKey.fromBase58(adminContractAddress);

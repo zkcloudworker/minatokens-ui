@@ -29,6 +29,7 @@ import { accountExists } from "@/lib/account";
 import { debug } from "@/lib/debug";
 import { getWallet, getChain } from "@/lib/chain";
 import { getAccountNonce } from "../../nonce";
+import { getFee } from "@/lib/fee";
 const WALLET = getWallet();
 const chain = getChain();
 const DEBUG = debug();
@@ -236,7 +237,8 @@ export async function nftTransaction(props: {
 
     const symbol = "NFT";
 
-    const fee = 100_000_000;
+    const fee = txParams.fee ?? (await getFee({ params: { weight: 6 } }));
+    txParams.fee = fee;
     const collectionAddress = PublicKey.fromBase58(txParams.collectionAddress);
     if (DEBUG) console.log("Collection", collectionAddress.toBase58());
     const wallet = PublicKey.fromBase58(WALLET);
