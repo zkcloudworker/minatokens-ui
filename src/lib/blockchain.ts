@@ -116,6 +116,7 @@ export async function initBlockchain(): Promise<MinaNetwork> {
     archive: network.archive,
     lightnetAccountManager: network.accountManager,
     networkId: instance === "mainnet" ? "mainnet" : "testnet",
+    bypassTransactionLimits: instance === "zeko",
   });
   Mina.setActiveInstance(networkInstance);
 
