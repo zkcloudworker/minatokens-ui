@@ -4,7 +4,7 @@ import {
   accountBalanceMina,
   fetchMinaAccount,
 } from "@/lib/blockchain";
-import { PrivateKey, PublicKey, UInt64, Mina, UInt8 } from "o1js";
+import { PrivateKey, PublicKey, Mina } from "o1js";
 import { buildTokenLaunchTransaction, LAUNCH_FEE } from "@silvana-one/abi";
 import {
   TokenTransaction,
