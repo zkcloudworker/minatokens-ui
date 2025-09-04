@@ -49,7 +49,7 @@ export async function sendTransaction(transaction: string): Promise<{
         overflow,
         sender: sender?.toBase58(),
         balance,
-        nonce: tx.transaction?.feePayer?.body?.nonce?.toBigint(),
+        nonce: tx.transaction?.feePayer?.body?.nonce?.toBigint().toString(),
         memo: tx.transaction?.memo,
         transaction: lastHash === txSent?.hash ? "already logged" : transaction,
       });
