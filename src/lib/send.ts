@@ -30,7 +30,6 @@ export async function sendTransaction(transaction: string): Promise<{
         console.log(`tx sent: hash: ${txSent.hash} status: ${txSent.status}`);
       return { hash: txSent.hash, status: txSent.status, success: true };
     } else {
-      lastHash = txSent?.hash;
       const sender = tx.transaction?.feePayer?.body?.publicKey;
       let balance: number | undefined = undefined;
       if (sender) {
@@ -53,6 +52,7 @@ export async function sendTransaction(transaction: string): Promise<{
         memo: tx.transaction?.memo,
         transaction: lastHash === txSent?.hash ? "already logged" : transaction,
       });
+      lastHash = txSent?.hash;
       if (DEBUG)
         console.log(
           `tx NOT sent: hash: ${txSent?.hash} status: ${txSent?.status}`,
