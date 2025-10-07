@@ -128,9 +128,17 @@ export async function waitForProveJob(params: {
         groupId,
         update: {
           lineId: "txSent" + lineId,
-          content: `Error: Unable to send transaction to ${chain}. ${
+          content: `Error: Unable to send transaction to ${chain}.${
+            sendResult.overflow
+              ? " Overflow error. Check your balance and topup your account."
+              : ""
+          }  ${
+            sendResult.balance
+              ? ` Your balance is ${sendResult.balance} MINA.`
+              : ""
+          } ${
             sendResult.status
-              ? "Received status: " + sendResult.status + ". "
+              ? " Received status: " + sendResult.status + ". "
               : ""
           } Response: ${String(
             sendResult.error ?? "error D4381"
