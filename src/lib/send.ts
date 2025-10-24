@@ -22,7 +22,7 @@ export async function sendTransaction(transaction: string): Promise<{
   balance?: number;
 }> {
   try {
-    await initBlockchain(chain);
+    await initBlockchain({ chain });
     const tx = Mina.Transaction.fromJSON(JSON.parse(transaction));
     const txSent = await tx.safeSend();
     if (txSent.status == "pending") {

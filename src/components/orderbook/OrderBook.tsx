@@ -286,7 +286,7 @@ function ConfirmDialog({
 }) {
   if (!order) return null;
   const total = order.price * parseFloat(amount);
-  const exceeded = chain === "mainnet" && total > 500;
+  const exceeded = chain === "mina:mainnet" && total > 500;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

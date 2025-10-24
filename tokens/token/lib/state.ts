@@ -9,10 +9,10 @@ import { tokenVerificationKeys } from "@silvana-one/abi";
 import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo, TokenInfo } from "./token";
 import { algoliaGetToken, algoliaWriteToken } from "@/lib/algolia";
-import { getChainId } from "@/lib/chain";
+import { getChain } from "@/lib/chain";
 import { debug } from "@/lib/debug";
 import { log as logtail } from "@logtail/next";
-const chainId = getChainId();
+const chainId = getChain();
 const log = logtail.with({
   chainId,
   service: "state",

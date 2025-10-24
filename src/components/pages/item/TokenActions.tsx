@@ -2,7 +2,7 @@
 import type { TokenState } from "@/tokens/lib/token";
 import Link from "next/link";
 import { useContext, useEffect, useState, useCallback } from "react";
-import { getChainId } from "@/lib/chain";
+import { getChain } from "@/lib/chain";
 import { explorerAccountUrl, explorerTokenUrl } from "@/lib/chain";
 import { NotImplemented } from "./NotImplemented";
 import { ContactAuthorized } from "./ContactAuthorized";
@@ -13,12 +13,12 @@ import { balance } from "@/lib/api/info/token-info";
 import { debug } from "@/lib/debug";
 import { useTokenDetails } from "@/context/details";
 const DEBUG = debug();
-const chainId = getChainId();
+const chainId = getChain();
 
 function formatBalance(num: number | undefined): string {
   if (num === undefined) return "0";
   const fixed = num.toLocaleString("en-US", {
-    maximumSignificantDigits: 4
+    maximumSignificantDigits: 4,
   });
   return fixed.endsWith(".00") ? fixed.slice(0, fixed.length - 3) : fixed;
 }

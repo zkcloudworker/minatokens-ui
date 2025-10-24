@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useContext, useRef, FC } from "react";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { Mainnet, Devnet, Zeko } from "@/lib/networks";
+import { Mainnet, Devnet, Zeko } from "@silvana-one/api";
 import { Chain, APIKeyCalls } from "@prisma/client";
 import { getApiCalls } from "@/lib/api-calls";
 import Image from "next/image";

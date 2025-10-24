@@ -10,9 +10,9 @@ const chain = getChain();
 export async function getTxStatusFast(params: {
   hash: string;
 }): Promise<{ success: boolean; result?: boolean; error?: string }> {
-  if (chain === "zeko") return { success: true, result: true };
+  if (chain === "zeko:testnet") return { success: true, result: true };
   const { hash } = params;
-  await initBlockchain(chain);
+  await initBlockchain({ chain });
 
   try {
     const txStatus = await checkZkappTransaction(hash);

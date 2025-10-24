@@ -26,7 +26,7 @@ export async function getTransactionStatus(props: {
         json: { error: "Invalid hash" },
       };
     }
-    if (chain === "zeko") {
+    if (chain === "zeko:testnet") {
       return {
         status: 200,
         json: { hash, status: "applied" },

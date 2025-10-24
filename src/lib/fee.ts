@@ -16,7 +16,7 @@ export async function getFee(params: {
   };
 }): Promise<number> {
   const { weight } = params.params;
-  if (chain !== "zeko") return 200_000_000;
+  if (chain !== "zeko:testnet") return 200_000_000;
   try {
     if (weight === undefined || typeof weight !== "number") {
       log.error("getFee: zeko weight is undefined or not a number", { weight });

@@ -14,7 +14,6 @@ import {
   explorerAccountUrl,
   explorerTokenUrl,
   getChain,
-  getChainId,
   getLaunchpadUrl,
 } from "@/lib/chain";
 import { connectWallet, getWalletInfo } from "@/lib/wallet";
@@ -39,7 +38,7 @@ import { waitForProveJob } from "../../../launch/lib/mina-tx";
 import { log } from "@/lib/log";
 import { AccountBalance, getBalances } from "@/lib/api/info/token-info";
 const chain = getChain();
-const chainId = getChainId();
+const chainId = getChain();
 const DEBUG = debug();
 
 interface UpdateRequest {
@@ -463,7 +462,7 @@ export async function tokenAction(params: {
           "": "process",
         }[item.txType ?? ""] || "process";
 
-        const successAction=
+      const successAction =
         {
           "token:mint": "minted",
           "token:burn": "burned",

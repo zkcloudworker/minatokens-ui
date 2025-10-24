@@ -1,86 +1,7 @@
 "use server";
 import { Mina, PublicKey, fetchAccount, Field, UInt64 } from "o1js";
 import { getChain } from "./chain";
-
-/**
- * blockchain is the type for the chain ID.
- */
-export type blockchain = "local" | "devnet" | "lightnet" | "mainnet" | "zeko";
-
-interface MinaNetwork {
-  /** The Mina endpoints */
-  mina: string[];
-
-  /** The archive endpoints */
-  archive: string[];
-
-  /** The chain ID */
-  chainId: blockchain;
-
-  /** The name of the network (optional) */
-  name?: string;
-
-  /** The account manager for Lightnet (optional) */
-  accountManager?: string;
-
-  /** The explorer account URL (optional) */
-  explorerAccountUrl?: string;
-
-  /** The explorer transaction URL (optional) */
-  explorerTransactionUrl?: string;
-
-  /** The faucet URL (optional) */
-  faucet?: string;
-}
-
-const Mainnet: MinaNetwork = {
-  mina: [
-    //"https://proxy.devnet.minaexplorer.com/graphql",
-    "https://api.minascan.io/node/mainnet/v1/graphql",
-  ],
-  archive: [
-    "https://api.minascan.io/archive/mainnet/v1/graphql",
-    //"https://archive.devnet.minaexplorer.com",
-  ],
-  explorerAccountUrl: "https://minascan.io/mainnet/account/",
-  explorerTransactionUrl: "https://minascan.io/mainnet/tx/",
-  chainId: "mainnet",
-  name: "Mainnet",
-};
-
-const Devnet: MinaNetwork = {
-  mina: [
-    "https://api.minascan.io/node/devnet/v1/graphql",
-    //"https://proxy.devnet.minaexplorer.com/graphql",
-  ],
-  archive: [
-    "https://api.minascan.io/archive/devnet/v1/graphql",
-    //"https://archive.devnet.minaexplorer.com",
-  ],
-  explorerAccountUrl: "https://minascan.io/devnet/account/",
-  explorerTransactionUrl: "https://minascan.io/devnet/tx/",
-  chainId: "devnet",
-  name: "Devnet",
-  faucet: "https://faucet.minaprotocol.com",
-};
-
-const Zeko: MinaNetwork = {
-  mina: ["https://devnet.zeko.io/graphql"],
-  archive: ["https://devnet.zeko.io/graphql"],
-  explorerAccountUrl: "https://zekoscan.io/devnet/account/",
-  explorerTransactionUrl: "https://zekoscan.io/devnet/tx/",
-  chainId: "zeko",
-  name: "Zeko",
-  faucet: "https://zeko.io/faucet",
-};
-
-const Local: MinaNetwork = {
-  mina: [],
-  archive: [],
-  chainId: "local",
-};
-
-const networks: MinaNetwork[] = [Mainnet, Local, Devnet, Zeko];
+import { CanonicalBlockchain, MinaNetwork, networks } from "@silvana-one/api";
 
 let currentNetwork: MinaNetwork | undefined = undefined;
 
@@ -115,8 +36,8 @@ export async function initBlockchain(): Promise<MinaNetwork> {
     mina: network.mina,
     archive: network.archive,
     lightnetAccountManager: network.accountManager,
-    networkId: instance === "mainnet" ? "mainnet" : "testnet",
-    bypassTransactionLimits: instance === "zeko",
+    networkId: instance === "mina:mainnet" ? "mainnet" : "testnet",
+    bypassTransactionLimits: instance === "zeko:testnet",
   });
   Mina.setActiveInstance(networkInstance);
 

@@ -10,10 +10,7 @@ const log = logtail.with({
   service: "contract",
   chain: getChain(),
 });
-const chain = getChain() === "mainnet" ? "mainnet" : "devnet";
-
-import { debug } from "@/lib/debug";
-const DEBUG = debug();
+const chain = getChain();
 
 export async function contract(props: {
   params: ContractInfoRequest;

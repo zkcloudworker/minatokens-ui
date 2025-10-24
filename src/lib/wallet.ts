@@ -1,11 +1,11 @@
 "use client";
 
-import { getChainId } from "./chain";
+import { getChain } from "./chain";
 import { debug } from "./debug";
 import { getSystemInfo } from "./system-info";
 import { log } from "./log";
 const DEBUG = debug();
-const chainId = getChainId();
+const chainId = getChain();
 
 let walletInfo:
   | {

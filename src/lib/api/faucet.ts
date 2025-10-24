@@ -19,20 +19,20 @@ export async function faucet(props: {
         json: { error: "Invalid address" },
       };
     }
-    if (chain === "mainnet") {
+    if (chain === "mina:mainnet") {
       return {
         status: 400,
         json: { error: "Faucet not available on mainnet" },
       };
     }
-    if (chain !== "devnet" && chain !== "zeko") {
+    if (chain !== "mina:devnet" && chain !== "zeko:testnet") {
       return {
         status: 400,
         json: { error: `Chain ${chain} not supported` },
       };
     }
 
-    if (chain === "devnet") {
+    if (chain === "mina:devnet") {
       try {
         const response = await fetch(
           "https://faucet.minaprotocol.com/api/v1/faucet",
@@ -85,7 +85,7 @@ export async function faucet(props: {
       }
     }
 
-    if (chain === "zeko") {
+    if (chain === "zeko:testnet") {
       try {
         const response = await fetch("https://zeko.io/api/faucet", {
           method: "POST",

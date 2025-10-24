@@ -7,7 +7,6 @@ import {
   explorerAccountUrl,
   explorerTokenUrl,
   getChain,
-  getChainId,
   getLaunchpadUrl,
 } from "@/lib/chain";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
@@ -42,7 +41,6 @@ import { TokenMintTransactionParams } from "@silvana-one/api";
 const AURO_TEST = process.env.NEXT_PUBLIC_AURO_TEST === "true";
 const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_PK;
 const chain = getChain();
-const chainId = getChainId();
 const DEBUG = debug();
 
 interface UpdateRequest {
@@ -233,33 +231,33 @@ export async function launchToken(params: {
     if (DEBUG) console.log("launchToken: launching token:", data);
     const walletInfo = await getWalletInfo();
     let address = walletInfo.address;
-    if (walletInfo.network !== chainId) {
+    if (walletInfo.network !== chain) {
       updateTimelineItem({
         groupId: "verify",
         update: {
           lineId: "network",
-          content: `Your wallet is connected to wrong network, please change the network to ${chainId}`,
+          content: `Your wallet is connected to wrong network, please change the network to ${chain}`,
           status: "waiting",
         },
       });
       const connectResult = await connectWallet();
-      if (connectResult.success && connectResult.network === chainId) {
+      if (connectResult.success && connectResult.network === chain) {
         address = connectResult.address;
         updateTimelineItem({
           groupId: "verify",
           update: {
             lineId: "network",
-            content: `Your wallet is connected to correct network ${chainId}`,
+            content: `Your wallet is connected to correct network ${chain}`,
             status: "success",
           },
         });
       } else {
-        if (walletInfo.network !== chainId) {
+        if (walletInfo.network !== chain) {
           updateTimelineItem({
             groupId: "verify",
             update: {
               lineId: "network",
-              content: `Your wallet is connected to wrong network, should be ${chainId}`,
+              content: `Your wallet is connected to wrong network, should be ${chain}`,
               status: "error",
             },
           });

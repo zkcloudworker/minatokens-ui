@@ -96,7 +96,7 @@ export async function deployToken(params: {
       : PublicKey.fromBase58(adminPublicKey);
 
     if (DEBUG) console.log("initializing blockchain", chain);
-    const net = await initBlockchain(chain);
+    const net = await initBlockchain({ chain });
     if (DEBUG) console.log("blockchain initialized", net);
     if (DEBUG) console.log("network id", Mina.getNetworkId());
 

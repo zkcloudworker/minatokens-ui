@@ -1,4 +1,4 @@
-import { MinaNetworkParams, Mainnet, Devnet, Zeko } from "./networks";
+import { Mainnet, Devnet, Zeko, MinaNetwork } from "@silvana-one/api";
 
 export function getSiteType(): "nft" | "token" {
   const type = process.env.NEXT_PUBLIC_SITE_TYPE;
@@ -8,32 +8,18 @@ export function getSiteType(): "nft" | "token" {
   return type;
 }
 
-export function getChain(): "mainnet" | "devnet" | "zeko" {
+export function getChain(): "mina:mainnet" | "mina:devnet" | "zeko:testnet" {
   const chain = process.env.NEXT_PUBLIC_CHAIN;
   if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
-  if (chain !== "devnet" && chain !== "mainnet" && chain !== "zeko")
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet or zeko");
-  return chain;
-}
-
-export function getChainId():
-  | "mina:mainnet"
-  | "mina:devnet"
-  | "zeko:testnet"
-  | "zeko:alphanet" {
-  const chain = getChain();
-  const chainId = [Mainnet, Devnet, Zeko].find(
-    (network) => network.chain === chain
-  )?.chainId;
   if (
-    chainId !== "mina:mainnet" &&
-    chainId !== "mina:devnet" &&
-    chainId !== "zeko:testnet"
+    chain !== "mina:devnet" &&
+    chain !== "mina:mainnet" &&
+    chain !== "zeko:testnet"
   )
     throw new Error(
-      "chainId must be mina:mainnet or mina:devnet or zeko:testnet"
+      "NEXT_PUBLIC_CHAIN must be mina:devnet or mina:mainnet or zeko:testnet"
     );
-  return chainId;
+  return chain;
 }
 
 export function getPrismaChainName():
@@ -42,11 +28,11 @@ export function getPrismaChainName():
   | "zeko_devnet" {
   const chain = getChain();
   switch (chain) {
-    case "mainnet":
+    case "mina:mainnet":
       return "mina_mainnet";
-    case "devnet":
+    case "mina:devnet":
       return "mina_devnet";
-    case "zeko":
+    case "zeko:testnet":
       return "zeko_devnet";
     default:
       throw new Error("Chain not supported");
@@ -55,11 +41,16 @@ export function getPrismaChainName():
 
 export function getLaunchpadUrl(): string {
   const chain = getChain();
-  const launchpadUrl = [Mainnet, Devnet, Zeko].find(
-    (network) => network.chain === chain
-  )?.launchpadUrl;
-  if (launchpadUrl === undefined) throw new Error("launchpadUrl is undefined");
-  return launchpadUrl;
+  switch (chain) {
+    case "mina:mainnet":
+      return "https://minatokens.com";
+    case "mina:devnet":
+      return "https://minatokens.com";
+    case "zeko:testnet":
+      return "https://zekotokens.com";
+    default:
+      throw new Error("Chain not supported");
+  }
 }
 
 export function getWallet(): string {
@@ -68,14 +59,14 @@ export function getWallet(): string {
   return wallet;
 }
 
-export function getNetwork(): MinaNetworkParams {
+export function getNetwork(): MinaNetwork {
   const chain = getChain();
   switch (chain) {
-    case "mainnet":
+    case "mina:mainnet":
       return Mainnet;
-    case "devnet":
+    case "mina:devnet":
       return Devnet;
-    case "zeko":
+    case "zeko:testnet":
       return Zeko;
     default:
       throw new Error("Chain not supported");
@@ -84,17 +75,26 @@ export function getNetwork(): MinaNetworkParams {
 
 export function explorerAccountUrl(): string {
   const network = getNetwork();
-  return network.explorerAccountUrl;
+  const explorerAccountUrl = network.explorerAccountUrl;
+  if (explorerAccountUrl === undefined)
+    throw new Error("explorerAccountUrl is undefined");
+  return explorerAccountUrl;
 }
 
 export function explorerTransactionUrl(): string {
   const network = getNetwork();
-  return network.explorerTransactionUrl;
+  const explorerTransactionUrl = network.explorerTransactionUrl;
+  if (explorerTransactionUrl === undefined)
+    throw new Error("explorerTransactionUrl is undefined");
+  return explorerTransactionUrl;
 }
 
 export function explorerTokenUrl(): string {
   const network = getNetwork();
-  return network.explorerTokenUrl;
+  const explorerTokenUrl = network.explorerTokenUrl;
+  if (explorerTokenUrl === undefined)
+    throw new Error("explorerTokenUrl is undefined");
+  return explorerTokenUrl;
 }
 
 export function getSiteName(): string {
@@ -104,11 +104,11 @@ export function getSiteName(): string {
   } else {
     const chain = getChain();
     switch (chain) {
-      case "mainnet":
+      case "mina:mainnet":
         return "MinaTokens";
-      case "devnet":
+      case "mina:devnet":
         return "MinaTokens";
-      case "zeko":
+      case "zeko:testnet":
         return "ZekoTokens";
     }
   }

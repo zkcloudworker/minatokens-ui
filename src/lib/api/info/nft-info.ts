@@ -88,11 +88,11 @@ export async function getNFTState(props: {
     }
     if (
       info.collection.contractVerificationKeyHash ===
-        tokenVerificationKeys[chain === "mainnet" ? "mainnet" : "devnet"].vk
-          .Collection.hash &&
+        tokenVerificationKeys[chain === "mina:mainnet" ? "mainnet" : "devnet"]
+          .vk.Collection.hash &&
       info.nft.contractVerificationKeyHash ===
-        tokenVerificationKeys[chain === "mainnet" ? "mainnet" : "devnet"].vk.NFT
-          .hash
+        tokenVerificationKeys[chain === "mina:mainnet" ? "mainnet" : "devnet"]
+          .vk.NFT.hash
     ) {
       const nftInfo = (await algoliaGetNFT({
         collectionAddress,
@@ -397,8 +397,9 @@ async function getNFTData(params: {
           approvedVerificationKeyHash = contractVerificationKeyHash;
 
           const vk =
-            tokenVerificationKeys[chain === "mainnet" ? "mainnet" : "devnet"]
-              .vk;
+            tokenVerificationKeys[
+              chain === "mina:mainnet" ? "mainnet" : "devnet"
+            ].vk;
           if (
             contractVerificationKeyHash ===
             vk.NonFungibleTokenOfferContract.hash
