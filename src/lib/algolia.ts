@@ -2,8 +2,9 @@
 import { algoliasearch } from "algoliasearch";
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 import { DeployedTokenInfo } from "@/tokens/lib/token";
-import { getChain } from "./chain";
+import { getChain, getAlgoliaChain } from "./chain";
 const chain = getChain();
+const algoliaChain = getAlgoliaChain();
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
 const log = logtail.with({
@@ -11,14 +12,6 @@ const log = logtail.with({
   chain,
 });
 const DEBUG = debug();
-
-export async function getAlgoliaChain(chain: string): Promise<string> {
-  return chain === "mina:mainnet"
-    ? "mainnet"
-    : chain === "mina:devnet"
-    ? "devnet"
-    : "zeko";
-}
 
 export async function algoliaWriteToken(params: {
   tokenAddress: string;
@@ -29,7 +22,6 @@ export async function algoliaWriteToken(params: {
     throw new Error("ALGOLIA_PROJECT is undefined");
   try {
     const client = algoliasearch(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const algoliaChain = await getAlgoliaChain(chain);
     const indexName = `tokens-${algoliaChain}`;
     if (DEBUG) console.log("algoliaWriteToken", params, indexName);
 
@@ -63,7 +55,7 @@ export async function algoliaGetToken(params: {
     throw new Error("ALGOLIA_PROJECT is undefined");
   try {
     const client = algoliasearch(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const algoliaChain = await getAlgoliaChain(chain);
+
     const indexName = `tokens-${algoliaChain}`;
     if (DEBUG) console.log("algoliaGetToken", params, indexName);
     const result = await client.getObject({

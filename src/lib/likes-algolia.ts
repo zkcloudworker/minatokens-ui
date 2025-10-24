@@ -1,12 +1,13 @@
 "use server";
 import { algoliasearch } from "algoliasearch";
 import { searchClient } from "@algolia/client-search";
-import { algoliaGetToken, algoliaWriteToken, getAlgoliaChain } from "./algolia";
-import { getChain } from "./chain";
+import { algoliaGetToken, algoliaWriteToken } from "./algolia";
+import { getChain, getAlgoliaChain } from "./chain";
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
 
 const chain = getChain();
+const algoliaChain = getAlgoliaChain();
 const log = logtail.with({
   service: "likes",
   chain,
@@ -27,7 +28,6 @@ export async function algoliaWriteLike(params: Like): Promise<boolean> {
     throw new Error("ALGOLIA_PROJECT is undefined");
   try {
     const client = algoliasearch(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const algoliaChain = await getAlgoliaChain(chain);
     const indexName = `token-likes-${algoliaChain}`;
     if (DEBUG) console.log("algoliaWriteLike", params, indexName);
     const objectID = tokenAddress + "." + userAddress;
@@ -77,7 +77,6 @@ export async function algoliaGetLike(params: Like): Promise<boolean> {
   try {
     const { tokenAddress, userAddress } = params;
     const client = algoliasearch(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const algoliaChain = await getAlgoliaChain(chain);
     const indexName = `token-likes-${algoliaChain}`;
     const objectID = tokenAddress + "." + userAddress;
     //if (DEBUG) console.log("algoliaGetLike", params, indexName);
@@ -102,7 +101,6 @@ export async function algoliaLikesCount(params: {
 
   try {
     const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const algoliaChain = await getAlgoliaChain(chain);
     const indexName = `token-likes-${algoliaChain}`;
     //if (DEBUG) console.log("algoliaLikesCount", params, indexName);
     const result = await client.searchForFacetValues({
@@ -136,7 +134,6 @@ export async function algoliaGetUsersLikes(params: {
 
   try {
     const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
-    const algoliaChain = await getAlgoliaChain(chain);
     const indexName = `token-likes-${algoliaChain}`;
     //if (DEBUG) console.log("algoliaGetUsersLikes", params, indexName);
     const result = await client.searchSingleIndex({
