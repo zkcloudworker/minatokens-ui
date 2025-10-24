@@ -22,16 +22,17 @@ import { ApiName, ApiResponse } from "../api-types";
 import { checkAddress } from "../utils/address";
 import { debug } from "@/lib/debug";
 import { log as logtail } from "@logtail/next";
-import { getChain } from "@/lib/chain";
+import { getChain, getAlgoliaChain } from "@/lib/chain";
 import { algoliasearch } from "algoliasearch";
 const { NFT_ALGOLIA_KEY, NFT_ALGOLIA_PROJECT } = process.env;
 const chain = getChain();
+const algoliaChain = getAlgoliaChain();
 const log = logtail.with({
   service: "nft-info",
   chain,
 });
 const DEBUG = debug();
-const indexName = `standard-${chain}`;
+const indexName = `standard-${algoliaChain}`;
 if (NFT_ALGOLIA_KEY === undefined) {
   log.error("NFT_ALGOLIA_KEY is undefined");
   throw new Error("NFT_ALGOLIA_KEY is undefined");

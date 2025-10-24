@@ -39,6 +39,15 @@ export function getPrismaChainName():
   }
 }
 
+export function getAlgoliaChain(): string {
+  const chain = getChain();
+  return chain === "mina:mainnet"
+    ? "mainnet"
+    : chain === "mina:devnet"
+    ? "devnet"
+    : "zeko";
+}
+
 export function getLaunchpadUrl(): string {
   const chain = getChain();
   switch (chain) {
