@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
-import { getChainId } from "@/lib/chain";
+import { getChain } from "@/lib/chain";
 import { getWalletInfo } from "@/lib/wallet";
-const chainId = getChainId();
+const chainId = getChain();
 
 interface AddressProviderProps {
   children: React.ReactNode;

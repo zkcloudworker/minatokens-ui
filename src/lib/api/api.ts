@@ -22,8 +22,8 @@ import {
 } from "@silvana-one/api";
 import { ApiResponse, ApiName } from "./api-types";
 import { debug } from "../debug";
-import { getChain } from "@/lib/chain";
-const chain = getChain();
+import { getChain, getPrismaChainName } from "@/lib/chain";
+
 const DEBUG = debug();
 const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY, README_DOCS_SECRET } =
   process.env;
@@ -61,19 +61,6 @@ initializeRedisRateLimiter({
   points: 120,
   duration: 60,
 });
-
-function getChainId(): Chain {
-  switch (chain) {
-    case "mainnet":
-      return "mina_mainnet";
-    case "devnet":
-      return "mina_devnet";
-    case "zeko":
-      return "zeko_devnet";
-    default:
-      throw new Error(`Unknown chain: ${chain}`);
-  }
-}
 
 export function apiHandler<T, V>(params: {
   name: ApiName;
@@ -260,7 +247,7 @@ function apiHandlerInternal<T, V>(params: {
           data: {
             address: userKey,
             status,
-            chain: getChainId(),
+            chain: getPrismaChainName(),
             endpoint: name,
             error,
             result: getResult(json),

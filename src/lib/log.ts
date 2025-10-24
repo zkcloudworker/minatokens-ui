@@ -1,12 +1,12 @@
 "use client";
 import { getSystemInfo } from "./system-info";
 import { log as logtail } from "@logtail/next";
-import { getChainId, getSiteType } from "./chain";
+import { getChain, getSiteType } from "./chain";
 import { geo, unavailableCountry, isFetchedFailed } from "./availability";
 import { nanoid } from "nanoid";
 
 const id = nanoid();
-const chainId = getChainId();
+const chainId = getChain();
 const siteType = getSiteType();
 //TODO: remove system from the log when the version will be stable
 const system = getSystemInfo();

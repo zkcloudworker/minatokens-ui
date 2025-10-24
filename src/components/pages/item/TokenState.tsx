@@ -2,9 +2,9 @@
 import type { TokenState } from "@/tokens/lib/token";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getChainId } from "@/lib/chain";
+import { getChain } from "@/lib/chain";
 import { explorerAccountUrl, explorerTokenUrl } from "@/lib/chain";
-const chainId = getChainId();
+const chainId = getChain();
 
 export const contracts = [
   {

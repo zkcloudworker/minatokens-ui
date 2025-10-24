@@ -20,8 +20,8 @@ export async function getAccountNonce(
 ): Promise<number | undefined> {
   if (BLOCKBERRY_API === undefined)
     throw new Error("BLOCKBERRY_API is undefined");
-  if (chain === "zeko") {
-    await initBlockchain(chain);
+  if (chain === "zeko:testnet") {
+    await initBlockchain({ chain });
     const publicKey = PublicKey.fromBase58(account);
     await fetchMinaAccount({ publicKey });
     if (!Mina.hasAccount(publicKey)) {
@@ -30,13 +30,14 @@ export async function getAccountNonce(
     }
     const nonce = Number(Mina.getAccount(publicKey).nonce.toBigint());
     return nonce;
-  } else {
+  } else if (chain === "mina:devnet" || chain === "mina:mainnet") {
+    const blockberryChain = chain === "mina:mainnet" ? "mainnet" : "devnet";
     const blockberryNoncePromise = getNonce({
       account,
       blockBerryApiKey: BLOCKBERRY_API,
-      chain,
+      chain: blockberryChain,
     });
-    await initBlockchain(chain);
+    await initBlockchain({ chain });
     const publicKey = PublicKey.fromBase58(account);
     await fetchMinaAccount({ publicKey });
     if (!Mina.hasAccount(publicKey)) {
@@ -49,5 +50,8 @@ export async function getAccountNonce(
     if (nonce > senderNonce)
       log.info(`Nonce changed from ${senderNonce} to ${nonce} for ${account}`);
     return nonce;
+  } else {
+    log.error("getAccountNonce: chain not supported", { chain });
+    return undefined;
   }
 }

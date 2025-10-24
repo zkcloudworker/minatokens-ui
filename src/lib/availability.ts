@@ -41,7 +41,7 @@ export async function checkAvailability(params: {
   retry?: boolean;
 }): Promise<Country | null> {
   const { address, retry = false } = params;
-  if (chain !== "mainnet") {
+  if (chain !== "mina:mainnet") {
     isChecked = true;
     return null;
   }

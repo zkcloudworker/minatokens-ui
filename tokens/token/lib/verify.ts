@@ -6,9 +6,9 @@ import { Mina, PublicKey, TokenId, fetchAccount } from "o1js";
 import { TokenInfo, DeployedTokenInfo } from "./token";
 import { getTokenState } from "./state";
 import { algoliaWriteToken } from "@/lib/algolia";
-import { getChainId } from "@/lib/chain";
+import { getChain } from "@/lib/chain";
 import { log as logtail } from "@logtail/next";
-const chainId = getChainId();
+const chainId = getChain();
 const log = logtail.with({
   chainId,
   service: "verify",

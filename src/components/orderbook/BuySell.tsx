@@ -79,7 +79,7 @@ export function BuySellDialog({
   const maxAmount =
     operation === "buy" ? order?.amount : (order?.amount ?? 0) / (price ?? 1);
   const total = (price ?? 0) * (amount ?? 0);
-  const exceeded = chain === "mainnet" && total > 500;
+  const exceeded = chain === "mina:mainnet" && total > 500;
 
   const { state, dispatch } = useTokenDetails();
   const tokenBalance = state.tokens[tokenAddress]?.balance;

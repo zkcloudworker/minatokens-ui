@@ -44,9 +44,11 @@ export async function launchNftCollection(props: {
   const { params, name, apiKeyAddress } = props;
   const {
     symbol = "NFT",
-    url = chain === "mainnet"
-      ? "https://minanft.io"
-      : `https://${chain}.minanft.io`,
+    url = chain === "mina:mainnet"
+      ? "https://mainnet.minanft.io"
+      : chain === "mina:devnet"
+      ? "https://devnet.minanft.io"
+      : "https://zeko.minanft.io",
   } = params;
   if (DEBUG) console.log("Deploying token", params);
   console.log("chain", chain);

@@ -372,7 +372,7 @@ export async function tokenTransaction(props: {
     let limitCheck: Promise<{ passed: boolean; limit: number }> | undefined =
       undefined;
     if (
-      chain === "mainnet" &&
+      chain === "mina:mainnet" &&
       "amount" in txParams &&
       "price" in txParams &&
       txParams.amount &&

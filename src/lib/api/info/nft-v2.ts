@@ -38,7 +38,7 @@ export async function getNFTState(props: {
   const { params, name, apiKeyAddress } = props;
   console.log("getNFTState", params);
   const { collectionAddress, nftAddress } = params;
-  if (chain === "zeko") {
+  if (chain === "zeko:testnet") {
     return { status: 400, json: { error: "Zeko is not supported" } };
   }
   if (
@@ -301,7 +301,7 @@ export async function loadFromIPFS(
 export async function algoliaGetNFT(params: {
   contractAddress: string;
   name: string;
-  chain: "devnet" | "mainnet";
+  chain: "mina:devnet" | "mina:mainnet" | "zeko:testnet";
 }): Promise<object | undefined> {
   const { contractAddress, name, chain } = params;
   if (NFT_ALGOLIA_KEY === undefined)
@@ -310,9 +310,15 @@ export async function algoliaGetNFT(params: {
     throw new Error("NFT_ALGOLIA_PROJECT is undefined");
   try {
     const client = algoliasearch(NFT_ALGOLIA_PROJECT, NFT_ALGOLIA_KEY);
+    const algoliaChain =
+      chain === "mina:mainnet"
+        ? "mainnet"
+        : chain === "mina:devnet"
+        ? "devnet"
+        : "zeko";
     const result = await client.getObject({
-      indexName: chain,
-      objectID: chain + "." + contractAddress + "." + name,
+      indexName: algoliaChain,
+      objectID: algoliaChain + "." + contractAddress + "." + name,
     });
     return result;
   } catch (error: any) {

@@ -7,7 +7,7 @@
 //   explorerAccountUrl,
 //   explorerTokenUrl,
 //   getChain,
-//   getChainId,
+//   getChain,
 //   getLaunchpadUrl,
 // } from "@/lib/chain";
 // import { getWalletInfo } from "@/lib/wallet";

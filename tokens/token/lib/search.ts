@@ -9,6 +9,7 @@ import {
 import { getChain, getSiteType } from "@/lib/chain";
 import { debug } from "@/lib/debug";
 import { log as logtail } from "@logtail/next";
+import { getAlgoliaChain } from "@/lib/algolia";
 const chain = getChain();
 const siteType = getSiteType();
 const log = logtail.with({
@@ -23,7 +24,8 @@ if (ALGOLIA_PROJECT === undefined)
   throw new Error("ALGOLIA_PROJECT is undefined");
 
 const client = searchClient(ALGOLIA_PROJECT, ALGOLIA_KEY);
-const indexName = `tokens-${chain}`;
+const algoliaChain = await getAlgoliaChain(chain);
+const indexName = `tokens-${algoliaChain}`;
 
 export async function algoliaGetCollectionList(): Promise<DeployedTokenInfo[]> {
   return [];
