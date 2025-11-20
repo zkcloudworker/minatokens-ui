@@ -4,6 +4,7 @@ import { getActivityStats } from "@/lib/activity";
 import { GetActivityStatsParams, ActivityStats } from "@/lib/activity-types";
 import { ApiResponse } from "@/lib/api/api-types";
 import { Chain } from "@prisma/client";
+import { convertToPrismaChain } from "@/lib/chain";
 import { log as logtail } from "@logtail/next";
 
 const log = logtail.with({
@@ -39,7 +40,7 @@ async function getStats(props: {
     const params: GetActivityStatsParams = {
       userAddress,
       tokenAddress,
-      chain: chain as Chain,
+      chain: convertToPrismaChain(chain) as Chain | undefined,
       startDate: start ? new Date(start * 1000) : undefined,
       endDate: end ? new Date(end * 1000) : undefined,
     };

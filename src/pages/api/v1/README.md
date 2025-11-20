@@ -50,15 +50,15 @@ Returns an array of activity records with the following fields:
 
 ```bash
 # Get all activities
-curl -X GET "https://api.example.com/api/v1/activity" \
+curl -X GET "https://zekotokens.com/api/v1/activity" \
   -H "x-api-key: YOUR_API_KEY"
 
 # Get activities from a specific date onwards
-curl -X GET "https://api.example.com/api/v1/activity?start=1700000000" \
+curl -X GET "https://zekotokens.com/api/v1/activity?start=1700000000" \
   -H "x-api-key: YOUR_API_KEY"
 
 # Get activities within a date range
-curl -X GET "https://api.example.com/api/v1/activity?start=1700000000&end=1705000000" \
+curl -X GET "https://zekotokens.com/api/v1/activity?start=1700000000&end=1705000000" \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -98,19 +98,19 @@ Generates aggregated statistics for activities with flexible filtering.
 
 ```bash
 # Get overall stats
-curl -X GET "https://api.example.com/api/v1/activity/stats" \
+curl -X GET "https://zekotokens.com/api/v1/activity/stats" \
   -H "x-api-key: YOUR_API_KEY"
 
 # Get stats for a specific user
-curl -X GET "https://api.example.com/api/v1/activity/stats?userAddress=B62qk..." \
+curl -X GET "https://zekotokens.com/api/v1/activity/stats?userAddress=B62qk..." \
   -H "x-api-key: YOUR_API_KEY"
 
 # Get stats for a token within a date range
-curl -X GET "https://api.example.com/api/v1/activity/stats?tokenAddress=B62qm...&start=1700000000&end=1705000000" \
+curl -X GET "https://zekotokens.com/api/v1/activity/stats?tokenAddress=B62qm...&start=1700000000&end=1705000000" \
   -H "x-api-key: YOUR_API_KEY"
 
 # Get stats for a specific chain
-curl -X GET "https://api.example.com/api/v1/activity/stats?chain=mina:devnet" \
+curl -X GET "https://zekotokens.com/api/v1/activity/stats?chain=mina:devnet" \
   -H "x-api-key: YOUR_API_KEY"
 ```
 
@@ -192,7 +192,7 @@ Returns CSV text with columns: `userAddress`, `activityCount`, `activityScore`, 
 
 ```bash
 # Export all users in JSON format
-curl -X POST "https://api.example.com/api/v1/activity/export" \
+curl -X POST "https://zekotokens.com/api/v1/activity/export" \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -201,7 +201,7 @@ curl -X POST "https://api.example.com/api/v1/activity/export" \
   }'
 
 # Export with custom weightings in CSV format
-curl -X POST "https://api.example.com/api/v1/activity/export" \
+curl -X POST "https://zekotokens.com/api/v1/activity/export" \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -216,7 +216,7 @@ curl -X POST "https://api.example.com/api/v1/activity/export" \
   }'
 
 # Export with filters
-curl -X POST "https://api.example.com/api/v1/activity/export" \
+curl -X POST "https://zekotokens.com/api/v1/activity/export" \
   -H "x-api-key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{

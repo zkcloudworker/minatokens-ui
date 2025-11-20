@@ -22,7 +22,7 @@ import {
 import { writeBid, writeOffer } from "@/lib/trade";
 import { recordActivity } from "@/lib/activity";
 import { ActivityType, Chain } from "@prisma/client";
-import { getChain } from "@/lib/chain";
+import { getChain, getPrismaChainName } from "@/lib/chain";
 import { ActivityData } from "@/lib/activity-types";
 const DEBUG = debug();
 const chain = getChain();
@@ -272,7 +272,7 @@ export async function apiTokenTransaction(params: {
           txHash: `pending-${jobId}-sender`,
           activityType: "AIRDROP",
           tokenAddress: data.tokenAddress,
-          chain: chain as Chain,
+          chain: getPrismaChainName(),
           activityData: senderActivityData,
           amount: BigInt(totalAmount),
           memo: "memo" in data ? data.memo : `Airdrop to ${recipients.length} recipients`,
@@ -301,7 +301,7 @@ export async function apiTokenTransaction(params: {
             txHash: `pending-${jobId}-recipient-${i}`,
             activityType: "TRANSFER",  // Recipients see it as a transfer
             tokenAddress: data.tokenAddress,
-            chain: chain as Chain,
+            chain: getPrismaChainName(),
             activityData: recipientActivityData,
             amount: recipient.amount ? BigInt(recipient.amount) : undefined,
             memo: recipient.memo || `Airdrop from ${sender}`,
@@ -364,7 +364,7 @@ export async function apiTokenTransaction(params: {
             txHash: pendingHash,
             activityType: activityType,
             tokenAddress: data.tokenAddress,
-            chain: chain as Chain,
+            chain: getPrismaChainName(),
             activityData: activityData,
             amount: "amount" in data && data.amount ? BigInt(data.amount) : undefined,
             price: "price" in data && data.price ? BigInt(data.price) : undefined,
