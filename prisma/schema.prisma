@@ -21,6 +21,30 @@ enum Chain {
   zeko_devnet
 }
 
+enum ActivityType {
+  LAUNCH
+  MINT
+  TRANSFER
+  BURN
+  REDEEM
+  OFFER_CREATE
+  OFFER_UPDATE
+  OFFER_BUY
+  OFFER_WITHDRAW
+  BID_CREATE
+  BID_UPDATE
+  BID_SELL
+  BID_WITHDRAW
+  AIRDROP
+  ADMIN_WHITELIST
+  NFT_LAUNCH
+  NFT_MINT
+  NFT_TRANSFER
+  NFT_APPROVE
+  NFT_BUY
+  NFT_SELL
+}
+
 model APIKey {
   address     String          @id
   email       String          @db.VarChar(255)
@@ -254,4 +278,38 @@ model NFTCMS {
   @@index([chain])
   @@index([collectionAddress])
   @@index([name])
+}
+
+model UserActivity {
+  id              String       @id @default(cuid())
+  userAddress     String       @db.VarChar(255)
+  txHash          String       @db.VarChar(255)
+  activityType    ActivityType
+  tokenAddress    String       @db.VarChar(255)
+  chain           Chain
+  activityData    Json
+  amount          BigInt?
+  price           BigInt?
+  txSentAt        DateTime
+  txConfirmedAt   DateTime?
+  isConfirmed     Boolean      @default(false)
+  blockHeight     Int?
+  jobId           String?      @db.VarChar(255)
+  memo            String?      @db.VarChar(255)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([userAddress])
+  @@index([txHash])
+  @@index([activityType])
+  @@index([tokenAddress])
+  @@index([chain])
+  @@index([jobId])
+  @@index([txSentAt])
+  @@index([txConfirmedAt])
+  @@index([isConfirmed])
+  @@index([userAddress, activityType])
+  @@index([tokenAddress, activityType])
+  @@index([chain, txSentAt])
+  @@index([userAddress, chain, txSentAt])
 }

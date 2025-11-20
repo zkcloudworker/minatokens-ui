@@ -4,6 +4,9 @@ import { Mina } from "o1js";
 import { getChain } from "./chain";
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
+import { recordActivity } from "./activity";
+import { ActivityType, Chain } from "@prisma/client";
+import { ActivityData } from "./activity-types";
 const chain = getChain();
 const log = logtail.with({
   chain,
@@ -13,7 +16,25 @@ const DEBUG = debug();
 
 let lastHash: string | undefined = undefined;
 
-export async function sendTransaction(transaction: string): Promise<{
+/**
+ * Optional activity context for logging user activities
+ * NOTE: Currently not used as activities are recorded at job creation time
+ * Kept for potential future use where transactions bypass the proving service
+ */
+export interface ActivityContext {
+  activityType: ActivityType;
+  tokenAddress: string;
+  activityData: ActivityData;
+  amount?: bigint;
+  price?: bigint;
+  memo?: string;
+  jobId?: string;
+}
+
+export async function sendTransaction(
+  transaction: string,
+  activityContext?: ActivityContext
+): Promise<{
   hash?: string;
   status: string;
   success: boolean;
@@ -28,6 +49,26 @@ export async function sendTransaction(transaction: string): Promise<{
     if (txSent.status == "pending") {
       if (DEBUG)
         console.log(`tx sent: hash: ${txSent.hash} status: ${txSent.status}`);
+
+      // Log activity if context is provided
+      if (activityContext && txSent.hash) {
+        const sender = tx.transaction?.feePayer?.body?.publicKey;
+        if (sender) {
+          await recordActivity({
+            userAddress: sender.toBase58(),
+            txHash: txSent.hash,
+            chain: chain as Chain,
+            ...activityContext,
+          }).catch((error) => {
+            log.error("Failed to record activity", {
+              error,
+              txHash: txSent.hash,
+              activityType: activityContext.activityType,
+            });
+          });
+        }
+      }
+
       return { hash: txSent.hash, status: txSent.status, success: true };
     } else {
       const sender = tx.transaction?.feePayer?.body?.publicKey;

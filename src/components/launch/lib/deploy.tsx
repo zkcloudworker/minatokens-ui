@@ -17,6 +17,9 @@ import {
   LaunchTokenBondingCurveAdminParams,
 } from "@silvana-one/api";
 import { deployToken as deployTokenApi } from "@/lib/api/token/launch";
+import { recordActivity } from "@/lib/activity";
+import { Chain } from "@prisma/client";
+import { LaunchActivityData } from "@/lib/activity-types";
 const DEBUG = debug();
 const chain = getChain();
 
@@ -301,6 +304,31 @@ export async function deployToken(params: {
         error: "Deploy transaction prove job failed",
       };
     }
+
+    // Record activity with pending txHash
+    const activityData: LaunchActivityData = {
+      adminContractAddress: adminContractPublicKey.toBase58(),
+      tokenSymbol: symbol,
+      decimals: decimals,
+      uri: uri,
+    };
+
+    await recordActivity({
+      userAddress: sender.toBase58(),
+      txHash: `pending-${jobId}`,
+      activityType: "LAUNCH",
+      tokenAddress: contractAddress.toBase58(),
+      chain: chain as Chain,
+      activityData: activityData,
+      memo: memo,
+      jobId: jobId,
+    }).catch((error) => {
+      log.error("Failed to record launch activity", {
+        error,
+        jobId,
+        symbol,
+      });
+    });
 
     const jobIdMessage = (
       <>

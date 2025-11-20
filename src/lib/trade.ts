@@ -1,9 +1,18 @@
 "use server";
-import { PrismaClient, Bids, Offers, Prisma } from "@prisma/client";
-import { getPrismaChainName } from "./chain";
+import { PrismaClient, Bids, Offers, Prisma, Chain } from "@prisma/client";
+import { getPrismaChainName, getChain } from "./chain";
+import { recordActivity } from "./activity";
+import { TradeActivityData } from "./activity-types";
+import { log as logtail } from "@logtail/next";
+
 const prismaChainName = getPrismaChainName();
+const chain = getChain();
 const prisma = new PrismaClient({
   datasourceUrl: process.env.POSTGRES_PRISMA_URL,
+});
+
+const log = logtail.with({
+  service: "trade",
 });
 
 export interface OfferInfo {
@@ -28,8 +37,24 @@ export async function writeOffer(params: {
   ownerAddress: string;
   amount: number;
   price: number;
+  txHash?: string;
+  jobId?: string;
 }) {
-  const { offerAddress, tokenAddress, ownerAddress, amount, price } = params;
+  const { offerAddress, tokenAddress, ownerAddress, amount, price, txHash, jobId } = params;
+
+  // Check if offer already exists to determine if this is create or update
+  const existingOffer = await prisma.offers.findUnique({
+    where: {
+      offerAddress_tokenAddress_chain: {
+        offerAddress,
+        tokenAddress,
+        chain: prismaChainName,
+      },
+    },
+  });
+
+  const isUpdate = existingOffer !== null;
+
   const offer = await prisma.offers.upsert({
     where: {
       offerAddress_tokenAddress_chain: {
@@ -52,6 +77,54 @@ export async function writeOffer(params: {
       price,
     },
   });
+
+  // Record activity for offer creation or update
+  // Only record if we have a txHash (indicating this came from a transaction)
+  // This prevents duplicate logging when called from api-transaction.tsx
+  if (txHash && !txHash.startsWith("pending-")) {
+    const activityData: TradeActivityData = {
+      offerAddress,
+      tokenSymbol: undefined, // Will be enriched by caller if needed
+      isUpdate,
+    };
+
+    if (isUpdate && existingOffer) {
+      activityData.previousAmount = existingOffer.amount;
+      activityData.previousPrice = existingOffer.price;
+
+      // Convert to BigInt for comparison
+      const amountBigInt = BigInt(amount);
+      const priceBigInt = BigInt(price);
+
+      if (existingOffer.amount !== amountBigInt && existingOffer.price !== priceBigInt) {
+        activityData.changeReason = "Amount and price updated";
+      } else if (existingOffer.amount !== amountBigInt) {
+        activityData.changeReason = "Amount updated";
+      } else if (existingOffer.price !== priceBigInt) {
+        activityData.changeReason = "Price updated";
+      }
+    }
+
+    await recordActivity({
+      userAddress: ownerAddress,
+      txHash: txHash,
+      activityType: isUpdate ? "OFFER_UPDATE" : "OFFER_CREATE",
+      tokenAddress: tokenAddress,
+      chain: chain as Chain,
+      activityData: activityData,
+      amount: BigInt(amount),
+      price: BigInt(price),
+      jobId: jobId,
+    }).catch((error) => {
+      log.error("Failed to record offer activity", {
+        error,
+        offerAddress,
+        isUpdate,
+      });
+    });
+  }
+
+  return offer;
 }
 
 export async function getOffers(params: {
@@ -100,9 +173,25 @@ export async function writeBid(params: {
   ownerAddress: string;
   amount: number;
   price: number;
+  txHash?: string;
+  jobId?: string;
 }) {
-  const { bidAddress, tokenAddress, ownerAddress, amount, price } = params;
-  const offer = await prisma.bids.upsert({
+  const { bidAddress, tokenAddress, ownerAddress, amount, price, txHash, jobId } = params;
+
+  // Check if bid already exists to determine if this is create or update
+  const existingBid = await prisma.bids.findUnique({
+    where: {
+      bidAddress_tokenAddress_chain: {
+        bidAddress,
+        tokenAddress,
+        chain: prismaChainName,
+      },
+    },
+  });
+
+  const isUpdate = existingBid !== null;
+
+  const bid = await prisma.bids.upsert({
     where: {
       bidAddress_tokenAddress_chain: {
         bidAddress,
@@ -124,6 +213,54 @@ export async function writeBid(params: {
       price,
     },
   });
+
+  // Record activity for bid creation or update
+  // Only record if we have a txHash (indicating this came from a transaction)
+  // This prevents duplicate logging when called from api-transaction.tsx
+  if (txHash && !txHash.startsWith("pending-")) {
+    const activityData: TradeActivityData = {
+      bidAddress,
+      tokenSymbol: undefined, // Will be enriched by caller if needed
+      isUpdate,
+    };
+
+    if (isUpdate && existingBid) {
+      activityData.previousAmount = existingBid.amount;
+      activityData.previousPrice = existingBid.price;
+
+      // Convert to BigInt for comparison
+      const amountBigInt = BigInt(amount);
+      const priceBigInt = BigInt(price);
+
+      if (existingBid.amount !== amountBigInt && existingBid.price !== priceBigInt) {
+        activityData.changeReason = "Amount and price updated";
+      } else if (existingBid.amount !== amountBigInt) {
+        activityData.changeReason = "Amount updated";
+      } else if (existingBid.price !== priceBigInt) {
+        activityData.changeReason = "Price updated";
+      }
+    }
+
+    await recordActivity({
+      userAddress: ownerAddress,
+      txHash: txHash,
+      activityType: isUpdate ? "BID_UPDATE" : "BID_CREATE",
+      tokenAddress: tokenAddress,
+      chain: chain as Chain,
+      activityData: activityData,
+      amount: BigInt(amount),
+      price: BigInt(price),
+      jobId: jobId,
+    }).catch((error) => {
+      log.error("Failed to record bid activity", {
+        error,
+        bidAddress,
+        isUpdate,
+      });
+    });
+  }
+
+  return bid;
 }
 
 export async function getBids(params: {

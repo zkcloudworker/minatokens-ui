@@ -20,6 +20,7 @@ import {
 import { sendTransaction } from "@/lib/send";
 import { log } from "@/lib/log";
 import { AccountBalance, getBalances } from "@/lib/api/info/token-info";
+import { confirmActivity, updateActivityTxHash } from "@/lib/activity";
 const chain = getChain();
 const DEBUG = debug();
 
@@ -186,6 +187,16 @@ export async function waitForProveJob(params: {
       );
       return false;
     }
+
+    // Update activity with real transaction hash
+    await updateActivityTxHash(jobId, sendResult.hash).catch((error) => {
+      log.error("waitForProveJob: Failed to update activity txHash", {
+        error,
+        jobId,
+        txHash: sendResult.hash,
+      });
+    });
+
     includedPromises.push(
       waitForMinaTx({
         hash: sendResult.hash,
@@ -403,6 +414,15 @@ export async function waitForMinaTx(params: {
       status: "success",
     },
   });
+
+  // Confirm activity in database
+  await confirmActivity({ txHash: hash }).catch((error) => {
+    log.error("waitForMinaTx: Failed to confirm activity", {
+      error,
+      hash,
+    });
+  });
+
   // if (
   //   type === "launch" ||
   //   type === "mint" ||

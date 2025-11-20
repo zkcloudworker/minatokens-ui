@@ -23,7 +23,10 @@ export type ApiName =
   | "key"
   | "cms:store"
   | "cms:read"
-  | "cms:reserve";
+  | "cms:reserve"
+  | "activity:query"
+  | "activity:stats"
+  | "activity:export";
 
 export type ApiResponse<T> =
   | {
