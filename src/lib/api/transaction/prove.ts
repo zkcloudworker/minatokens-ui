@@ -3,7 +3,7 @@
 import { proveTransactions as proveTokenTransactions } from "@/lib/token-api";
 import { proveTransactions as proveNftTransactions } from "@/lib/nft-api";
 import { debug } from "@/lib/debug";
-import { getChain } from "@/lib/chain";
+import { getChain, getPrismaChainName } from "@/lib/chain";
 import { checkAddress } from "../utils/address";
 import { checkAddress as checkSenderAddress } from "@/lib/address";
 import {
@@ -255,7 +255,7 @@ export async function prove(props: {
               txHash: pendingHash,
               activityType: "NFT_LAUNCH",
               tokenAddress: request.collectionAddress,
-              chain: chain as Chain,
+              chain: getPrismaChainName(),
               activityData: activityData,
               memo: request.memo,
               jobId: jobId,
@@ -276,7 +276,7 @@ export async function prove(props: {
               txHash: pendingHash,
               activityType: "NFT_MINT",
               tokenAddress: request.collectionAddress,
-              chain: chain as Chain,
+              chain: getPrismaChainName(),
               activityData: activityData,
               memo: request.memo,
               jobId: jobId,
@@ -296,7 +296,7 @@ export async function prove(props: {
               txHash: pendingHash,
               activityType: "NFT_TRANSFER",
               tokenAddress: request.collectionAddress,
-              chain: chain as Chain,
+              chain: getPrismaChainName(),
               activityData: activityData,
               memo: request.memo,
               jobId: jobId,
@@ -316,7 +316,7 @@ export async function prove(props: {
               txHash: pendingHash,
               activityType: "NFT_APPROVE",
               tokenAddress: request.collectionAddress,
-              chain: chain as Chain,
+              chain: getPrismaChainName(),
               activityData: activityData,
               memo: request.memo,
               jobId: jobId,
@@ -337,7 +337,7 @@ export async function prove(props: {
               txHash: pendingHash,
               activityType: txType === "nft:buy" ? "NFT_BUY" : "NFT_SELL",
               tokenAddress: request.collectionAddress,
-              chain: chain as Chain,
+              chain: getPrismaChainName(),
               activityData: activityData,
               price: request.price || request.nftSellParams?.price
                 ? BigInt(request.price || request.nftSellParams?.price)

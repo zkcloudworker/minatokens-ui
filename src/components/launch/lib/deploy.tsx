@@ -9,7 +9,7 @@ import {
 } from "./messages";
 import type { Libraries } from "@/lib/libraries";
 import { debug } from "@/lib/debug";
-import { getChain, getWallet } from "@/lib/chain";
+import { getChain, getWallet, getPrismaChainName } from "@/lib/chain";
 import { proveTransaction } from "@/lib/token-api";
 import { log } from "@/lib/log";
 import {
@@ -318,7 +318,7 @@ export async function deployToken(params: {
       txHash: `pending-${jobId}`,
       activityType: "LAUNCH",
       tokenAddress: contractAddress.toBase58(),
-      chain: chain as Chain,
+      chain: getPrismaChainName(),
       activityData: activityData,
       memo: memo,
       jobId: jobId,

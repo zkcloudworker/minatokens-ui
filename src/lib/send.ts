@@ -1,7 +1,7 @@
 "use server";
 import { initBlockchain, accountBalanceMina } from "@silvana-one/mina-utils";
 import { Mina } from "o1js";
-import { getChain } from "./chain";
+import { getChain, getPrismaChainName } from "./chain";
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
 import { recordActivity } from "./activity";
@@ -57,7 +57,7 @@ export async function sendTransaction(
           await recordActivity({
             userAddress: sender.toBase58(),
             txHash: txSent.hash,
-            chain: chain as Chain,
+            chain: getPrismaChainName(),
             ...activityContext,
           }).catch((error) => {
             log.error("Failed to record activity", {
