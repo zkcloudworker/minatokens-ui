@@ -94,8 +94,8 @@ describe("JWT Generation and Verification", () => {
   it("should generate JWT for activity API", async () => {
     const customAddress =
       "B62qo69VLUPMXEC6AFWRgjdTEGsA3xKvqeU5CgYm3jAbBJL7dTvaQkv";
-    const customName = "Test User";
-    const customEmail = "test@example.com";
+    const customName = "Zekoboom";
+    const customEmail = "zekoboom@zeko.io";
 
     const customJWT = await generateJWT({
       address: customAddress,

@@ -392,11 +392,8 @@ export default function Terms() {
             If you become aware of any violation of copyright, intellectual
             property rights, or licenses related to the Service, you are obliged
             to immediately inform MinaTokens by contacting{" "}
-            <a
-              href="mailto:ip@silvana-one.com"
-              className="text-blue-600 underline"
-            >
-              ip@silvana-one.com
+            <a href="mailto:ip@silvana.one" className="text-blue-600 underline">
+              ip@silvana.one
             </a>{" "}
             and providing details of the violation.
           </p>
@@ -602,10 +599,10 @@ export default function Terms() {
               proceeding, you must send a letter requesting arbitration and
               describing your claim to our legal department at{" "}
               <a
-                href="mailto:legal@silvana-one.com"
+                href="mailto:legal@silvana.one"
                 className="text-blue-600 underline"
               >
-                legal@silvana-one.com
+                legal@silvana.one
               </a>{" "}
               and receive the answer explaining the arbitration process.
             </li>
@@ -703,10 +700,10 @@ export default function Terms() {
             <li>
               <strong>Email</strong>:{" "}
               <a
-                href="mailto:support@silvana-one.com"
+                href="mailto:support@silvana.one"
                 className="text-blue-600 underline"
               >
-                support@silvana-one.com
+                support@silvana.one
               </a>
             </li>
           </ul>
