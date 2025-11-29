@@ -301,8 +301,8 @@ export default function Privacy() {
           <ul className="list-disc list-inside space-y-2">
             <li>
               <strong>Email</strong>:{" "}
-              <a href="mailto:privacy@silvana-one.com" className="text-accent">
-                privacy@silvana-one.com
+              <a href="mailto:privacy@silvana.one" className="text-accent">
+                privacy@silvana.one
               </a>
             </li>
           </ul>

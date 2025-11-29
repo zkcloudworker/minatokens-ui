@@ -39,6 +39,29 @@ export function getPrismaChainName():
   }
 }
 
+export function convertToPrismaChain(
+  chain: string | undefined
+): "mina_mainnet" | "mina_devnet" | "zeko_devnet" | "zeko_mainnet" | undefined {
+  if (!chain) return undefined;
+
+  switch (chain) {
+    case "mina:mainnet":
+    case "mina_mainnet":
+      return "mina_mainnet";
+    case "mina:devnet":
+    case "mina_devnet":
+      return "mina_devnet";
+    case "zeko:testnet":
+    case "zeko_devnet":
+      return "zeko_devnet";
+    case "zeko:mainnet":
+    case "zeko_mainnet":
+      return "zeko_mainnet";
+    default:
+      return undefined;
+  }
+}
+
 export function getAlgoliaChain(): string {
   const chain = getChain();
   return chain === "mina:mainnet"

@@ -20,7 +20,28 @@ import {
   TokenTransactionType,
 } from "@silvana-one/api";
 import { writeBid, writeOffer } from "@/lib/trade";
+import { recordActivity } from "@/lib/activity";
+import { ActivityType, Chain } from "@prisma/client";
+import { getChain, getPrismaChainName } from "@/lib/chain";
+import { ActivityData } from "@/lib/activity-types";
 const DEBUG = debug();
+const chain = getChain();
+
+// Map transaction types to activity types
+const activityTypeMap: Record<string, ActivityType> = {
+  "token:mint": "MINT",
+  "token:transfer": "TRANSFER",
+  "token:burn": "BURN",
+  "token:redeem": "REDEEM",
+  "token:offer:create": "OFFER_CREATE",
+  "token:offer:buy": "OFFER_BUY",
+  "token:offer:withdraw": "OFFER_WITHDRAW",
+  "token:bid:create": "BID_CREATE",
+  "token:bid:sell": "BID_SELL",
+  "token:bid:withdraw": "BID_WITHDRAW",
+  "token:admin:whitelist": "ADMIN_WHITELIST",
+  "token:airdrop": "AIRDROP",
+};
 
 export async function apiTokenTransaction(params: {
   symbol: string;
@@ -223,6 +244,143 @@ export async function apiTokenTransaction(params: {
         error: "JobId is undefined",
       };
     }
+
+    // Record activity for each transaction
+    const activityType = activityTypeMap[txType];
+    if (activityType && payloads.length > 0) {
+      // Special handling for airdrops - record activity for sender AND each recipient
+      if (txType === "token:airdrop" && "recipients" in data) {
+        const airdropData = data as TokenAirdropTransactionParams;
+        const recipients = airdropData.recipients || [];
+        const totalAmount = recipients.reduce((sum, r) => sum + (r.amount || 0), 0);
+
+        // Record sender's airdrop activity
+        const senderActivityData: any = {
+          tokenSymbol: symbol,
+          nonce: payloads[0]?.nonce,
+          recipients: recipients.map(r => ({
+            address: r.address,
+            amount: BigInt(r.amount || 0),
+            memo: r.memo
+          })),
+          totalAmount: BigInt(totalAmount),
+          recipientCount: recipients.length
+        };
+
+        await recordActivity({
+          userAddress: sender,
+          txHash: `pending-${jobId}-sender`,
+          activityType: "AIRDROP",
+          tokenAddress: data.tokenAddress,
+          chain: getPrismaChainName(),
+          activityData: senderActivityData,
+          amount: BigInt(totalAmount),
+          memo: "memo" in data ? data.memo : `Airdrop to ${recipients.length} recipients`,
+          jobId: jobId,
+        }).catch((error) => {
+          log.error("Failed to record airdrop sender activity", {
+            error,
+            jobId,
+            txType,
+          });
+        });
+
+        // Record each recipient's activity
+        for (let i = 0; i < recipients.length; i++) {
+          const recipient = recipients[i];
+          const recipientActivityData: any = {
+            tokenSymbol: symbol,
+            fromAddress: sender,
+            recipientAddress: recipient.address,
+            airdropBatch: jobId,
+            recipientIndex: i
+          };
+
+          await recordActivity({
+            userAddress: recipient.address,
+            txHash: `pending-${jobId}-recipient-${i}`,
+            activityType: "TRANSFER",  // Recipients see it as a transfer
+            tokenAddress: data.tokenAddress,
+            chain: getPrismaChainName(),
+            activityData: recipientActivityData,
+            amount: recipient.amount ? BigInt(recipient.amount) : undefined,
+            memo: recipient.memo || `Airdrop from ${sender}`,
+            jobId: jobId,
+          }).catch((error) => {
+            log.error("Failed to record airdrop recipient activity", {
+              error,
+              jobId,
+              recipient: recipient.address,
+              index: i,
+            });
+          });
+        }
+      } else {
+        // Regular transaction handling
+        for (let i = 0; i < payloads.length; i++) {
+          const payload = payloads[i];
+          // Build activity data based on transaction type
+          const activityData: any = {
+            tokenSymbol: symbol,
+            nonce: payload.nonce,
+          };
+
+          // Add type-specific data
+          if (txType === "token:mint" || txType === "token:transfer") {
+            activityData.recipientAddress = "to" in data ? data.to : undefined;
+            if (txType === "token:mint") {
+              activityData.minterAddress = sender;
+            } else {
+              activityData.fromAddress = sender;
+              activityData.toAddress = data.to;
+            }
+          }
+
+          if (txType === "token:offer:create" && "offerAddress" in data) {
+            activityData.offerAddress = data.offerAddress;
+          }
+
+          if (txType === "token:bid:create" && "bidAddress" in data) {
+            activityData.bidAddress = data.bidAddress;
+          }
+
+          if (txType === "token:offer:buy" && "offerAddress" in data) {
+            activityData.offerAddress = data.offerAddress;
+            activityData.buyerAddress = sender;
+          }
+
+          if (txType === "token:bid:sell" && "bidAddress" in data) {
+            activityData.bidAddress = data.bidAddress;
+            activityData.sellerAddress = sender;
+          }
+
+          // Use unique pending hash for batch transactions
+          const pendingHash = payloads.length > 1
+            ? `pending-${jobId}-${i}`
+            : `pending-${jobId}`;
+
+          await recordActivity({
+            userAddress: sender,
+            txHash: pendingHash,
+            activityType: activityType,
+            tokenAddress: data.tokenAddress,
+            chain: getPrismaChainName(),
+            activityData: activityData,
+            amount: "amount" in data && data.amount ? BigInt(data.amount) : undefined,
+            price: "price" in data && data.price ? BigInt(data.price) : undefined,
+            memo: "memo" in data ? data.memo : undefined,
+            jobId: jobId,
+          }).catch((error) => {
+            log.error("Failed to record token transaction activity", {
+              error,
+              jobId,
+              txType,
+            });
+          });
+        }
+      }
+    }
+
     const jobIdMessage = (
       <>
         <a

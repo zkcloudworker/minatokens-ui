@@ -3,7 +3,7 @@
 import { proveTransactions as proveTokenTransactions } from "@/lib/token-api";
 import { proveTransactions as proveNftTransactions } from "@/lib/nft-api";
 import { debug } from "@/lib/debug";
-import { getChain } from "@/lib/chain";
+import { getChain, getPrismaChainName } from "@/lib/chain";
 import { checkAddress } from "../utils/address";
 import { checkAddress as checkSenderAddress } from "@/lib/address";
 import {
@@ -16,6 +16,15 @@ import {
   NftTransaction,
 } from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
+import { recordActivity } from "@/lib/activity";
+import { Chain } from "@prisma/client";
+import {
+  NFTLaunchActivityData,
+  NFTMintActivityData,
+  NFTTransferActivityData,
+  NFTApproveActivityData,
+  NFTTradeActivityData,
+} from "@/lib/activity-types";
 const chain = getChain();
 import { log as logtail } from "@logtail/next";
 const log = logtail.with({
@@ -216,6 +225,137 @@ export async function prove(props: {
         status: 500,
         json: { error: "Failed to start proving job" },
       };
+    }
+
+    // Record NFT activities after jobId is obtained
+    if (isNFT) {
+      for (let i = 0; i < txs.length; i++) {
+        const tx = txs[i] as NftTransaction;
+        const txType = tx.request.txType;
+        const sender = tx.sender;
+
+        // Use unique pending hash for batch transactions
+        const pendingHash = txs.length > 1
+          ? `pending-${jobId}-${i}`
+          : `pending-${jobId}`;
+
+        try {
+          if (txType === "nft:launch") {
+            const request = tx.request as any;
+            const activityData: NFTLaunchActivityData = {
+              collectionAddress: request.collectionAddress,
+              collectionName: request.collectionName,
+              collectionSymbol: tx.symbol,
+              adminContractAddress: request.adminContractAddress,
+              metadataVerificationKeyHash: tx.metadataRoot?.toString(),
+            };
+
+            await recordActivity({
+              userAddress: sender,
+              txHash: pendingHash,
+              activityType: "NFT_LAUNCH",
+              tokenAddress: request.collectionAddress,
+              chain: getPrismaChainName(),
+              activityData: activityData,
+              memo: request.memo,
+              jobId: jobId,
+            });
+          } else if (txType === "nft:mint") {
+            const request = tx.request as any;
+            const activityData: NFTMintActivityData = {
+              collectionAddress: request.collectionAddress,
+              nftId: request.nftId || request.address,
+              recipientAddress: request.to || sender,
+              metadata: request.metadata,
+              uri: request.uri,
+              tokenSymbol: tx.symbol,
+            };
+
+            await recordActivity({
+              userAddress: sender,
+              txHash: pendingHash,
+              activityType: "NFT_MINT",
+              tokenAddress: request.collectionAddress,
+              chain: getPrismaChainName(),
+              activityData: activityData,
+              memo: request.memo,
+              jobId: jobId,
+            });
+          } else if (txType === "nft:transfer") {
+            const request = tx.request as any;
+            const activityData: NFTTransferActivityData = {
+              collectionAddress: request.collectionAddress,
+              nftId: request.nftId || request.address,
+              fromAddress: sender,
+              toAddress: request.to,
+              tokenSymbol: tx.symbol,
+            };
+
+            await recordActivity({
+              userAddress: sender,
+              txHash: pendingHash,
+              activityType: "NFT_TRANSFER",
+              tokenAddress: request.collectionAddress,
+              chain: getPrismaChainName(),
+              activityData: activityData,
+              memo: request.memo,
+              jobId: jobId,
+            });
+          } else if (txType === "nft:approve") {
+            const request = tx.request as any;
+            const activityData: NFTApproveActivityData = {
+              collectionAddress: request.collectionAddress,
+              nftId: request.nftId || request.address,
+              approvedAddress: request.to || request.approved,
+              ownerAddress: sender,
+              tokenSymbol: tx.symbol,
+            };
+
+            await recordActivity({
+              userAddress: sender,
+              txHash: pendingHash,
+              activityType: "NFT_APPROVE",
+              tokenAddress: request.collectionAddress,
+              chain: getPrismaChainName(),
+              activityData: activityData,
+              memo: request.memo,
+              jobId: jobId,
+            });
+          } else if (txType === "nft:buy" || txType === "nft:sell") {
+            const request = tx.request as any;
+            const activityData: NFTTradeActivityData = {
+              collectionAddress: request.collectionAddress,
+              nftId: request.nftId || request.address,
+              sellerAddress: txType === "nft:sell" ? sender : request.seller || request.from,
+              buyerAddress: txType === "nft:buy" ? sender : request.buyer || request.to,
+              salePrice: BigInt(request.price || request.nftSellParams?.price || 0),
+              tokenSymbol: tx.symbol,
+            };
+
+            await recordActivity({
+              userAddress: sender,
+              txHash: pendingHash,
+              activityType: txType === "nft:buy" ? "NFT_BUY" : "NFT_SELL",
+              tokenAddress: request.collectionAddress,
+              chain: getPrismaChainName(),
+              activityData: activityData,
+              price: request.price || request.nftSellParams?.price
+                ? BigInt(request.price || request.nftSellParams?.price)
+                : undefined,
+              memo: request.memo,
+              jobId: jobId,
+            });
+          }
+        } catch (error) {
+          log.error("Failed to record NFT activity", {
+            error,
+            jobId,
+            txType,
+            sender,
+          });
+          // Don't fail the whole transaction if activity logging fails
+        }
+      }
     }
 
     return {
