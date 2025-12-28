@@ -1,12 +1,9 @@
 "use server";
-import { PrismaClient, Chain } from "@prisma/client";
+import { Chain } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { getPrismaChainName } from "./chain";
 import { debug } from "./debug";
 import { log as logtail } from "@logtail/next";
-
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
 const chain = getPrismaChainName() as Chain;
 const log = logtail.with({
   service: "likes",

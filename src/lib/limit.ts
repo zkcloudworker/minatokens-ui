@@ -1,10 +1,7 @@
 "use server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/db";
 
 const LIMIT = 500; // 500 MINA
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
 
 export async function checkLimit(params: {
   address: string;

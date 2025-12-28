@@ -1,15 +1,12 @@
 "use server";
 import { apiHandler } from "@/lib/api/api";
-import { UserActivity, PrismaClient } from "@prisma/client";
+import { UserActivity } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { ApiResponse } from "@/lib/api/api-types";
 import { log as logtail } from "@logtail/next";
 
 const log = logtail.with({
   service: "activity:query",
-});
-
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
 });
 
 interface ActivityQueryParams {

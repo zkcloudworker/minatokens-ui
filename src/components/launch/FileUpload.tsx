@@ -47,7 +47,7 @@ export function FileUpload({ setImage, setImageURL, url }: FileUploadProps) {
   };
 
   return (
-    <>
+    <div>
       <div
         className="shrink-0"
         onDragEnter={handleDragEnter}
@@ -55,20 +55,20 @@ export function FileUpload({ setImage, setImageURL, url }: FileUploadProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <figure className="relative inline-block w-300 h-300 ">
+        <figure className="relative inline-block">
           <Image
             src={url ?? "/token.png"}
             alt="image"
-            height={300}
-            width={300}
-            className="rounded-xl border-[5px] border-white dark:border-jacarta-600 object-cover !w-[150px] !h-[150px] overflow-hidden "
+            height={150}
+            width={150}
+            className="rounded-xl border-[5px] border-white dark:border-jacarta-600 object-cover"
           />
           <div className="group absolute -right-3 -bottom-2 h-8 w-8 overflow-hidden rounded-full border border-jacarta-100 bg-white text-center hover:border-transparent hover:bg-accent">
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="absolute top-0 left-0 w-full cursor-pointer opacity-0"
+              className="absolute top-0 left-0 w-full h-full cursor-pointer opacity-0"
             />
             <div className="flex h-full items-center justify-center">
               <svg
@@ -83,24 +83,17 @@ export function FileUpload({ setImage, setImageURL, url }: FileUploadProps) {
               </svg>
             </div>
           </div>
-          <input
-            type="file"
-            accept="image/*,video/*,audio/*,webgl/*,.glb,.gltf"
-            id="file-upload"
-            onChange={handleImageChange}
-            className="absolute inset-0 z-20 cursor-pointer opacity-0"
-          />
         </figure>
       </div>
-      <div className="mt-4">
-        <span className="mb-3 block font-display text-sm text-jacarta-700 dark:text-white">
+      <div className="mt-2">
+        <span className="block font-display text-sm text-jacarta-700 dark:text-white">
           Token Image
         </span>
         <p className="text-sm leading-normal dark:text-jacarta-300">
           Upload an image or GIF (max 5MB). Drag and drop supported.
         </p>
       </div>
-    </>
+    </div>
   );
 }
 

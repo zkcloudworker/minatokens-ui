@@ -1,7 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { describe, expect, test } from "@jest/globals";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+  connectionString: process.env.POSTGRES_PRISMA_URL,
+});
+const prisma = new PrismaClient({ adapter });
 
 describe("Prisma Tests", () => {
   it.skip("should connect to the database", async () => {

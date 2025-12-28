@@ -1,11 +1,7 @@
 "use server";
 import { PublicKey } from "o1js";
 import { MintAddress, MintAddressVerified } from "@/tokens/lib/token";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
+import { prisma } from "@/lib/db";
 
 export async function checkMintData(
   params: MintAddress
