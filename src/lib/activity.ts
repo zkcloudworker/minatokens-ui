@@ -1,5 +1,6 @@
 "use server";
-import { PrismaClient, UserActivity, ActivityType, Chain } from "@prisma/client";
+import { UserActivity, ActivityType, Chain } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { getPrismaChainName } from "./chain";
 import { log as logtail } from "@logtail/next";
 import {
@@ -13,10 +14,6 @@ import {
   AirdropExport,
   AirdropUserExport,
 } from "./activity-types";
-
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
 
 const log = logtail.with({
   service: "activity",

@@ -1,10 +1,8 @@
 "use server";
-import { APIKeyCalls, Chain, PrismaClient } from "@prisma/client";
+import { APIKeyCalls, Chain } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { debug } from "./debug";
 const DEBUG = debug();
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
 
 export async function getApiCalls(params: {
   address: string;

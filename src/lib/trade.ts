@@ -1,5 +1,6 @@
 "use server";
-import { PrismaClient, Bids, Offers, Prisma, Chain } from "@prisma/client";
+import { Bids, Offers, Prisma, Chain } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { getPrismaChainName, getChain } from "./chain";
 import { recordActivity } from "./activity";
 import { TradeActivityData } from "./activity-types";
@@ -7,9 +8,6 @@ import { log as logtail } from "@logtail/next";
 
 const prismaChainName = getPrismaChainName();
 const chain = getChain();
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
 
 const log = logtail.with({
   service: "trade",

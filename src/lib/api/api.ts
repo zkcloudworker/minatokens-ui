@@ -7,7 +7,8 @@ import {
   initializeRedisRateLimiter,
 } from "../rate-limit";
 import { jwtVerify } from "jose";
-import { Chain, PrismaClient } from "@prisma/client";
+import { Chain } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import {
   TokenTransaction,
   FaucetResponse,
@@ -27,10 +28,6 @@ import { getChain, getPrismaChainName } from "@/lib/chain";
 const DEBUG = debug();
 const { API_SECRET, MINATOKENS_API_KEY, README_API_KEY, README_DOCS_SECRET } =
   process.env;
-
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
 
 initializeMemoryRateLimiter({
   name: "ipMemory",

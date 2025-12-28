@@ -1,6 +1,7 @@
 "use server";
 import assert from "assert";
-import { PrismaClient, Chain as PrismaChain } from "@prisma/client";
+import { Chain as PrismaChain } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import Client from "mina-signer";
 import { CmsnftData } from "@silvana-one/api";
 import { ApiName, ApiResponse } from "../api-types";
@@ -20,10 +21,6 @@ const log = logtail.with({
 
 const client = new Client({
   network: "testnet",
-});
-
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
 });
 
 export interface CmsStoreNFTParams {

@@ -16,6 +16,12 @@ const nextConfig = {
       bodySizeLimit: "5mb",
     },
   },
+  serverExternalPackages: ["o1js"],
+  turbopack: {
+    resolveAlias: {
+      o1js: "./node_modules/o1js/dist/web/index.js",
+    },
+  },
   images: {
     remotePatterns: [
       {

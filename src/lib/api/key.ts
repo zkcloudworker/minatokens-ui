@@ -1,6 +1,7 @@
 "use server";
 import { ApiName, ApiResponse } from "./api-types";
-import { APIKey, PrismaClient } from "@prisma/client";
+import { APIKey } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { SignJWT } from "jose";
 import formData from "form-data";
 import { checkAddress } from "./utils/address";
@@ -19,10 +20,6 @@ const {
   SLACK_WEBHOOK_URL,
   API_SECRET,
 } = process.env;
-
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
 
 export interface KeyParams {
   address: string;

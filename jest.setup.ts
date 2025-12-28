@@ -1,12 +1,16 @@
 import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import console from "console";
 import { afterAll, beforeAll } from "@jest/globals";
 
 global.console = console;
 dotenv.config({ path: ".env.test" });
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+  connectionString: process.env.POSTGRES_PRISMA_URL,
+});
+const prisma = new PrismaClient({ adapter });
 
 const logCopy = console.log.bind(console);
 

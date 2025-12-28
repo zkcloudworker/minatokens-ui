@@ -1,15 +1,11 @@
 "use server";
 import { ApiResponse } from "./api-types";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import { getBlockberryScamInfo } from "../blockberry-tokens";
 import { generateJWT } from "./key";
 import { log as logtail } from "@logtail/next";
 import { getChain } from "@/lib/chain";
 const chain = getChain();
-
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
 
 const log = logtail.with({
   service: "api",

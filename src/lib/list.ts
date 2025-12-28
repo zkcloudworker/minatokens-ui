@@ -1,8 +1,5 @@
 "use server";
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.POSTGRES_PRISMA_URL,
-});
+import { prisma } from "@/lib/db";
 
 export async function isWhitelisted(params: {
   address: string;
