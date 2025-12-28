@@ -194,7 +194,7 @@ export function LaunchForm({
           Launch your token
         </h1>
 
-        <div className="mx-auto max-w-[48.125rem] md:flex mt-8">
+        <div className="mx-auto max-w-[48.125rem] md:flex md:items-start mt-8">
           <div className="mb-12 md:w-1/2 md:pr-8">
             {/* Token symbol */}
             <div className="mb-6">
@@ -649,8 +649,8 @@ export function LaunchForm({
             </button>
             {/* </Tippy> */}
           </div>
-          <div className="mb-12 md:w-1/2 md:pr-8">
-            <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+          <div className="mb-12 md:w-1/2 md:pl-8 self-start">
+            <div className="mb-4">
               <FileUpload
                 setImage={setImage}
                 setImageURL={setImageURL}
@@ -658,12 +658,12 @@ export function LaunchForm({
               />
             </div>
             {imageError && (
-              <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+              <div className="mb-4 shrink-0">
                 <p className="text-red">{imageError}</p>
               </div>
             )}
             {symbol && name && address && !imageError && (
-              <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+              <div className="mb-4 shrink-0">
                 <button
                   onClick={generateImageWithAI}
                   disabled={imageGenerating || imageError !== undefined}
