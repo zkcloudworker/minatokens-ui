@@ -19,6 +19,7 @@
     "postinstall": "dotenv -e .env.local -- prisma generate --no-hints",
     "test": "jest",
     "jwt": "dotenv -e .env.local -- tsx --test test/jwt.test.ts",
+    "prisma:test": "dotenv -e .env.local -- tsx --test test/prisma.test.ts",
     "test:watch": "jest --watch",
     "update": "ncu -i -u"
   },
