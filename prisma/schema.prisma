@@ -278,6 +278,43 @@ model NFTCMS {
   @@index([name])
 }
 
+enum MesaAccountType {
+  MAIN
+  TOKEN
+}
+
+enum MesaKeyOperation {
+  TOKEN_LAUNCH
+  NFT_LAUNCH
+  TOKEN_OFFER_CREATE
+  TOKEN_BID_CREATE
+  NFT_MINT
+  NFT_SELL
+}
+
+// Mesa upgrade: encrypted Mina private keys persisted (testnet/devnet only) so
+// verification keys can be regenerated and redeployed for every deployed account
+// after the Mina Mesa network upgrade. Encryption: AES-256-GCM, base64(nonce|ct|tag).
+model MesaPrivateKey {
+  publicKey            String           @id @db.VarChar(255) // Base58 Mina public key
+  encryptedPrivateKey  String // base64(nonce|ciphertext|tag), AES-256-GCM of the base58 private key
+  walletAddress        String?          @db.VarChar(255) // connected wallet (sender), nullable
+  operation            MesaKeyOperation
+  accountType          MesaAccountType // MAIN = usual account, TOKEN = token account
+  mainAccountPublicKey String?          @db.VarChar(255) // parent token/collection address when accountType = TOKEN
+  chain                Chain
+  source               String?          @db.VarChar(50) // "client" | "api"
+  context              Json?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  @@index([walletAddress])
+  @@index([operation])
+  @@index([accountType])
+  @@index([mainAccountPublicKey])
+  @@index([chain])
+}
+
 model UserActivity {
   id              String       @id @default(cuid())
   userAddress     String       @db.VarChar(255)

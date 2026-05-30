@@ -16,10 +16,12 @@ import { ApiName, ApiResponse } from "../api-types";
 import { createTransactionPayloads } from "@silvana-one/mina-utils";
 import { checkAddress, checkPrivateKey } from "../utils/address";
 import { debug } from "@/lib/debug";
-import { getWallet, getChain } from "@/lib/chain";
+import { getWallet, getChain, convertToPrismaChain } from "@/lib/chain";
 import { getFee } from "@/lib/fee";
 import { getAccountNonce } from "../../nonce";
 import { accountExists } from "../../account";
+import { saveMesaPrivateKeys } from "@/lib/mesa/keys";
+import { MesaKeyPersistenceError } from "@/lib/mesa/retry";
 import { log as logtail } from "@logtail/next";
 const chain = getChain();
 const log = logtail.with({
@@ -232,6 +234,37 @@ export async function deployToken(props: {
       PrivateKey.fromBase58(params.adminContractPrivateKey)
         .toPublicKey()
         .toBase58();
+
+    // Mesa upgrade: atomically persist the generated contract private keys
+    // (testnet only). Fail-closed — saveMesaPrivateKeys throws on failure, which
+    // aborts before the tx is built/signed/returned, so no account is deployed
+    // without its key saved.
+    const mesaChain = convertToPrismaChain(chain);
+    if (mesaChain) {
+      await saveMesaPrivateKeys([
+        {
+          publicKey: params.tokenAddress,
+          privateKey: params.tokenContractPrivateKey,
+          walletAddress: params.sender,
+          operation: "TOKEN_LAUNCH",
+          accountType: "MAIN",
+          chain: mesaChain,
+          source: "api",
+          context: { role: "token", symbol },
+        },
+        {
+          publicKey: params.adminContractAddress,
+          privateKey: params.adminContractPrivateKey,
+          walletAddress: params.sender,
+          operation: "TOKEN_LAUNCH",
+          accountType: "MAIN",
+          chain: mesaChain,
+          source: "api",
+          context: { role: "admin", symbol },
+        },
+      ]);
+    }
+
     const { tx, request, adminType } = await buildTokenLaunchTransaction({
       chain,
       args: params,
@@ -262,6 +295,13 @@ export async function deployToken(props: {
       } satisfies TokenTransaction,
     };
   } catch (error) {
+    if (error instanceof MesaKeyPersistenceError) {
+      log.error("deployToken: key persistence failed", { error });
+      return {
+        status: 503,
+        json: { error: "Could not persist deployment key — please retry" },
+      };
+    }
     log.error("deployToken catch", { error });
     return {
       status: 500,
