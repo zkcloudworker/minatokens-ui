@@ -16,7 +16,7 @@
 // Matches both path-style (arweave.net/<txid>/..) and subdomain-style
 // (<base32>.arweave.net/<txid>/..). Arweave TXIDs are exactly 43 base64url chars.
 const ARWEAVE_TXID =
-  /^(https?:\/\/[^/]*arweave\.net\/[A-Za-z0-9_-]{43})(?:[/?#].*)?$/;
+  /^(https?:\/\/(?:[^/]+\.)?arweave\.net\/[A-Za-z0-9_-]{43})(?:[/?#].*)?$/;
 
 export function normalizeArweaveUrl(url: string): string;
 export function normalizeArweaveUrl(url: string | undefined): string | undefined;

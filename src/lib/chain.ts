@@ -1,4 +1,10 @@
-import { Mainnet, Devnet, Zeko, MinaNetwork } from "@silvana-one/api";
+import {
+  Mainnet,
+  Devnet,
+  Zeko,
+  MesaTestnet,
+  MinaNetwork,
+} from "@silvana-one/api";
 
 export function getSiteType(): "nft" | "token" {
   const type = process.env.NEXT_PUBLIC_SITE_TYPE;
@@ -8,16 +14,21 @@ export function getSiteType(): "nft" | "token" {
   return type;
 }
 
-export function getChain(): "mina:mainnet" | "mina:devnet" | "zeko:testnet" {
+export function getChain():
+  | "mina:mainnet"
+  | "mina:devnet"
+  | "mina:testnet"
+  | "zeko:testnet" {
   const chain = process.env.NEXT_PUBLIC_CHAIN;
   if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
   if (
     chain !== "mina:devnet" &&
     chain !== "mina:mainnet" &&
+    chain !== "mina:testnet" &&
     chain !== "zeko:testnet"
   )
     throw new Error(
-      "NEXT_PUBLIC_CHAIN must be mina:devnet or mina:mainnet or zeko:testnet"
+      "NEXT_PUBLIC_CHAIN must be mina:devnet, mina:testnet, mina:mainnet or zeko:testnet"
     );
   return chain;
 }
@@ -25,6 +36,7 @@ export function getChain(): "mina:mainnet" | "mina:devnet" | "zeko:testnet" {
 export function getPrismaChainName():
   | "mina_mainnet"
   | "mina_devnet"
+  | "mina_testnet"
   | "zeko_devnet" {
   const chain = getChain();
   switch (chain) {
@@ -32,6 +44,8 @@ export function getPrismaChainName():
       return "mina_mainnet";
     case "mina:devnet":
       return "mina_devnet";
+    case "mina:testnet":
+      return "mina_testnet";
     case "zeko:testnet":
       return "zeko_devnet";
     default:
@@ -41,7 +55,13 @@ export function getPrismaChainName():
 
 export function convertToPrismaChain(
   chain: string | undefined
-): "mina_mainnet" | "mina_devnet" | "zeko_devnet" | "zeko_mainnet" | undefined {
+):
+  | "mina_mainnet"
+  | "mina_devnet"
+  | "mina_testnet"
+  | "zeko_devnet"
+  | "zeko_mainnet"
+  | undefined {
   if (!chain) return undefined;
 
   switch (chain) {
@@ -51,6 +71,9 @@ export function convertToPrismaChain(
     case "mina:devnet":
     case "mina_devnet":
       return "mina_devnet";
+    case "mina:testnet":
+    case "mina_testnet":
+      return "mina_testnet";
     case "zeko:testnet":
     case "zeko_devnet":
       return "zeko_devnet";
@@ -68,6 +91,8 @@ export function getAlgoliaChain(): string {
     ? "mainnet"
     : chain === "mina:devnet"
     ? "devnet"
+    : chain === "mina:testnet"
+    ? "testnet"
     : "zeko";
 }
 
@@ -78,6 +103,8 @@ export function getLaunchpadUrl(): string {
       return "https://minatokens.com";
     case "mina:devnet":
       return "https://minatokens.com";
+    case "mina:testnet":
+      return "https://mesa.minatokens.com";
     case "zeko:testnet":
       return "https://zekotokens.com";
     default:
@@ -98,6 +125,8 @@ export function getNetwork(): MinaNetwork {
       return Mainnet;
     case "mina:devnet":
       return Devnet;
+    case "mina:testnet":
+      return MesaTestnet;
     case "zeko:testnet":
       return Zeko;
     default:
@@ -139,6 +168,7 @@ export function getSiteName(): string {
       case "mina:mainnet":
         return "MinaTokens";
       case "mina:devnet":
+      case "mina:testnet":
         return "MinaTokens";
       case "zeko:testnet":
         return "ZekoTokens";

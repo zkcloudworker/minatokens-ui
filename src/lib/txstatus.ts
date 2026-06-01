@@ -85,6 +85,8 @@ export async function getTxStatus(params: {
   hash: string;
 }): Promise<TxStatus | undefined> {
   const { hash } = params;
+  // Mesa testnet and Zeko have no Blockberry indexer.
+  if (chain === "zeko:testnet" || chain === "mina:testnet") return undefined;
   if (!BLOCKBERRY_API) {
     console.error("BLOCKBERRY_API is undefined");
     return undefined;
