@@ -20,7 +20,10 @@ export async function getAccountNonce(
 ): Promise<number | undefined> {
   if (BLOCKBERRY_API === undefined)
     throw new Error("BLOCKBERRY_API is undefined");
-  if (chain === "zeko:testnet") {
+  // Mesa testnet (mina:testnet) and Zeko have no Blockberry indexer — read the nonce
+  // straight from the chain. (Blockberry only covers mina mainnet/old-devnet, so using it
+  // for mina:testnet returns the wrong devnet nonce.)
+  if (chain === "zeko:testnet" || chain === "mina:testnet") {
     await initBlockchain({ chain });
     const publicKey = PublicKey.fromBase58(account);
     await fetchMinaAccount({ publicKey });

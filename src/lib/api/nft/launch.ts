@@ -48,6 +48,8 @@ export async function launchNftCollection(props: {
     symbol = "NFT",
     url = chain === "mina:mainnet"
       ? "https://mainnet.minanft.io"
+      : chain === "mina:testnet"
+      ? "https://testnet.minanft.io"
       : chain === "mina:devnet"
       ? "https://devnet.minanft.io"
       : "https://zeko.minanft.io",
