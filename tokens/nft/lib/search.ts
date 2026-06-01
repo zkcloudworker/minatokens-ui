@@ -20,7 +20,9 @@ if (NFT_ALGOLIA_KEY === undefined)
   throw new Error("NFT_ALGOLIA_KEY is undefined");
 
 const client = searchClient(NFT_ALGOLIA_PROJECT, NFT_ALGOLIA_KEY);
-const indexName = `standard-${chain}`;
+// mina:testnet uses the dedicated `standard-testnet` index (matches nft-info.ts).
+// Other chains keep their existing raw-chain index names to avoid regressions.
+const indexName = `standard-${chain === "mina:testnet" ? "testnet" : chain}`;
 
 export async function algoliaGetCollectionList(): Promise<DeployedTokenInfo[]> {
   const result = await client.searchForFacetValues({

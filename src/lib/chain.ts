@@ -8,16 +8,21 @@ export function getSiteType(): "nft" | "token" {
   return type;
 }
 
-export function getChain(): "mina:mainnet" | "mina:devnet" | "zeko:testnet" {
+export function getChain():
+  | "mina:mainnet"
+  | "mina:devnet"
+  | "mina:testnet"
+  | "zeko:testnet" {
   const chain = process.env.NEXT_PUBLIC_CHAIN;
   if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
   if (
     chain !== "mina:devnet" &&
     chain !== "mina:mainnet" &&
+    chain !== "mina:testnet" &&
     chain !== "zeko:testnet"
   )
     throw new Error(
-      "NEXT_PUBLIC_CHAIN must be mina:devnet or mina:mainnet or zeko:testnet"
+      "NEXT_PUBLIC_CHAIN must be mina:devnet, mina:testnet, mina:mainnet or zeko:testnet"
     );
   return chain;
 }
@@ -31,6 +36,7 @@ export function getPrismaChainName():
     case "mina:mainnet":
       return "mina_mainnet";
     case "mina:devnet":
+    case "mina:testnet":
       return "mina_devnet";
     case "zeko:testnet":
       return "zeko_devnet";
@@ -49,6 +55,7 @@ export function convertToPrismaChain(
     case "mina_mainnet":
       return "mina_mainnet";
     case "mina:devnet":
+    case "mina:testnet":
     case "mina_devnet":
       return "mina_devnet";
     case "zeko:testnet":
@@ -68,6 +75,8 @@ export function getAlgoliaChain(): string {
     ? "mainnet"
     : chain === "mina:devnet"
     ? "devnet"
+    : chain === "mina:testnet"
+    ? "testnet"
     : "zeko";
 }
 
@@ -77,6 +86,7 @@ export function getLaunchpadUrl(): string {
     case "mina:mainnet":
       return "https://minatokens.com";
     case "mina:devnet":
+    case "mina:testnet":
       return "https://minatokens.com";
     case "zeko:testnet":
       return "https://zekotokens.com";
@@ -97,6 +107,7 @@ export function getNetwork(): MinaNetwork {
     case "mina:mainnet":
       return Mainnet;
     case "mina:devnet":
+    case "mina:testnet":
       return Devnet;
     case "zeko:testnet":
       return Zeko;
@@ -139,6 +150,7 @@ export function getSiteName(): string {
       case "mina:mainnet":
         return "MinaTokens";
       case "mina:devnet":
+      case "mina:testnet":
         return "MinaTokens";
       case "zeko:testnet":
         return "ZekoTokens";

@@ -301,7 +301,7 @@ export async function loadFromIPFS(
 export async function algoliaGetNFT(params: {
   contractAddress: string;
   name: string;
-  chain: "mina:devnet" | "mina:mainnet" | "zeko:testnet";
+  chain: "mina:devnet" | "mina:testnet" | "mina:mainnet" | "zeko:testnet";
 }): Promise<object | undefined> {
   const { contractAddress, name, chain } = params;
   if (NFT_ALGOLIA_KEY === undefined)
@@ -315,6 +315,8 @@ export async function algoliaGetNFT(params: {
         ? "mainnet"
         : chain === "mina:devnet"
         ? "devnet"
+        : chain === "mina:testnet"
+        ? "testnet"
         : "zeko";
     const result = await client.getObject({
       indexName: algoliaChain,

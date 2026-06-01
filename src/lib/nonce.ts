@@ -30,7 +30,11 @@ export async function getAccountNonce(
     }
     const nonce = Number(Mina.getAccount(publicKey).nonce.toBigint());
     return nonce;
-  } else if (chain === "mina:devnet" || chain === "mina:mainnet") {
+  } else if (
+    chain === "mina:devnet" ||
+    chain === "mina:testnet" ||
+    chain === "mina:mainnet"
+  ) {
     const blockberryChain = chain === "mina:mainnet" ? "mainnet" : "devnet";
     const blockberryNoncePromise = getNonce({
       account,

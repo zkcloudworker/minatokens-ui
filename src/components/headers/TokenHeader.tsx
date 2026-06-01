@@ -111,6 +111,8 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
                   ? "mainnet beta"
                   : chain === "zeko:testnet"
                   ? "testnet"
+                  : chain === "mina:testnet"
+                  ? "testnet"
                   : "devnet"}
               </div>
             </Link>
