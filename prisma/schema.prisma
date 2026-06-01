@@ -15,6 +15,7 @@ enum Plan {
 enum Chain {
   mina_mainnet
   mina_devnet
+  mina_testnet
   zeko_mainnet
   zeko_devnet
 }

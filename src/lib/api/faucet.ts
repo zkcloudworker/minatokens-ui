@@ -25,18 +25,22 @@ export async function faucet(props: {
         json: { error: "Faucet not available on mainnet" },
       };
     }
-    if (
-      chain !== "mina:devnet" &&
-      chain !== "mina:testnet" &&
-      chain !== "zeko:testnet"
-    ) {
+    if (chain === "mina:testnet") {
+      // Mesa testnet has no programmatic faucet (the Mina faucet API serves the old
+      // devnet, not Mesa). Fail clearly instead of funding the wrong network.
+      return {
+        status: 400,
+        json: { error: "Faucet not available for Mesa testnet" },
+      };
+    }
+    if (chain !== "mina:devnet" && chain !== "zeko:testnet") {
       return {
         status: 400,
         json: { error: `Chain ${chain} not supported` },
       };
     }
 
-    if (chain === "mina:devnet" || chain === "mina:testnet") {
+    if (chain === "mina:devnet") {
       try {
         const response = await fetch(
           "https://faucet.minaprotocol.com/api/v1/faucet",
