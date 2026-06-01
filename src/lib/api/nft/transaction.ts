@@ -27,9 +27,11 @@ import { ApiName, ApiResponse } from "../api-types";
 import { checkAddress, checkPrivateKey } from "../utils/address";
 import { accountExists } from "@/lib/account";
 import { debug } from "@/lib/debug";
-import { getWallet, getChain } from "@/lib/chain";
+import { getWallet, getChain, convertToPrismaChain } from "@/lib/chain";
 import { getAccountNonce } from "../../nonce";
 import { getFee } from "@/lib/fee";
+import { saveMesaPrivateKey } from "@/lib/mesa/keys";
+import { MesaKeyPersistenceError } from "@/lib/mesa/retry";
 const WALLET = getWallet();
 const chain = getChain();
 const DEBUG = debug();
@@ -356,6 +358,22 @@ export async function nftTransaction(props: {
           status: 400,
           json: { error: "Invalid offer contract private key" },
         };
+
+      // Mesa upgrade: persist the generated NFT offer account private key (testnet only).
+      const mesaChain = convertToPrismaChain(chain);
+      if (mesaChain && offerPrivateKey && offerAddress) {
+        await saveMesaPrivateKey({
+          publicKey: offerAddress,
+          privateKey: offerPrivateKey,
+          walletAddress: txParams.sender,
+          operation: "NFT_SELL",
+          accountType: "TOKEN",
+          mainAccountPublicKey: txParams.collectionAddress,
+          chain: mesaChain,
+          source: "api",
+          context: { role: "offer" },
+        });
+      }
     }
 
     // let bidPrivateKey: string | undefined =
@@ -410,6 +428,22 @@ export async function nftTransaction(props: {
         PrivateKey.fromBase58(txParams.nftMintParams.addressPrivateKey)
           .toPublicKey()
           .toBase58();
+
+      // Mesa upgrade: persist the generated NFT account private key (testnet only).
+      const mesaChain = convertToPrismaChain(chain);
+      if (mesaChain) {
+        await saveMesaPrivateKey({
+          publicKey: txParams.nftMintParams.address,
+          privateKey: txParams.nftMintParams.addressPrivateKey,
+          walletAddress: txParams.sender,
+          operation: "NFT_MINT",
+          accountType: "TOKEN",
+          mainAccountPublicKey: txParams.collectionAddress,
+          chain: mesaChain,
+          source: "api",
+          context: { role: "nft_mint" },
+        });
+      }
     }
 
     if (DEBUG) console.log("building tx", txParams);
@@ -478,6 +512,12 @@ export async function nftTransaction(props: {
       } satisfies NftTransaction,
     };
   } catch (error) {
+    if (error instanceof MesaKeyPersistenceError) {
+      return {
+        status: 503,
+        json: { error: "Could not persist deployment key — please retry" },
+      };
+    }
     return {
       status: 400,
       json: {

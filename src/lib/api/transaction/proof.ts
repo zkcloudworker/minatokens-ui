@@ -27,6 +27,7 @@ export async function proof(props: {
   const api = new TokenAPI({
     jwt: ZKCW_JWT,
     chain,
+    repo: process.env.ZKCW_TOKEN_REPO,
   });
 
   const result = await api.getResults(jobId);

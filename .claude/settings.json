@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash([ -d \"/Users/mike/Documents/Silvana/$d/.git\" ])",
+      "Bash(git -C /Users/mike/Documents/Silvana/__TRACKED_VAR__ branch --show-current)",
+      "Bash(git -C /Users/mike/Documents/Silvana/__TRACKED_VAR__ branch -a)",
+      "Bash(git -C /Users/mike/Documents/Silvana/nft-agent checkout -b mesa)",
+      "Bash(git -C /Users/mike/Documents/Silvana/nft-agent branch --show-current)",
+      "Bash(npm run *)",
+      "Bash(echo \"---exit: $?---\")"
+    ],
+    "additionalDirectories": [
+      "/Users/mike/Documents/Silvana/silvana-lib/packages/mina-prover/src/tokens",
+      "/Users/mike/Documents/Silvana/token-agent",
+      "/Users/mike/Documents/Silvana/nft-agent",
+      "/Users/mike/Documents/Silvana/nft-ui/src/lib",
+      "/Users/mike/Documents/Silvana/nft-ui/src/components/mesa"
+    ]
+  }
+}

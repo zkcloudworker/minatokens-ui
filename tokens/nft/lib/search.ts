@@ -1,6 +1,7 @@
 "use server";
 import { searchClient } from "@algolia/client-search";
 import { DeployedTokenInfo, CollectionDataSerialized } from "./token";
+import { normalizeTokenInfoUrls } from "@/lib/arweave-url";
 import { getChain, getSiteType } from "@/lib/chain";
 import { debug } from "@/lib/debug";
 import { log as logtail } from "@logtail/next";
@@ -40,7 +41,7 @@ export async function algoliaGetCollectionList(): Promise<DeployedTokenInfo[]> {
     }
   }
   //console.log("collections", collections);
-  return collections;
+  return collections.map(normalizeTokenInfoUrls);
 }
 
 export async function algoliaGetCollection(params: {
@@ -51,7 +52,9 @@ export async function algoliaGetCollection(params: {
       indexName,
       objectID: params.tokenAddress,
     });
-    return result as unknown as DeployedTokenInfo | undefined;
+    return normalizeTokenInfoUrls(
+      result as unknown as DeployedTokenInfo
+    ) as DeployedTokenInfo | undefined;
   } catch (error: any) {
     log.error("algoliaGetCollection error:", {
       error: error?.message ?? String(error),
@@ -253,6 +256,10 @@ export async function algoliaGetTokenList(params: {
     "serverTimeMS": 2
 }
     */
+    // Strip the now-broken `/filename` suffix from arweave image/uri URLs.
+    if (tokenList?.hits) {
+      tokenList.hits = tokenList.hits.map(normalizeTokenInfoUrls);
+    }
     console.log("tokenList", tokenList?.hits?.length);
     return tokenList;
   } catch (error: any) {

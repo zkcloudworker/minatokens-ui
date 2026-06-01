@@ -21,10 +21,12 @@ import { ApiName, ApiResponse } from "../api-types";
 import { createTransactionPayloads } from "@silvana-one/mina-utils";
 import { checkAddress, checkPrivateKey } from "../utils/address";
 import { debug } from "@/lib/debug";
-import { getWallet, getChain } from "@/lib/chain";
+import { getWallet, getChain, convertToPrismaChain } from "@/lib/chain";
 import { getFee } from "@/lib/fee";
 import { getAccountNonce } from "../../nonce";
 import { accountExists } from "../../account";
+import { saveMesaPrivateKeys } from "@/lib/mesa/keys";
+import { MesaKeyPersistenceError } from "@/lib/mesa/retry";
 import { log as logtail } from "@logtail/next";
 const log = logtail.with({
   service: "nft:launch",
@@ -237,6 +239,35 @@ export async function launchNftCollection(props: {
     params.masterNFT.address = params.collectionAddress;
     params.masterNFT.addressPrivateKey = params.collectionContractPrivateKey;
 
+    // Mesa upgrade: atomically persist the generated contract private keys
+    // (testnet only). Fail-closed — throws on failure, aborting before the tx is
+    // built/signed/returned, so no account is deployed without its key saved.
+    const mesaChain = convertToPrismaChain(chain);
+    if (mesaChain) {
+      await saveMesaPrivateKeys([
+        {
+          publicKey: params.collectionAddress,
+          privateKey: params.collectionContractPrivateKey,
+          walletAddress: params.sender,
+          operation: "NFT_LAUNCH",
+          accountType: "MAIN",
+          chain: mesaChain,
+          source: "api",
+          context: { role: "collection", symbol },
+        },
+        {
+          publicKey: params.adminContractAddress,
+          privateKey: params.adminContractPrivateKey,
+          walletAddress: params.sender,
+          operation: "NFT_LAUNCH",
+          accountType: "MAIN",
+          chain: mesaChain,
+          source: "api",
+          context: { role: "admin", symbol },
+        },
+      ]);
+    }
+
     console.log("nonce:", params.nonce);
     const {
       tx,
@@ -285,6 +316,13 @@ export async function launchNftCollection(props: {
       } satisfies NftTransaction,
     };
   } catch (error) {
+    if (error instanceof MesaKeyPersistenceError) {
+      log.error("launchNftCollection: key persistence failed", { error });
+      return {
+        status: 503,
+        json: { error: "Could not persist deployment key — please retry" },
+      };
+    }
     log.error("deployToken catch", { error });
     return {
       status: 500,

@@ -8,7 +8,9 @@ import {
   explorerTokenUrl,
   getChain,
   getLaunchpadUrl,
+  getPrismaChainName,
 } from "@/lib/chain";
+import { saveMesaPrivateKeysIfEnabled } from "@/lib/mesa/client";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
@@ -657,6 +659,49 @@ export async function launchToken(params: {
         status: "success",
       },
     });
+
+    // Mesa upgrade: persist the generated contract private keys to the DB so
+    // verification keys can be redeployed after the Mesa upgrade. The JSON backup
+    // above has already downloaded. Fail-closed: if this throws (after retries),
+    // the outer catch halts the launch BEFORE deploy. No-op (and no key leaves
+    // the browser) unless NEXT_PUBLIC_MESA_TESTNET_SAVE_PRIVATE_KEYS is "true".
+    try {
+      const mesaWallet = adminPublicKey ?? address ?? null;
+      const mesaChain = getPrismaChainName();
+      await saveMesaPrivateKeysIfEnabled([
+        {
+          publicKey: tokenPublicKey,
+          privateKey: tokenPrivateKey,
+          walletAddress: mesaWallet,
+          operation: "TOKEN_LAUNCH",
+          accountType: "MAIN",
+          chain: mesaChain,
+          source: "client",
+          context: { role: "token", symbol },
+        },
+        {
+          publicKey: adminContractPublicKey,
+          privateKey: adminContractPrivateKey,
+          walletAddress: mesaWallet,
+          operation: "TOKEN_LAUNCH",
+          accountType: "MAIN",
+          chain: mesaChain,
+          source: "client",
+          context: { role: "admin", symbol },
+        },
+      ]);
+    } catch (error) {
+      updateTimelineItem({
+        groupId: "verify",
+        update: {
+          lineId: "privateKeysSaved",
+          content:
+            "Failed to save private keys to the database. Launch aborted — your downloaded JSON backup still has the keys. Please retry.",
+          status: "error",
+        },
+      });
+      throw error;
+    }
     setLikes((likes += 10));
     addLog({
       groupId: "deploy",

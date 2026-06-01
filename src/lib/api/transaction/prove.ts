@@ -210,6 +210,16 @@ export async function prove(props: {
         tx.request.adminContractPrivateKey = undefined;
       if ("privateMetadata" in tx.request)
         tx.request.privateMetadata = undefined;
+      // Also strip the server-generated trading-account keys (offer/bid/sell/
+      // mint) and any client-supplied sender key, so no private key is ever
+      // forwarded to the prover. They are already signed into the tx (and
+      // persisted for the Mesa redeploy); the prover never needs them.
+      const req = tx.request as Record<string, any>;
+      if ("offerPrivateKey" in req) req.offerPrivateKey = undefined;
+      if ("bidPrivateKey" in req) req.bidPrivateKey = undefined;
+      if ("senderPrivateKey" in req) req.senderPrivateKey = undefined;
+      if (req.nftSellParams) req.nftSellParams.offerPrivateKey = undefined;
+      if (req.nftMintParams) req.nftMintParams.addressPrivateKey = undefined;
 
       txs.push(tx as any);
     }

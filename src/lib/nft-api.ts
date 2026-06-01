@@ -13,6 +13,7 @@ function getAPI(): NftAPI {
   return new NftAPI({
     jwt: ZKCW_JWT,
     chain,
+    repo: process.env.ZKCW_NFT_REPO,
   });
 }
 

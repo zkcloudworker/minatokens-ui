@@ -8,6 +8,10 @@ import {
 import { tokenVerificationKeys } from "@silvana-one/abi";
 import { Mina, PublicKey, Bool, TokenId } from "o1js";
 import { TokenState, DeployedTokenInfo, TokenInfo } from "./token";
+import {
+  normalizeArweaveUrl,
+  normalizeTokenInfoUrls,
+} from "@/lib/arweave-url";
 import { algoliaGetToken, algoliaWriteToken } from "@/lib/algolia";
 import { getChain } from "@/lib/chain";
 import { debug } from "@/lib/debug";
@@ -230,9 +234,9 @@ export async function getTokenState(params: {
 
     return {
       success: true,
-      tokenState,
+      tokenState: normalizeTokenInfoUrls(tokenState),
       isStateUpdated,
-      info: tokenInfo,
+      info: normalizeTokenInfoUrls(tokenInfo),
     };
   } catch (error: any) {
     log.error("getTokenState: catch", { error });
@@ -367,7 +371,8 @@ export async function restoreDeployedTokenInfo(params: {
     name: tokenState.tokenSymbol,
   };
   try {
-    const uri = tokenState.uri;
+    // Strip the now-broken `/filename.json` suffix before fetching the metadata.
+    const uri = normalizeArweaveUrl(tokenState.uri);
     let json: object | undefined;
     let isImage = false;
     if (uri && typeof uri === "string" && uri.startsWith("http")) {
@@ -418,7 +423,8 @@ export async function restoreDeployedTokenInfo(params: {
     chain: chainId,
     rating: 100,
   };
-  return deployedTokenInfo;
+  // `...tokenState` carries the raw on-chain uri/adminUri — normalize them too.
+  return normalizeTokenInfoUrls(deployedTokenInfo);
 }
 
 async function getPrice(adminAddress: PublicKey): Promise<{
