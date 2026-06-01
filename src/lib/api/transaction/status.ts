@@ -33,25 +33,28 @@ export async function getTransactionStatus(props: {
       };
     }
 
-    if (!BLOCKBERRY_API) {
-      console.error("BLOCKBERRY_API is undefined");
-      return {
-        status: 500,
-        json: { error: "BLOCKBERRY_API is undefined" },
+    // Mesa testnet has no Blockberry indexer — skip it and use the on-chain
+    // checkZkappTransaction path below.
+    if (chain !== "mina:testnet") {
+      if (!BLOCKBERRY_API) {
+        console.error("BLOCKBERRY_API is undefined");
+        return {
+          status: 500,
+          json: { error: "BLOCKBERRY_API is undefined" },
+        };
+      }
+      const options = {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          "x-api-key": BLOCKBERRY_API,
+        },
       };
-    }
-    const options = {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-        "x-api-key": BLOCKBERRY_API,
-      },
-    };
-    try {
-      const response = await fetch(
-        `https://api.blockberry.one/mina-${chain}/v1/zkapps/txs/${hash}`,
-        options
-      );
+      try {
+        const response = await fetch(
+          `https://api.blockberry.one/mina-${chain}/v1/zkapps/txs/${hash}`,
+          options
+        );
       if (response.ok) {
         const result = (await response.json()) as TxStatus;
         //console.log("blockberry result", result);
@@ -90,8 +93,9 @@ export async function getTransactionStatus(props: {
       //   text: response.statusText,
       //   json: await response.json(),
       // });
-    } catch (error: any) {
-      //console.error("blockberry catch", error);
+      } catch (error: any) {
+        //console.error("blockberry catch", error);
+      }
     }
 
     await initBlockchain();

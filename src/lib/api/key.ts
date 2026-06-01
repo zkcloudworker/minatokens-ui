@@ -159,6 +159,10 @@ export async function generateApiKey(props: {
               activated: true,
             },
             {
+              chain: "mina_testnet",
+              activated: true,
+            },
+            {
               chain: "mina_mainnet",
               activated: false,
             },
