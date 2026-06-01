@@ -1,4 +1,10 @@
-import { Mainnet, Devnet, Zeko, MinaNetwork } from "@silvana-one/api";
+import {
+  Mainnet,
+  Devnet,
+  Zeko,
+  MesaTestnet,
+  MinaNetwork,
+} from "@silvana-one/api";
 
 export function getSiteType(): "nft" | "token" {
   const type = process.env.NEXT_PUBLIC_SITE_TYPE;
@@ -86,8 +92,9 @@ export function getLaunchpadUrl(): string {
     case "mina:mainnet":
       return "https://minatokens.com";
     case "mina:devnet":
-    case "mina:testnet":
       return "https://minatokens.com";
+    case "mina:testnet":
+      return "https://mesa.minatokens.com";
     case "zeko:testnet":
       return "https://zekotokens.com";
     default:
@@ -107,8 +114,9 @@ export function getNetwork(): MinaNetwork {
     case "mina:mainnet":
       return Mainnet;
     case "mina:devnet":
-    case "mina:testnet":
       return Devnet;
+    case "mina:testnet":
+      return MesaTestnet;
     case "zeko:testnet":
       return Zeko;
     default:
