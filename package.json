@@ -11,7 +11,7 @@
     "prisma:generate": "dotenv -e .env.local -- prisma generate --no-hints",
     "prisma:format": "prisma format",
     "prisma:seed": "dotenv -e .env.local -- prisma db seed",
-    "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev --name v27",
+    "prisma:migrate": "dotenv -e .env.local -- prisma migrate dev --name v28",
     "prisma:status": "dotenv -e .env.local -- prisma migrate status",
     "prisma:studio": "dotenv -e .env.local -- prisma studio",
     "prisma:push": "dotenv -e .env.local -- prisma db push",

@@ -36,14 +36,16 @@ export function getChain():
 export function getPrismaChainName():
   | "mina_mainnet"
   | "mina_devnet"
+  | "mina_testnet"
   | "zeko_devnet" {
   const chain = getChain();
   switch (chain) {
     case "mina:mainnet":
       return "mina_mainnet";
     case "mina:devnet":
-    case "mina:testnet":
       return "mina_devnet";
+    case "mina:testnet":
+      return "mina_testnet";
     case "zeko:testnet":
       return "zeko_devnet";
     default:
@@ -53,7 +55,13 @@ export function getPrismaChainName():
 
 export function convertToPrismaChain(
   chain: string | undefined
-): "mina_mainnet" | "mina_devnet" | "zeko_devnet" | "zeko_mainnet" | undefined {
+):
+  | "mina_mainnet"
+  | "mina_devnet"
+  | "mina_testnet"
+  | "zeko_devnet"
+  | "zeko_mainnet"
+  | undefined {
   if (!chain) return undefined;
 
   switch (chain) {
@@ -61,9 +69,11 @@ export function convertToPrismaChain(
     case "mina_mainnet":
       return "mina_mainnet";
     case "mina:devnet":
-    case "mina:testnet":
     case "mina_devnet":
       return "mina_devnet";
+    case "mina:testnet":
+    case "mina_testnet":
+      return "mina_testnet";
     case "zeko:testnet":
     case "zeko_devnet":
       return "zeko_devnet";
