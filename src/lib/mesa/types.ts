@@ -17,3 +17,14 @@ export interface SaveMesaPrivateKeyInput {
   source?: MesaKeySource;
   context?: Record<string, unknown> | null;
 }
+
+/** Everything the Mesa upgrade modal shows for one account. */
+export interface MesaUpgradeInfo {
+  name: string;
+  address: string;
+  tokenId: string;
+  isDefaultTokenId: boolean;
+  currentVk: { hash: string; data: string };
+  newVk: { hash: string; data: string } | null;
+  savedInDb: boolean;
+}

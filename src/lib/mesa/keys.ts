@@ -163,3 +163,60 @@ export async function getMesaPrivateKey(
     );
   }
 }
+
+/**
+ * The wallet recorded as the creator/owner when this key was saved (or null if
+ * none/unknown). No key material is read. Used to authorize use of the stored
+ * key for a Mesa upgrade — only the recorded owner may sign via the DB key.
+ */
+export async function getMesaKeyOwner(
+  publicKey: string
+): Promise<string | null> {
+  try {
+    const row = await withRetry(
+      () =>
+        prisma.mesaPrivateKey.findUnique({
+          where: { publicKey },
+          select: { walletAddress: true },
+        }),
+      {
+        ...RETRY,
+        onRetry: (error, attempt) =>
+          log.warn("getMesaKeyOwner retry", { attempt, publicKey, error }),
+      }
+    );
+    return row?.walletAddress ?? null;
+  } catch (error) {
+    log.error("getMesaKeyOwner failed after retries", { error, publicKey });
+    throw new MesaKeyPersistenceError(
+      `Failed to read Mesa key owner for ${publicKey}`,
+      { cause: error }
+    );
+  }
+}
+
+/**
+ * Whether a private key is stored for the given public key. Returns a boolean
+ * only — no key material is read or decrypted. Used by the Mesa upgrade UI to
+ * show the "saved in DB" status. Throws on a persistent DB error (so the UI can
+ * distinguish "not saved" from "could not check").
+ */
+export async function isMesaPrivateKeySaved(publicKey: string): Promise<boolean> {
+  try {
+    const count = await withRetry(
+      () => prisma.mesaPrivateKey.count({ where: { publicKey } }),
+      {
+        ...RETRY,
+        onRetry: (error, attempt) =>
+          log.warn("isMesaPrivateKeySaved retry", { attempt, publicKey, error }),
+      }
+    );
+    return count > 0;
+  } catch (error) {
+    log.error("isMesaPrivateKeySaved failed after retries", { error, publicKey });
+    throw new MesaKeyPersistenceError(
+      `Failed to check Mesa private key for ${publicKey}`,
+      { cause: error }
+    );
+  }
+}
