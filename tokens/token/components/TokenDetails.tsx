@@ -22,6 +22,7 @@ import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
 import { getOrderbook } from "@/lib/trade";
 import { Order } from "@/components/orderbook/OrderBook";
 import { BuySellDialog } from "@/components/orderbook/BuySell";
+import { MesaUpgradeButton } from "@/components/mesa/MesaUpgrade";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 function formatBalance(num: number | undefined): string {
@@ -387,6 +388,17 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
                       <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
                     </svg>
                   </span>
+                </div>
+
+                {/* Mesa verification-key upgrade (testnet-gated) */}
+                <div className="ml-auto flex flex-wrap gap-2">
+                  <MesaUpgradeButton address={tokenAddress} label="Mesa: token" />
+                  {(tokenState as any)?.adminAddress && (
+                    <MesaUpgradeButton
+                      address={(tokenState as any).adminAddress}
+                      label="Mesa: admin"
+                    />
+                  )}
                 </div>
 
                 {/* Likes / Actions */}

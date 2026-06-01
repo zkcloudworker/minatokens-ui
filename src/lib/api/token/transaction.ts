@@ -27,9 +27,11 @@ import { getTokenSymbolAndAdmin } from "../utils/symbol";
 import { checkAddress, checkPrivateKey } from "../utils/address";
 import { accountExists } from "@/lib/account";
 import { debug } from "@/lib/debug";
-import { getWallet, getChain } from "@/lib/chain";
+import { getWallet, getChain, convertToPrismaChain } from "@/lib/chain";
 import { getFee } from "@/lib/fee";
 import { getAccountNonce } from "../../nonce";
+import { saveMesaPrivateKey } from "@/lib/mesa/keys";
+import { MesaKeyPersistenceError } from "@/lib/mesa/retry";
 import { log as logtail } from "@logtail/next";
 const chain = getChain();
 const log = logtail.with({
@@ -564,6 +566,22 @@ export async function tokenTransaction(props: {
           status: 400,
           json: { error: "Invalid offer private key" },
         };
+
+      // Mesa upgrade: persist the generated offer account private key (testnet only).
+      const mesaChain = convertToPrismaChain(chain);
+      if (mesaChain && offerPrivateKey && offerAddress) {
+        await saveMesaPrivateKey({
+          publicKey: offerAddress,
+          privateKey: offerPrivateKey,
+          walletAddress: txParams.sender,
+          operation: "TOKEN_OFFER_CREATE",
+          accountType: "TOKEN",
+          mainAccountPublicKey: txParams.tokenAddress,
+          chain: mesaChain,
+          source: "api",
+          context: { role: "offer" },
+        });
+      }
     }
 
     let bidPrivateKey: string | undefined =
@@ -595,6 +613,22 @@ export async function tokenTransaction(props: {
           status: 400,
           json: { error: "Invalid bid private key" },
         };
+
+      // Mesa upgrade: persist the generated bid account private key (testnet only).
+      const mesaChain = convertToPrismaChain(chain);
+      if (mesaChain && bidPrivateKey && bidAddress) {
+        await saveMesaPrivateKey({
+          publicKey: bidAddress,
+          privateKey: bidPrivateKey,
+          walletAddress: txParams.sender,
+          operation: "TOKEN_BID_CREATE",
+          accountType: "TOKEN",
+          mainAccountPublicKey: txParams.tokenAddress,
+          chain: mesaChain,
+          source: "api",
+          context: { role: "bid" },
+        });
+      }
     }
 
     txParams.nonce =
@@ -672,6 +706,12 @@ export async function tokenTransaction(props: {
       } satisfies TokenTransaction,
     };
   } catch (error) {
+    if (error instanceof MesaKeyPersistenceError) {
+      return {
+        status: 503,
+        json: { error: "Could not persist deployment key — please retry" },
+      };
+    }
     return {
       status: 400,
       json: {

@@ -13,6 +13,7 @@ function getAPI(): TokenAPI {
   return new TokenAPI({
     jwt: ZKCW_JWT,
     chain,
+    repo: process.env.ZKCW_TOKEN_REPO,
   });
 }
 

@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { describe, expect, test } from "@jest/globals";
+import { describe, test } from "node:test";
+import assert from "node:assert";
 
 const adapter = new PrismaPg({
   connectionString: process.env.POSTGRES_PRISMA_URL,
@@ -8,13 +9,13 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 describe("Prisma Tests", () => {
-  it.skip("should connect to the database", async () => {
+  test.skip("should connect to the database", async () => {
     const result = await prisma.aPIKey.findMany();
-    expect(Array.isArray(result)).toBe(true);
+    assert.ok(Array.isArray(result));
     console.log(result);
   });
 
-  it("should calculate statistics for each endpoint", async () => {
+  test("should calculate statistics for each endpoint", async () => {
     // Calculate statistics for each endpoint
     const stats = await prisma.aPIKeyCalls.groupBy({
       by: ["endpoint"],
@@ -29,8 +30,8 @@ describe("Prisma Tests", () => {
       },
     });
 
-    expect(stats).toBeDefined();
-    expect(Array.isArray(stats)).toBe(true);
+    assert.ok(stats);
+    assert.ok(Array.isArray(stats));
 
     // Log the statistics for each endpoint
     stats.forEach((stat) => {
@@ -42,15 +43,19 @@ describe("Prisma Tests", () => {
     });
   });
 
-  // Add more test cases as needed
-  it.skip("should fetch specific data", async () => {
-    // Example: fetching a user by email
+  test("should count UserActivity records", async () => {
+    const count = await prisma.userActivity.count();
+    console.log("UserActivity count:", count);
+    assert.ok(typeof count === "number");
+  });
+
+  test.skip("should fetch specific data", async () => {
     const user = await prisma.aPIKey.findFirst({
       where: {
         email: "test@example.com",
       },
     });
-    expect(user).toBeDefined();
+    assert.ok(user);
     console.log(user);
   });
 });
