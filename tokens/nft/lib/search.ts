@@ -2,7 +2,7 @@
 import { searchClient } from "@algolia/client-search";
 import { DeployedTokenInfo, CollectionDataSerialized } from "./token";
 import { normalizeTokenInfoUrls } from "@/lib/arweave-url";
-import { getChain, getSiteType } from "@/lib/chain";
+import { getChain, getAlgoliaChain, getSiteType } from "@/lib/chain";
 import { debug } from "@/lib/debug";
 import { log as logtail } from "@logtail/next";
 const chain = getChain();
@@ -20,9 +20,9 @@ if (NFT_ALGOLIA_KEY === undefined)
   throw new Error("NFT_ALGOLIA_KEY is undefined");
 
 const client = searchClient(NFT_ALGOLIA_PROJECT, NFT_ALGOLIA_KEY);
-// mina:testnet uses the dedicated `standard-testnet` index (matches nft-info.ts).
-// Other chains keep their existing raw-chain index names to avoid regressions.
-const indexName = `standard-${chain === "mina:testnet" ? "testnet" : chain}`;
+// Index suffix via getAlgoliaChain() so it is the single source of truth:
+// standard-testnet (mesa), standard-devnet, standard-zeko, standard-mainnet.
+const indexName = `standard-${getAlgoliaChain()}`;
 
 export async function algoliaGetCollectionList(): Promise<DeployedTokenInfo[]> {
   const result = await client.searchForFacetValues({
