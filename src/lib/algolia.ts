@@ -2,6 +2,7 @@
 import { algoliasearch } from "algoliasearch";
 const { ALGOLIA_KEY, ALGOLIA_PROJECT } = process.env;
 import { DeployedTokenInfo } from "@/tokens/lib/token";
+import { normalizeTokenInfoUrls } from "./arweave-url";
 import { getChain, getAlgoliaChain } from "./chain";
 const chain = getChain();
 const algoliaChain = getAlgoliaChain();
@@ -62,7 +63,9 @@ export async function algoliaGetToken(params: {
       indexName,
       objectID: params.tokenAddress,
     });
-    return result as unknown as DeployedTokenInfo | undefined;
+    return normalizeTokenInfoUrls(
+      result as unknown as DeployedTokenInfo
+    ) as DeployedTokenInfo | undefined;
   } catch (error: any) {
     log.info("algoliaGetToken error:", {
       error: error?.message ?? String(error),

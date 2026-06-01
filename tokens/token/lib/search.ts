@@ -1,6 +1,7 @@
 "use server";
 import { searchClient } from "@algolia/client-search";
 import { DeployedTokenInfo } from "./token";
+import { normalizeTokenInfoUrls } from "@/lib/arweave-url";
 import { Like, getUsersLikes } from "@/lib/likes";
 import {
   getAllTokensByAddress,
@@ -245,6 +246,10 @@ export async function algoliaGetTokenList(params: {
     "serverTimeMS": 2
 }
     */
+    // Strip the now-broken `/filename` suffix from arweave image/uri URLs.
+    if (tokenList?.hits) {
+      tokenList.hits = tokenList.hits.map(normalizeTokenInfoUrls);
+    }
     console.log("tokenList", tokenList?.hits?.length);
     return tokenList;
   } catch (error: any) {
